@@ -23,8 +23,13 @@ test.beforeEach(({ page }) => {
 test("a aplicação inicializa sem erro fatal", async ({ page }) => {
   await page.goto("/", { waitUntil: "domcontentloaded" });
   await expect(page.locator("#root")).toBeAttached();
+  // O index.html já traz a tela de abertura (#app-shell) dentro do #root: o
+  // app só "montou" quando o React a substituiu pelo conteúdo dele.
   await page.waitForFunction(
-    () => (document.querySelector("#root")?.childElementCount ?? 0) > 0,
+    () => {
+      const root = document.querySelector("#root");
+      return Boolean(root && root.childElementCount > 0 && !root.querySelector("#app-shell"));
+    },
     undefined,
     { timeout: 20_000 },
   );

@@ -8,13 +8,13 @@
  */
 
 // Hash do onload="this.media='all'" que carrega a fonte sem travar a página.
-const FONT_ONLOAD_HASH = "'sha256-MhtPZXr7+LpJUY5qtMutB+qWfQtMaPccfe7QXtCcEYc='";
-
 export const CONTENT_SECURITY_POLICY = [
   "default-src 'self'",
-  `script-src 'self' 'unsafe-hashes' ${FONT_ONLOAD_HASH}`,
-  "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
-  "font-src 'self' data: https://fonts.gstatic.com",
+  // A fonte (Poppins) é servida pelo próprio app (public/fonts): sem script
+  // inline nem Google Fonts.
+  "script-src 'self'",
+  "style-src 'self' 'unsafe-inline'",
+  "font-src 'self' data:",
   "img-src 'self' data: blob: https:",
   "media-src 'self' data: blob: https:",
   "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://*.googleapis.com",

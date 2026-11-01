@@ -50,18 +50,14 @@ export default defineConfig(({ mode }) => ({
     minify: 'esbuild',
     rollupOptions: {
       output: {
+        // Só bibliotecas que TODA tela usa ficam em chunks fixos. Antes havia
+        // um chunk "radix" com menus, popover, abas e tooltip: o Rollup juntava
+        // ali também o react-dom e o arquivo inteiro entrava no carregamento
+        // inicial. Sem ele, cada componente do Radix vai junto da tela que usa.
         manualChunks: {
           'react-vendor': ['react', 'react-dom', 'react-router-dom'],
           'supabase': ['@supabase/supabase-js'],
           'query': ['@tanstack/react-query'],
-          'radix': [
-            '@radix-ui/react-dialog',
-            '@radix-ui/react-dropdown-menu',
-            '@radix-ui/react-popover',
-            '@radix-ui/react-tabs',
-            '@radix-ui/react-toast',
-            '@radix-ui/react-tooltip',
-          ],
         },
       },
     },

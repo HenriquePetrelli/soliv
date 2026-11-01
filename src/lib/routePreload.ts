@@ -1,4 +1,5 @@
 import { matchPath } from "react-router-dom";
+import { afterPageSettles, isConstrainedNetwork } from "@/lib/idle";
 
 /**
  * Código de cada tela, para baixar antes de precisar.
@@ -158,17 +159,30 @@ const CORE_ROUTES: Record<string, string[]> = {
   admin: ["/admin-dashboard"],
 };
 
-const whenIdle = (callback: () => void) => {
-  const idle = (globalThis as typeof globalThis & {
-    requestIdleCallback?: (cb: () => void, options?: { timeout?: number }) => void;
-  }).requestIdleCallback;
-  if (idle) idle(callback, { timeout: 2500 });
-  else globalThis.setTimeout(callback, 1200);
-};
-
-/** Depois de saber quem entrou, baixa em segundo plano as abas dessa pessoa. */
+/**
+ * Depois de saber quem entrou, baixa em segundo plano as abas dessa pessoa:
+ * só depois que a tela atual terminou de carregar, uma aba por vez, e nada em
+ * conexão lenta ou com economia de dados (lá cada aba baixa ao ser aberta).
+ * Antes começava assim que o navegador ficava ocioso e pedia as seis de uma
+ * vez, disputando a rede com os dados da tela que a pessoa estava esperando.
+ */
 export const preloadCoreRoutesFor = (userType: string) => {
   const routes = CORE_ROUTES[userType];
   if (!routes) return;
-  whenIdle(() => routes.forEach(preloadRoute));
+  afterPageSettles(
+    () => {
+      if (isConstrainedNetwork()) return;
+      const queue = routes.map(loaderForPath).filter((loader): loader is Loader => Boolean(loader) && !preloaded.has(loader!));
+      const next = () => {
+        const loader = queue.shift();
+        if (!loader) return;
+        preloaded.add(loader);
+        loader()
+          .catch(() => preloaded.delete(loader))
+          .finally(() => afterPageSettles(next, { idleTimeoutMs: 1500 }));
+      };
+      next();
+    },
+    { minDelayMs: 1500 },
+  );
 };

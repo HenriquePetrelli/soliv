@@ -1,6 +1,7 @@
 import { useNavigate, useLocation } from "react-router-dom";
 import { Home, Calendar, BarChart3, MessageCircle } from "lucide-react";
 import LifeRingIcon from "@/components/icons/LifeRingIcon";
+import { preloadRoute } from '@/lib/routePreload';
 
 interface BottomNavigationProps {
   onSOSClick?: () => void;
@@ -71,6 +72,8 @@ const BottomNavigation = ({ onSOSClick }: BottomNavigationProps) => {
           <button
             key={item.path}
             onClick={() => navigate(item.path)}
+            onPointerEnter={() => preloadRoute(item.path)}
+            onTouchStart={() => preloadRoute(item.path)}
             aria-current={item.isActive ? "page" : undefined}
             className={`tab-item group ${
               item.isActive

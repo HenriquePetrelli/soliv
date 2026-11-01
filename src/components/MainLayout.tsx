@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, lazy, Suspense } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Bell, User } from "lucide-react";
 import logoImg from '@/assets/soliv-logo.webp';
@@ -11,7 +11,10 @@ import { DesktopSidebar } from "@/components/DesktopSidebar";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useNotifications } from "@/hooks/useNotifications";
-import PsychologistLayout from "@/components/psychologist/layout/PsychologistLayout";
+import RouteSkeleton from "@/components/skeletons/RouteSkeleton";
+
+// Só o psicólogo usa (no /chat): fora do pacote do paciente.
+const PsychologistLayout = lazy(() => import("@/components/psychologist/layout/PsychologistLayout"));
 
 interface MainLayoutProps {
   children: React.ReactNode;
@@ -83,7 +86,11 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
   // paciente (com o SOS do paciente). Enquanto o tipo de conta não chegou, não
   // mostra barra nenhuma, para não piscar a errada.
   if (userType === 'psychologist') {
-    return <PsychologistLayout>{children}</PsychologistLayout>;
+    return (
+      <Suspense fallback={<RouteSkeleton />}>
+        <PsychologistLayout>{children}</PsychologistLayout>
+      </Suspense>
+    );
   }
   if (user && userType === 'unknown' && location.pathname === '/chat') {
     return <>{children}</>;

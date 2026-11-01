@@ -4,18 +4,15 @@ import { ThemeProvider } from "next-themes";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Outlet } from "react-router-dom";
 import { SubscriptionProvider } from "@/contexts/SubscriptionContext";
-import { AuthProvider } from "@/contexts/AuthContext";
-import { lazy, Suspense } from "react";
+import { AuthProvider, useAuth } from "@/contexts/AuthContext";
+import { lazy, Suspense, type ReactNode } from "react";
 import RouteGuard from "@/components/RouteGuard";
 import MainLayout from "@/components/MainLayout";
-import PsychologistLayout from "@/components/psychologist/layout/PsychologistLayout";
-import AdminLayout from "@/components/admin/AdminLayout";
-import AdminMfaGate from "@/components/admin/AdminMfaGate";
 import BackgroundWrapper from "@/components/BackgroundWrapper";
 import RouteSkeleton from "@/components/skeletons/RouteSkeleton";
 import PendingFeedbackGate from "@/components/sos/PendingFeedbackGate";
 import AppErrorBoundary from "@/components/AppErrorBoundary";
-import LegalAcceptanceGate from "@/components/legal/LegalAcceptanceGate";
+import DeferredMount from "@/components/DeferredMount";
 
 // Persistent layout: MainLayout stays mounted across nested routes,
 // so sidebar/bottom nav never re-render when switching between them.
@@ -30,15 +27,27 @@ const MainLayoutOutlet = () => (
 
 // Mesmo padrão para o psicólogo: menu lateral/barra inferior não remontam.
 const PsychologistLayoutOutlet = () => (
-  <PsychologistLayout>
-    <Suspense fallback={<RouteSkeleton />}>
-      <Outlet />
-    </Suspense>
-  </PsychologistLayout>
+  <Suspense fallback={<RouteSkeleton />}>
+    <PsychologistLayout>
+      <Suspense fallback={<RouteSkeleton />}>
+        <Outlet />
+      </Suspense>
+    </PsychologistLayout>
+  </Suspense>
 );
 
-// Push (toque no aviso, aviso com o app aberto, renovar o token): fora do
-// pacote inicial, carregado logo depois.
+// Fora do pacote inicial: cada tipo de conta baixa só o que usa. O paciente
+// (a maioria) não baixa o layout do psicólogo nem o do admin, e quem está
+// deslogado não baixa nenhum dos três nem o pedido de aceite dos termos (que
+// traz o texto completo dos Termos e da Política).
+const PsychologistLayout = lazy(() => import("@/components/psychologist/layout/PsychologistLayout"));
+const AdminLayout = lazy(() => import("@/components/admin/AdminLayout"));
+const AdminMfaGate = lazy(() => import("@/components/admin/AdminMfaGate"));
+const LegalAcceptanceGate = lazy(() => import("@/components/legal/LegalAcceptanceGate"));
+
+// Push (toque no aviso, aviso com o app aberto, renovar o token) e a
+// conferência de bloqueio: montados só depois que a primeira tela aparece
+// (DeferredMount), para não disputar a rede com ela.
 const PushBridge = lazy(() => import("./components/PushBridge"));
 const AccountStatusWatcher = lazy(() => import("./components/AccountStatusWatcher"));
 
@@ -95,6 +104,12 @@ const PrivateJournal = lazy(() => import("./pages/PrivateJournal"));
 import NotFound from "./pages/NotFound";
 const LegalDocument = lazy(() => import("./pages/LegalDocument"));
 const ResetPassword = lazy(() => import("./pages/ResetPassword"));
+
+/** Só monta para quem está logado (deslogado não baixa o código). */
+const LoggedInOnly = ({ children }: { children: ReactNode }) => {
+  const { user } = useAuth();
+  return user ? <>{children}</> : null;
+};
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -453,11 +468,17 @@ const App = () => {
                   </Routes>
                   </Suspense>
                   <PendingFeedbackGate />
-                  <Suspense fallback={null}>
-                    <PushBridge />
-                    <AccountStatusWatcher />
-                  </Suspense>
-                  <LegalAcceptanceGate />
+                  <DeferredMount>
+                    <Suspense fallback={null}>
+                      <PushBridge />
+                      <AccountStatusWatcher />
+                    </Suspense>
+                  </DeferredMount>
+                  <LoggedInOnly>
+                    <Suspense fallback={null}>
+                      <LegalAcceptanceGate />
+                    </Suspense>
+                  </LoggedInOnly>
                 </BackgroundWrapper>
 
               </BrowserRouter>

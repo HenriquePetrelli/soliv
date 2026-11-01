@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/button';
 import LifeRingIcon from '@/components/icons/LifeRingIcon';
 import logoImg from '@/assets/soliv-logo.webp';
 import { useAuth } from '@/contexts/AuthContext';
+import { preloadRoute } from '@/lib/routePreload';
 
 const sidebarItems = [
   { icon: Home, label: 'Home', path: '/home' },
@@ -65,6 +66,7 @@ export const DesktopSidebar: React.FC<DesktopSidebarProps> = ({ onSOSClick }) =>
                 ${isActive ? 'bg-sidebar-accent text-sidebar-primary' : ''}
               `}
               onClick={() => navigate(item.path)}
+              onPointerEnter={() => preloadRoute(item.path)}
             >
               <item.icon className="w-5 h-5" />
               <span className="font-medium">{item.label}</span>
