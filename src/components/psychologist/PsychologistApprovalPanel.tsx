@@ -21,6 +21,7 @@ import { BlockPsychologistModal } from './BlockPsychologistModal';
 import { isCurrentlyBlocked, formatBlockPeriod } from '@/utils/psychologistBlock';
 import { SkeletonCardGrid } from '@/components/skeletons/Skeletons';
 import { ContentTransition } from '@/components/skeletons/ContentTransition';
+import { openSafeUrl } from '@/lib/safeUrl';
 
 import { EmptyState } from '@/components/EmptyState';
 import { ErrorState } from '@/components/ErrorState';
@@ -595,7 +596,7 @@ export const PsychologistApprovalPanel = ({ adminUserId, onDataChange }: Psychol
                                   <Button
                                     variant="outline"
                                     size="sm"
-                                    onClick={() => window.open(selectedPsychologist.document_url, '_blank', 'noopener,noreferrer')}
+                                    onClick={() => openSafeUrl(selectedPsychologist.document_url)}
                                   >
                                     <Eye className="h-4 w-4 mr-1" />
                                     Visualizar
@@ -603,7 +604,7 @@ export const PsychologistApprovalPanel = ({ adminUserId, onDataChange }: Psychol
                                   <Button
                                     variant="ghost"
                                     size="sm"
-                                    onClick={() => window.open(selectedPsychologist.document_url, '_blank', 'noopener,noreferrer')}
+                                    onClick={() => openSafeUrl(selectedPsychologist.document_url)}
                                   >
                                     <Download className="h-4 w-4" />
                                   </Button>

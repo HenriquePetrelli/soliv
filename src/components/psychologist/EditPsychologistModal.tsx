@@ -11,6 +11,7 @@ import { toast } from 'sonner';
 import { getFriendlyErrorMessage } from '@/utils/errorMessage';
 import { Eye, EyeOff, FileText, Loader2, Upload } from 'lucide-react';
 import { passwordProblem } from '@/lib/password';
+import { openSafeUrl } from '@/lib/safeUrl';
 
 interface EditablePsychologist {
   id: string;
@@ -300,7 +301,7 @@ export const EditPsychologistModal = ({
               </div>
               <div className="flex gap-2">
                 {form.document_url && (
-                  <Button variant="outline" size="sm" onClick={() => window.open(form.document_url!, '_blank', 'noopener,noreferrer')}>
+                  <Button variant="outline" size="sm" onClick={() => openSafeUrl(form.document_url)}>
                     Visualizar
                   </Button>
                 )}

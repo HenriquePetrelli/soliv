@@ -1,11 +1,14 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { safeHttpUrl } from '@/lib/safeUrl';
 
 export const useSignedDocumentUrl = (
   documentPath?: string,
   bucket: string = 'psychologist-documents',
-  fallbackUrl?: string
+  rawFallbackUrl?: string
 ) => {
+  // O link de reserva vem do banco (texto do psicólogo): só http(s).
+  const fallbackUrl = safeHttpUrl(rawFallbackUrl) ?? undefined;
   const [signedUrl, setSignedUrl] = useState<string>('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);

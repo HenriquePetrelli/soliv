@@ -15,20 +15,6 @@ const resendKey = Deno.env.get('RESEND_API_KEY')!;
 const supabase = createClient(supabaseUrl, supabaseKey);
 const resend = new Resend(resendKey);
 
-interface PsychologistRegistration {
-  user_id: string;
-  full_name: string;
-  cpf?: string;
-  email: string;
-  crp_number: string;
-  specialization?: string;
-  bio?: string;
-  state?: string;
-  city?: string;
-  address?: string;
-  document_url?: string;
-  documents?: string[];
-}
 
 interface ApprovalRequest {
   psychologist_id: string;
@@ -37,6 +23,12 @@ interface ApprovalRequest {
 interface RejectionRequest extends ApprovalRequest {
   rejection_reason?: string;
 }
+
+// Nome e motivo vêm de texto livre (do psicólogo e do admin): escapar antes de pôr no HTML do e-mail.
+const escapeHtml = (value: unknown): string =>
+  String(value ?? '').replace(/[&<>"']/g, (c) => (
+    { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]!
+  ));
 
 const generateApprovalEmail = (name: string) => `
 <!DOCTYPE html>
@@ -49,7 +41,7 @@ const generateApprovalEmail = (name: string) => `
   <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
     <h1 style="color: #4CAF50;">Parabéns! Seu cadastro foi aprovado!</h1>
     
-    <p>Olá, ${name}!</p>
+    <p>Olá, ${escapeHtml(name)}!</p>
     
     <p>Temos o prazer de informar que seu cadastro como psicólogo na plataforma Soliv foi <strong>aprovado</strong>!</p>
     
@@ -80,11 +72,11 @@ const generateRejectionEmail = (name: string, reason?: string) => `
   <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
     <h1 style="color: #f44336;">Cadastro não aprovado</h1>
     
-    <p>Olá, ${name}!</p>
+    <p>Olá, ${escapeHtml(name)}!</p>
     
     <p>Infelizmente, seu cadastro como psicólogo na plataforma Soliv não foi aprovado neste momento.</p>
     
-    ${reason ? `<p><strong>Motivo:</strong> ${reason}</p>` : ''}
+    ${reason ? `<p><strong>Motivo:</strong> ${escapeHtml(reason)}</p>` : ''}
     
     <p>Você pode tentar se cadastrar novamente após verificar e corrigir as informações necessárias.</p>
     
@@ -107,7 +99,7 @@ const generatePendingEmail = (name: string) => `
   <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
     <h1 style="color: #2196F3;">Cadastro recebido com sucesso!</h1>
     
-    <p>Olá, ${name}!</p>
+    <p>Olá, ${escapeHtml(name)}!</p>
     
     <p>Recebemos seu cadastro como psicólogo na plataforma Soliv.</p>
     
@@ -158,95 +150,121 @@ const handler = async (req: Request): Promise<Response> => {
     const action = url.searchParams.get('action');
 
     // Registrar novo psicólogo
+    //
+    // Esta função grava com a service role, que pula o gatilho
+    // a_guard_psychologist_client_write. Antes o corpo da requisição ia
+    // inteiro para o insert: qualquer conta logada podia mandar
+    // `approved: true` / `approval_status: 'approved'` e virar psicólogo
+    // aprovado (com acesso à fila do SOS), ou cadastrar outro `user_id`, e o
+    // e-mail de confirmação ia para qualquer endereço, com HTML do atacante.
+    // Agora: só a própria conta, só os campos do formulário, sempre pendente.
     if (req.method === 'POST' && action === 'register') {
-      const registrationData: PsychologistRegistration = await req.json();
-      
-      validateInput(registrationData, ['user_id', 'full_name', 'email', 'crp_number']);
-      
-      // Verificar se usuário já está cadastrado
+      const body = (await req.json().catch(() => null)) as Record<string, unknown> | null;
+      if (!body || typeof body !== 'object') throw new Error('Corpo da requisição inválido');
+
+      if (body.user_id !== undefined && body.user_id !== user.id) {
+        throw new Error('Você só pode cadastrar a sua própria conta');
+      }
+      if (!user.email) throw new Error('Conta sem e-mail');
+
+      const text = (key: string, max: number, required = false): string | null => {
+        const value = body[key];
+        if (value === undefined || value === null || value === '') {
+          if (required) throw new Error(`Campo obrigatório ausente: ${key}`);
+          return null;
+        }
+        if (typeof value !== 'string' || value.trim().length === 0 || value.length > max) {
+          throw new Error(`Campo inválido: ${key}`);
+        }
+        return value.trim();
+      };
+
+      const documentUrl = text('document_url', 2048);
+      if (documentUrl && /^[a-z][a-z0-9+.-]*:/i.test(documentUrl) && !/^https:\/\//i.test(documentUrl)) {
+        throw new Error('Campo inválido: document_url');
+      }
+
+      const insertData = {
+        user_id: user.id,
+        email: user.email,
+        full_name: text('full_name', 200, true),
+        crp_number: text('crp_number', 30, true),
+        cpf: text('cpf', 20),
+        specialization: text('specialization', 200),
+        bio: text('bio', 5000),
+        state: text('state', 50),
+        city: text('city', 100),
+        address: text('address', 300),
+        document_url: documentUrl,
+        approved: false,
+        approval_status: 'pending',
+        is_blocked: false,
+        submitted_at: new Date().toISOString(),
+      };
+
       const { data: existingProfile } = await supabase
         .from('profiles')
         .select('user_type')
-        .eq('user_id', registrationData.user_id)
-        .single();
-      
+        .eq('user_id', user.id)
+        .maybeSingle();
+
       if (existingProfile?.user_type === 'patient') {
         throw new Error('Usuários já cadastrados como pacientes não podem se registrar como psicólogos');
       }
-      
-      // Verificar duplicidade de CRP
-      const { data: existingCrp } = await supabase
+
+      const { data: existingOwn } = await supabase
         .from('psychologists')
         .select('id')
-        .eq('crp_number', registrationData.crp_number)
-        .single();
-      
-      if (existingCrp) {
-        throw new Error('CRP já cadastrado no sistema');
-      }
-      
-      // Verificar duplicidade de email
-      const { data: existingEmail } = await supabase
-        .from('psychologists')
-        .select('id')
-        .eq('email', registrationData.email)
-        .single();
-      
-      if (existingEmail) {
-        throw new Error('Email já cadastrado no sistema');
+        .eq('user_id', user.id)
+        .maybeSingle();
+      if (existingOwn) {
+        throw new Error('Esta conta já tem um cadastro de psicólogo');
       }
 
-      // Verificar duplicidade de CPF se fornecido
-      if (registrationData.cpf) {
-        const { data: existingCpf } = await supabase
-          .from('psychologists')
-          .select('id')
-          .eq('cpf', registrationData.cpf)
-          .single();
-        
-        if (existingCpf) {
-          throw new Error('CPF já cadastrado no sistema');
-        }
+      // Mensagem única para CRP/CPF repetidos: não revela qual dado já existe.
+      const duplicateChecks = [
+        supabase.from('psychologists').select('id').eq('crp_number', insertData.crp_number).limit(1),
+        supabase.from('psychologists').select('id').eq('email', insertData.email).limit(1),
+        ...(insertData.cpf ? [supabase.from('psychologists').select('id').eq('cpf', insertData.cpf).limit(1)] : []),
+      ];
+      const duplicates = await Promise.all(duplicateChecks);
+      if (duplicates.some((r) => (r.data ?? []).length > 0)) {
+        throw new Error('Já existe um cadastro com estes dados (CRP, CPF ou e-mail).');
       }
-      
-      // Inserir registro
-      const { professional_email, ...insertData } = registrationData as any;
+
       const { data, error } = await supabase
         .from('psychologists')
         .insert([insertData])
-        .select()
+        .select('id, full_name, approval_status')
         .single();
-      
+
       if (error) throw error;
 
-      // Criar entrada na tabela psychologist_registrations
       const { error: regError } = await supabase
         .from('psychologist_registrations')
         .insert({
-          user_id: registrationData.user_id,
+          user_id: user.id,
           status: 'pending',
           submitted_at: new Date().toISOString()
         });
 
       if (regError) {
         console.error('Erro ao criar registro de aprovação:', regError);
-        // Não vamos falhar a operação por isso, apenas logar
       }
-      
-      // Enviar email de confirmação
+
       await resend.emails.send({
         from: 'Soliv <onboarding@resend.dev>',
-        to: [registrationData.email],
+        to: [user.email],
         subject: 'Cadastro recebido - Soliv',
-        html: generatePendingEmail(registrationData.full_name),
+        html: generatePendingEmail(insertData.full_name ?? ''),
       });
-      
+
       console.log('Psicólogo registrado com sucesso:', data.id);
-      
-      return new Response(JSON.stringify({ 
-        success: true, 
+
+      return new Response(JSON.stringify({
+        success: true,
         data: data,
-        message: 'Cadastro realizado com sucesso! Você receberá um email com atualizações.' 
+        message: 'Cadastro realizado com sucesso! Você receberá um email com atualizações.'
       }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 201,

@@ -56,7 +56,7 @@
     "firebase": "^12.18.0",
     "framer-motion": "^12.23.22",
     "input-otp": "^1.2.4",
-    "jspdf": "^3.0.3",
+    "jspdf": "^4.2.1",
     "lottie-react": "^2.4.1",
     "lucide-react": "^0.462.0",
     "next-themes": "^0.3.0",

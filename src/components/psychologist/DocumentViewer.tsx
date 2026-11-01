@@ -5,6 +5,7 @@ import { toast } from 'sonner';
 import { useSignedDocumentUrl } from '@/hooks/useSignedDocumentUrl';
 import { useState, useEffect } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
+import { openSafeUrl } from '@/lib/safeUrl';
 
 interface DocumentViewerProps {
   documentPath?: string;
@@ -52,12 +53,7 @@ export const DocumentViewer = ({ documentPath, bucket, fallbackUrl }: DocumentVi
   };
 
   const openInNewTab = () => {
-    if (!signedUrl) return;
-    
-    const newWindow = window.open('', '_blank', 'noopener,noreferrer');
-    if (newWindow) {
-      newWindow.location.href = signedUrl;
-    }
+    openSafeUrl(signedUrl);
   };
 
   if (!documentPath && !fallbackUrl) {

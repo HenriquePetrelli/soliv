@@ -1,7 +1,7 @@
 # 20. Segurança: proteções que valem para o app inteiro
 
 > **Status:** Pronto, com pendência externa (ajustes de senha no painel do Supabase e senha do admin).
-> **Última verificação:** 2026-10-30 (verificação em duas etapas obrigatória para o admin). Antes: 2026-10-27 (varredura: RLS em todas as tabelas, funções abertas a visitantes conferem o acesso, todas as edge functions exigem login, segredo ou assinatura; corrigidos documento do psicólogo aprovado, `cleanup-user` e presença na chamada).
+> **Última verificação:** 2026-11-01 (varredura: cadastro de psicólogo pela edge function não aceita mais `approved`/outro `user_id`; link `javascript:` no documento do psicólogo bloqueado no banco e no painel do admin; `subscribers` não é mais lido por e-mail reaproveitado; jsPDF 4.2.1 e dependências atualizadas). Antes: 2026-10-30 (verificação em duas etapas obrigatória para o admin). Antes: 2026-10-27 (varredura: RLS em todas as tabelas, funções abertas a visitantes conferem o acesso, todas as edge functions exigem login, segredo ou assinatura; corrigidos documento do psicólogo aprovado, `cleanup-user` e presença na chamada).
 > **Quem usa:** todos (proteção invisível).
 
 ## Princípio
@@ -48,6 +48,9 @@
 | Trocar o documento do CRP depois de aprovado | `guard_psychologist_client_write` trava `document_url` e `documents` após a aprovação; no armazenamento, o dono só sobrescreve ou apaga os próprios arquivos antes da aprovação (`my_psychologist_documents_locked`) | Psicólogo aprovado → update em `document_url` pela API → valor não muda |
 | Apagar a conta pulando a exclusão normal | `cleanup-user` (desfaz cadastro que falhou) só vale para conta criada há menos de 24 h, sem aprovação, sem consultas e que não é admin | Conta antiga chama `cleanup-user` → 403 "use Perfil > Excluir conta" |
 | Senha do admin descoberta ou vazada | Verificação em duas etapas obrigatória: `is_super_admin()` só vale com o token `aal2` (depois do código do app autenticador), e as edge functions de admin conferem o mesmo (`_shared/adminMfa.ts`) | Admin entra só com a senha e chama `get_admin_metrics` pela API → "Access denied" |
+| Virar psicólogo aprovado pela edge function de cadastro | `psychologist-management?action=register` usa só o `user_id` e o e-mail do token, só os campos do formulário e grava sempre `pending` (a service role pula o gatilho do banco) | Chamar o register com `"approved": true` ou outro `user_id` → recusado ou fica pendente |
+| Script no link do documento (ataque ao admin) | Gatilho `validate_psychologist_document_links`: `document_url`/`documents` só `https://` ou caminho do armazenamento; no app, `src/lib/safeUrl.ts` só abre links http(s) | Update em `document_url` = `javascript:alert(1)` → "Link do documento inválido" |
+| Ver o plano de outra conta pelo e-mail reaproveitado | Política `select_own_subscription`: por e-mail só linha ainda sem dono | Conta nova com e-mail antigo de outra pessoa → 0 linhas da conta antiga |
 
 ## Conferência rápida no banco (tudo deve dar `true`)
 
