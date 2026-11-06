@@ -14,7 +14,7 @@ Pacientes, psicólogos, administradores.
 
 ## Dados sensíveis (art. 11)
 
-Quase tudo o que o paciente registra é **dado pessoal sensível referente à saúde**: sintomas, humor, diário, plano de segurança, depoimentos em grupos, histórico de SOS e consultas, avaliações de atendimento. Base legal proposta: **consentimento específico e destacado** (art. 11, I) para o uso do app, e **tutela da saúde, em procedimento realizado por profissionais de saúde** (art. 11, II, "f") para o atendimento psicológico (SOS e consultas). Obrigação legal (art. 11, II, "a") para a guarda dos registros de atendimento por 5 anos (Resolução CFP 01/2009). **Pendente no app:** o cadastro ainda não tem o passo de consentimento destacado nem a confirmação de maioridade (ver `LEIA-ME.md`).
+Quase tudo o que o paciente registra é **dado pessoal sensível referente à saúde**: sintomas, humor, diário, plano de segurança, depoimentos em grupos, histórico de SOS e consultas, avaliações de atendimento. Base legal proposta: **consentimento específico e destacado** (art. 11, I) para o uso do app, e **tutela da saúde, em procedimento realizado por profissionais de saúde** (art. 11, II, "f") para o atendimento psicológico (SOS e consultas). Obrigação legal (art. 11, II, "a") para a guarda dos registros de atendimento por 5 anos (Resolução CFP 01/2009). **Já no app (desde 28/09/2026):** o cadastro pede o consentimento destacado para dados de saúde e a confirmação de maioridade, e grava data e versão do aceite em `legal_acceptances` (ver `LEIA-ME.md`, seção 3).
 
 ## Inventário
 

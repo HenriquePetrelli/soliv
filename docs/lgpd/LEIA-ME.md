@@ -29,7 +29,7 @@ O encarregado pode ser um dos sócios. O importante é que o e-mail seja lido e 
 3. **Natureza da relação com os psicólogos:** o texto afasta bem o vínculo empregatício? Qual o tratamento fiscal dos repasses (nota fiscal, RPA, retenções)?
 4. **Responsabilidade da plataforma** pelo atendimento feito pelo psicólogo, e o limite de responsabilidade por falhas técnicas diante do Código de Defesa do Consumidor.
 5. **SOS sem garantia de tempo:** a redação protege a empresa sem ser abusiva para o consumidor?
-6. **Cancelamento imediato da assinatura:** hoje o app encerra o acesso na hora do cancelamento. Seria melhor manter o acesso até o fim do mês já pago?
+6. **Cancelamento da assinatura:** o plano continua até o fim do período já pago e não renova; só o cancelamento em até 7 dias (arrependimento) encerra o acesso na hora, com reembolso integral. A redação dos termos (item 5) está adequada?
 7. **Transferência internacional:** quais garantias citar para Supabase, Stripe, Resend, Google e Twilio?
 8. **Guarda do chat:** as mensagens entre paciente e psicólogo são apagadas após 3 meses. Elas fazem parte do registro do atendimento e deveriam seguir o prazo de 5 anos?
 9. **e-Psi e Resolução CFP 11/2018:** exigências de cadastro para atendimento on-line.
@@ -37,6 +37,7 @@ O encarregado pode ser um dos sócios. O importante é que o e-mail seja lido e 
 11. **Arrependimento depois de usar o serviço:** hoje o reembolso de 7 dias é integral e automático, mesmo que a pessoa já tenha feito o SOS ou a consulta do mês (que geram repasse ao psicólogo). É possível descontar o que já foi usado?
 12. **Prova do aceite após a exclusão da conta:** o histórico de aceites (data e versão) é apagado junto com a conta. Convém guardá-lo pelo mesmo prazo dos registros de atendimento?
 13. **B2B (empresas):** o contrato com a empresa precisa de cláusulas próprias (a empresa como cliente, sem acesso a dados individuais; LGPD na relação empresa–Soliv–colaborador; desligamento do colaborador). O RH vê só totais com 5 ou mais pessoas: isso basta como anonimização?
+14. **SOS on-line e urgência/emergência:** a Resolução CFP 11/2018 tratava o atendimento de pessoas em urgência e emergência por meios on-line como inadequado. Qual norma vale hoje (Resolução CFP 09/2024?) e o que ela permite para o SOS por vídeo e por mensagem, incluindo a triagem de risco de suicídio? As citações dos termos devem ser atualizadas?
 
 ## 3. Regras que o app já cumpre
 
