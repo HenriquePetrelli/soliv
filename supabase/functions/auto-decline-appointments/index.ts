@@ -69,7 +69,7 @@ serve(async (req) => {
       }
 
       // These requests expired unanswered — nobody ever confirmed them, so
-      // the patient's monthly Premium appointment slot (marked used at
+      // the patient's monthly appointment slot (Flex or Completo) (marked used at
       // booking time) must come back, same as an explicit decline.
       // Devolve a cota de cada pedido vencido (só se a cota marcada for a dele).
       const declinedIds = new Set((updatedAppointments ?? []).map((a: { id: string }) => a.id));

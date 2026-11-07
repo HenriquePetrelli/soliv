@@ -192,7 +192,7 @@ export const PaymentsPanel = () => {
         <CardHeader className="p-4 sm:p-6">
           <CardTitle>Lista de Pagamentos</CardTitle>
           <CardDescription className="text-xs sm:text-sm">
-            Consultas agendadas = R$ 90,00 | Emergências = R$ 50,00
+            Consultas agendadas = R$ 85,00 | Emergências = R$ 40,00
           </CardDescription>
         </CardHeader>
         <CardContent className="p-4 pt-0 sm:p-6 sm:pt-0">

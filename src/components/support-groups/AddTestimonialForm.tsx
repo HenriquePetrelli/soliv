@@ -13,6 +13,7 @@ import { usePatientStatistics } from '@/hooks/usePatientStatistics';
 import { Loader2 } from 'lucide-react';
 import { JOURNAL_MOODS, DEFAULT_JOURNAL_MOOD } from '@/components/journal/journalMoods';
 import { cn } from '@/lib/utils';
+import { hasPaidPlan } from '@/lib/plans';
 
 interface AddTestimonialFormProps {
   groupId: string;
@@ -47,7 +48,7 @@ const AddTestimonialForm = ({ groupId, groupName, onSuccess, onCancel }: AddTest
     }
 
     // Check subscription (additional frontend check)
-    if (!subscribed || (subscriptionTier !== 'Plus' && subscriptionTier !== 'Premium')) {
+    if (!hasPaidPlan(subscribed, subscriptionTier)) {
       return; // This should not happen as the modal should be blocked already
     }
 

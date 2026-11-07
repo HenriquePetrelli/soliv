@@ -72,7 +72,7 @@ const EmergencyCall = () => {
   }, [sessionIdParam, searchParams, requestIdFromUrl]);
 
   // Session length comes from the request itself (filled server-side from
-  // the patient's plan: Plus 25 min, Premium 50 min). Resolved before the
+  // the SOS: 25 min in every plan). Resolved before the
   // room mounts: the shared timer persists its first value right away, so
   // starting on a placeholder limit would stick for the whole call.
   const [timeLimit, setTimeLimit] = useState<number | null>(null);

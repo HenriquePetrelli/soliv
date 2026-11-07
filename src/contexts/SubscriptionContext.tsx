@@ -3,10 +3,13 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { withExpiredCancellation } from '@/lib/subscriptionStatus';
+import { hasPaidPlan as tierIsPaid, parsePlanTier, type PlanTier } from '@/lib/plans';
 
 interface SubscriptionContextType {
   subscribed: boolean;
-  subscriptionTier: string | null;
+  subscriptionTier: PlanTier | null;
+  /** Essencial, Flex ou Completo ativo (o Plano Grátis tem recursos só de leitura). */
+  hasPaidPlan: boolean;
   subscriptionEnd: string | null;
   planLimits: { appointments: number; sos_uses: number };
   currentUsage: { appointments: number; sos_uses: number };
@@ -41,6 +44,13 @@ export const useSubscription = () => {
   return context;
 };
 
+/**
+ * O mesmo, mas sem exigir o provider (telas reaproveitadas fora dele, como
+ * nos testes). Sem provider não há plano conhecido: quem usa trata como
+ * "não sei" e deixa o banco conferir.
+ */
+export const useOptionalSubscription = () => useContext(SubscriptionContext);
+
 const CACHE_PREFIX = 'soliv:subscription:';
 
 const readCachedSubscription = (userId: string): unknown | null => {
@@ -62,7 +72,7 @@ const writeCachedSubscription = (userId: string, data: unknown) => {
 
 export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [subscribed, setSubscribed] = useState(false);
-  const [subscriptionTier, setSubscriptionTier] = useState<string | null>(null);
+  const [subscriptionTier, setSubscriptionTier] = useState<PlanTier | null>(null);
   const [subscriptionEnd, setSubscriptionEnd] = useState<string | null>(null);
   const [planLimits, setPlanLimits] = useState({ appointments: 0, sos_uses: 0 });
   const [currentUsage, setCurrentUsage] = useState({ appointments: 0, sos_uses: 0 });
@@ -92,7 +102,8 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
     // esperar o Stripe e o banco encerrarem (alguns minutos depois).
     const data = withExpiredCancellation(raw ?? {});
     setSubscribed(data.subscribed || false);
-    setSubscriptionTier(data.subscription_tier);
+    // Normaliza nomes antigos (Plus/Premium) que podem vir do cache da sessão.
+    setSubscriptionTier(parsePlanTier(data.subscription_tier));
     setSubscriptionEnd(data.subscription_end);
     setPlanLimits(data.plan_limits || { appointments: 0, sos_uses: 0 });
     setCurrentUsage(data.current_usage || { appointments: 0, sos_uses: 0 });
@@ -100,9 +111,9 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
     setAppointmentReason(data.appointment_reason ?? null);
     setEntitlementSource(data.entitlement_source ?? null);
     setOrganizationName(data.organization_name ?? null);
-    setPersonalSubscriptionTier(data.personal_subscription_tier ?? null);
+    setPersonalSubscriptionTier(parsePlanTier(data.personal_subscription_tier));
     setCancelAtPeriodEnd(data.cancel_at_period_end ?? false);
-    setPendingTier(data.pending_tier ?? null);
+    setPendingTier(parsePlanTier(data.pending_tier));
     setPendingFrom(data.pending_from ?? null);
     setPaymentIssue(data.payment_issue ?? false);
     setExtraSubscriptions(data.extra_subscriptions ?? 0);
@@ -205,6 +216,7 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
       value={{
         subscribed,
         subscriptionTier,
+        hasPaidPlan: tierIsPaid(subscribed, subscriptionTier),
         subscriptionEnd,
         planLimits,
         currentUsage,

@@ -37,11 +37,16 @@ Os recursos de autocuidado e os grupos de apoio **não são atendimento psicoló
 
 | Plano | Preço | Inclui |
 |---|---|---|
-| **Plus** | R$ 69,90 por mês | 1 atendimento SOS por mês, de até 25 minutos |
-| **Premium** | R$ 120,00 por mês | 1 atendimento SOS por mês, de até 25 minutos, e 1 consulta agendada por mês, de 50 minutos |
+| **Grátis** | R$ 0,00 | Respiração guiada e sons terapêuticos; grupos de apoio, diário e chat só para leitura; até 3 hábitos e 1 plano de segurança. Sem atendimento com psicólogo |
+| **Essencial** | R$ 69,90 por mês | 1 atendimento SOS por mês, de até 25 minutos |
+| **Flex** | R$ 120,00 por mês | 1 atendimento por mês, à sua escolha: SOS, de até 25 minutos, **ou** consulta agendada, de 50 minutos |
+| **Completo** | R$ 159,90 por mês | 1 atendimento SOS por mês, de até 25 minutos, **e** 1 consulta agendada por mês, de 50 minutos |
+
+Os planos pagos incluem também, sem limite: respiração guiada, sons terapêuticos, grupos de apoio (ler e publicar), diário, hábitos (até 10), planos de segurança (até 10) e chat com o psicólogo.
 
 - A cobrança é mensal, feita no cartão de crédito por meio da Stripe, e **renova automaticamente** até você cancelar. O recibo de cada cobrança vai para o seu e-mail, e as faturas ficam em **Planos → Gerenciar pagamento**.
-- **Troca de plano:** ao passar do Plus para o Premium, o Premium vale na hora e cobramos só a diferença proporcional até a sua próxima renovação. Ao passar do Premium para o Plus, você continua no Premium até o fim do período já pago, e o Plus vale a partir da renovação.
+- **Troca de plano:** ao passar para um plano maior (por exemplo, do Essencial para o Flex ou o Completo), o novo plano vale na hora e cobramos só a diferença proporcional até a sua próxima renovação. Ao passar para um plano menor, você continua no plano atual até o fim do período já pago, e o novo plano vale a partir da renovação.
+- **Flex:** o atendimento do mês é um só. Se você usar o SOS, a consulta agendada daquele mês fica indisponível, e vice-versa. Uma consulta recusada, cancelada com antecedência ou não realizada devolve o atendimento do mês.
 - **Pagamento recusado:** se a renovação não for aprovada, avisamos no app e tentamos cobrar de novo nos dias seguintes; o plano continua enquanto isso. Se nenhuma tentativa der certo, a assinatura é encerrada.
 - A cota do mês **não é cumulativa**: o que não for usado no mês não passa para o seguinte.
 - A cota de SOS só é consumida **quando o atendimento começa**. Um pedido que nenhum psicólogo aceita não conta.
@@ -66,7 +71,7 @@ Se a sua empresa oferece o Soliv, você pode usar o código de convite do RH (no
 
 ## 7. Consultas agendadas
 
-- Disponíveis no plano Premium: 1 consulta de 50 minutos por mês.
+- Disponíveis nos planos Flex e Completo: 1 consulta de 50 minutos por mês (no Flex, no lugar do SOS do mês).
 - O psicólogo tem **24 horas** para aceitar, recusar ou propor outro horário. Se a consulta for recusada ou não tiver resposta, a cota do mês é devolvida.
 - A sala de vídeo abre 10 minutos antes do horário e fica disponível até 15 minutos depois do fim previsto.
 - **Falhas técnicas:** se um atendimento (SOS ou consulta) for interrompido por falha técnica, o caso é avaliado pelo suporte, que pode devolver a cota do mês. Para isso, escreva para **[E-MAIL DE SUPORTE]** em até **7 dias** depois do atendimento. ⚖️

@@ -3,7 +3,7 @@
 Formato: **quem → onde → o que fazer** ⇒ resultado esperado. Marque `[x]` quando passar.
 Se falhar, a ficha indicada em cada seção (`docs/fluxos/`) diz o que olhar.
 
-**Contas necessárias:** Paciente A (Premium), Paciente B (Plus), Paciente C (sem plano), Psicólogo aprovado, Admin.
+**Contas necessárias:** Paciente A (Completo), Paciente B (Essencial), Paciente C (sem plano), Psicólogo aprovado, Admin.
 **Aparelhos:** dois (ou dois navegadores, um em janela anônima). Um celular para push.
 
 O mesmo roteiro está no checklist interativo (mesmos itens e códigos `sNN-MM`). Os testes **sem internet** e de **push** ficam juntos nas seções 20 e 21, para fazer de uma vez: desligar a rede uma vez só, e testar o push com o app fechado e a tela bloqueada.
@@ -143,7 +143,7 @@ O mesmo roteiro está no checklist interativo (mesmos itens e códigos `sNN-MM`)
 - [ ] `s03-28` Paciente A → Consultas → Agendar → lista de psicólogos ⇒ mostra consultas, SOS atendidos e a nota real (ou "Sem avaliações ainda"); não mostra cidade nem estado
 - [ ] `s03-05` Paciente A → Consultas → Agendar (toque duplo rápido) ⇒ só uma consulta criada
 - [ ] `s03-06` Paciente A → Consultas → Agendar outra no mês ⇒ aviso de cota usada
-- [ ] `s03-07` Paciente B (Plus) → Consultas → Agendar ⇒ "disponível apenas no Premium"
+- [ ] `s03-07` Paciente B (Essencial) → Consultas → Agendar ⇒ "disponível nos planos Flex e Completo"
 - [ ] `s03-08` Psicólogo → Consultas → Próximas → pedido → Aceitar ⇒ paciente recebe "Consulta confirmada"
 - [ ] `s03-09` Psicólogo → Consultas → pedido → Propor outro horário → Paciente aceita ⇒ horário muda nos dois
 - [ ] `s03-10` Psicólogo → Consultas → pedido → Recusar ⇒ consulta do mês volta para o paciente
@@ -167,7 +167,7 @@ O mesmo roteiro está no checklist interativo (mesmos itens e códigos `sNN-MM`)
 - [ ] `s03-31` Psicólogo → Chat ⇒ abre com a navegação do psicólogo (sem a barra e o SOS do paciente)
 - [ ] `s03-63` Psicólogo → Histórico → consulta concluída → escrever resumo e anotação privada → Salvar ⇒ O paciente vê o resumo no histórico dele, mas não a anotação
 - [ ] `s03-64` Psicólogo → consulta seguinte com o mesmo paciente → Contexto do paciente ⇒ Mostra o resumo e a anotação privada ("só você vê") das sessões anteriores
-- [ ] `s03-65` Paciente Premium com cancelamento agendado → agendar consulta depois do fim do plano ⇒ "Seu plano termina em DD/MM. Agende até essa data ou renove o plano."
+- [ ] `s03-65` Paciente Completo com cancelamento agendado → agendar consulta depois do fim do plano ⇒ "Seu plano termina em DD/MM. Agende até essa data ou renove o plano."
 
 ## 4. Chat (ficha 06)
 
@@ -206,10 +206,10 @@ O mesmo roteiro está no checklist interativo (mesmos itens e códigos `sNN-MM`)
 ## 6. Assinaturas (ficha 08)
 
 
-- [ ] `s06-01` Paciente C → Planos → Plus → pagar ⇒ tela de sucesso; Perfil mostra Plus
-- [ ] `s06-02` Paciente → Planos → subir para Premium ⇒ prévia do valor proporcional → Premium na hora
-- [ ] `s06-03` Paciente → Planos → descer para Plus ⇒ "vale na renovação"
-- [ ] `s06-04` Paciente → Planos → Cancelar (após 7 dias) ⇒ Perfil e Planos mostram "Plano cancelado - Plus disponível até dd/mm/aaaa" → "Manter" desfaz
+- [ ] `s06-01` Paciente C → Planos → Essencial → pagar ⇒ tela de sucesso; Perfil mostra Essencial
+- [ ] `s06-02` Paciente → Planos → subir para Completo ⇒ prévia do valor proporcional → Completo na hora
+- [ ] `s06-03` Paciente → Planos → descer para Essencial ⇒ "vale na renovação"
+- [ ] `s06-04` Paciente → Planos → Cancelar (após 7 dias) ⇒ Perfil e Planos mostram "Plano cancelado - Essencial disponível até dd/mm/aaaa" → "Manter" desfaz
 - [ ] `s06-05` Plano cancelado → passar a data de fim (relógio de teste do Stripe) ⇒ Perfil mostra "Plano Grátis"; SOS pede plano
 - [ ] `s06-06` Paciente → Planos → Cancelar (até 7 dias) ⇒ acaba na hora, reembolso no Stripe
 - [ ] `s06-07` Cartão `4000 0000 0000 0341` na renovação ⇒ aviso para atualizar o cartão
@@ -217,11 +217,11 @@ O mesmo roteiro está no checklist interativo (mesmos itens e códigos `sNN-MM`)
 - [ ] `s06-09` Paciente → Planos → Gerenciar pagamento ⇒ abre o portal do Stripe
 - [ ] `s06-11` Paciente → Planos → Assinar (toque duplo rápido) ⇒ um checkout só; no Stripe, uma assinatura
 - [ ] `s06-10` Psicólogo e admin → entrar ⇒ nenhum aviso de assinatura
-- [ ] `s06-19` Paciente Premium com consulta marcada → cancelar em até 7 dias ⇒ aviso de que a consulta também será cancelada; depois do cancelamento, o psicólogo recebe "Consulta cancelada"
+- [ ] `s06-19` Paciente Completo com consulta marcada → cancelar em até 7 dias ⇒ aviso de que a consulta também será cancelada; depois do cancelamento, o psicólogo recebe "Consulta cancelada"
 - [ ] `s06-13` Plano termina (fim do período, arrependimento ou saída da empresa) ⇒ aviso "Seu plano terminou" com link para os planos
-- [ ] `s06-14` Paciente com Premium da empresa → tentar assinar Plus ou Premium pela API ⇒ "Seu plano já vem da empresa"; nenhum checkout
+- [ ] `s06-14` Paciente com Completo da empresa → tentar assinar Essencial, Flex ou Completo pela API ⇒ "Seu plano já vem da empresa"; nenhum checkout
 - [ ] `s06-15` Conta A troca de e-mail → conta B se cadastra com o e-mail antigo → B abre o app ⇒ A continua com o plano e o cliente do Stripe dela; B ganha linha própria, sem plano
-- [ ] `s06-16` Premium com consulta marcada depois do fim do período → Cancelar assinatura ⇒ A tela avisa que a consulta será cancelada quando o plano terminar
+- [ ] `s06-16` Completo com consulta marcada depois do fim do período → Cancelar assinatura ⇒ A tela avisa que a consulta será cancelada quando o plano terminar
 - [ ] `s06-17` Mesmo caso, 3 dias antes do fim ⇒ Aviso "Consulta depois do fim do plano" (uma vez)
 - [ ] `s06-18` Mesmo caso, quando o plano termina ⇒ Consulta cancelada; paciente recebe "Consultas canceladas" e o psicólogo "o plano do paciente terminou"
 - [ ] `s06-12` Conta A com assinatura troca de e-mail → conta B se cadastra com o e-mail antigo ⇒ B fica sem plano (não herda o de A)
@@ -229,7 +229,7 @@ O mesmo roteiro está no checklist interativo (mesmos itens e códigos `sNN-MM`)
 ## 7. Repasses (ficha 09)
 
 
-- [ ] `s07-01` Admin → Financeiro → Repasses → Sincronizar ⇒ psicólogo com consulta (R$ 90) + SOS (R$ 50)
+- [ ] `s07-01` Admin → Financeiro → Repasses → Sincronizar ⇒ psicólogo com consulta (R$ 85) + SOS (R$ 40)
 - [ ] `s07-02` Admin → Repasses → Sincronizar de novo ⇒ valor não duplica
 - [ ] `s07-03` Admin → Repasses → Confirmar → E2E de 32 caracteres + comprovante ⇒ pendente zera
 - [ ] `s07-04` Admin → Repasses → Confirmar com o mesmo E2E ⇒ recusado
@@ -240,25 +240,25 @@ O mesmo roteiro está no checklist interativo (mesmos itens e códigos `sNN-MM`)
 - [ ] `s07-09` Consulta já paga → Consulta interrompida ⇒ recusado: "já foi paga no repasse, fale com o suporte"
 - [ ] `s07-10` Admin confirma com valor desatualizado (outra aba sincronizou antes) ⇒ "O valor pendente mudou"; nada é pago
 - [ ] `s07-11` Admin → Confirmar → conferir no banco ⇒ itens do psicólogo com paid_at e o registro com o E2E
-- [ ] `s07-12` SOS concluído com menos de 5 min de chamada (os dois conectados) → Sincronizar ⇒ Não entra no repasse; com 5 min ou mais, entra (R$ 50)
+- [ ] `s07-12` SOS concluído com menos de 5 min de chamada (os dois conectados) → Sincronizar ⇒ Não entra no repasse; com 5 min ou mais, entra (R$ 40)
 - [ ] `s07-13` Admin → excluir psicólogo com repasses ⇒ Some do painel; archived_psychologist_payouts tem uma linha com nome, CPF e os pagamentos
 - [ ] `s07-14` Admin → excluir psicólogo com consulta passada e consulta futura de um paciente ⇒ O paciente continua vendo a passada no histórico (com nome e resumo); a futura aparece cancelada, ele recebe "o psicólogo não atende mais pelo Soliv" e a consulta do mês volta
 
 ## 8. Empresas / B2B (ficha 10)
 
 
-- [ ] `s08-01` Admin → Empresas → criar "Teste" (Premium, 2 vagas, domínio `empresa.com`) ⇒ gera código
-- [ ] `s08-02` Visitante → Cadastro com código + `ana@empresa.com` ⇒ entra Premium
+- [ ] `s08-01` Admin → Empresas → criar "Teste" (Completo, 2 vagas, domínio `empresa.com`) ⇒ gera código
+- [ ] `s08-02` Visitante → Cadastro com código + `ana@empresa.com` ⇒ entra Completo
 - [ ] `s08-03` Visitante → Cadastro com código + `joao@gmail.com` ⇒ recusa pelo domínio
 - [ ] `s08-04` Terceira pessoa com o código (2 vagas ocupadas) ⇒ "As vagas acabaram"
 - [ ] `s08-05` RH → Portal da empresa → desligar colaborador ⇒ vaga volta; plano vale até o fim do mês
 - [ ] `s08-10` Colaborador desligado pelo RH → usar o mesmo código de novo ⇒ "Seu acesso ao benefício desta empresa foi encerrado pelo RH"
 - [ ] `s08-11` Colaborador → Sair do benefício → usar o código de novo ⇒ volta a ter o plano
-- [ ] `s08-12` Com "Confirmar e-mail" ligado → cadastro com e-mail @empresa e o código ⇒ a vaga só é ocupada depois de confirmar o e-mail; ao confirmar, entra Premium sozinho
+- [ ] `s08-12` Com "Confirmar e-mail" ligado → cadastro com e-mail @empresa e o código ⇒ a vaga só é ocupada depois de confirmar o e-mail; ao confirmar, entra Completo sozinho
 - [ ] `s08-13` Paciente com e-mail não confirmado → Benefício da empresa → código de empresa com domínio ⇒ "Confirme o seu e-mail para usar o benefício da empresa"
 - [ ] `s08-06` Admin → Empresas → pausar contrato ⇒ colaboradores perdem o plano
 - [ ] `s08-07` 21 códigos errados seguidos ⇒ "Muitas tentativas de código"
-- [ ] `s08-08` Paciente já cadastrado → Perfil → Benefício da empresa → digitar código ⇒ vira Premium
+- [ ] `s08-08` Paciente já cadastrado → Perfil → Benefício da empresa → digitar código ⇒ vira Completo
 - [ ] `s08-09` Paciente → Benefício da empresa → Sair do benefício ⇒ perde o plano da empresa na hora e libera a vaga
 
 ## 9. Meus hábitos (ficha 11)
@@ -355,7 +355,7 @@ O mesmo roteiro está no checklist interativo (mesmos itens e códigos `sNN-MM`)
 - [ ] `s14-06` Paciente A → 6 depoimentos seguidos ⇒ o 6º é recusado
 - [ ] `s14-07` Paciente → Grupos → favoritar ⇒ grupo vai para o topo
 - [ ] `s14-08` Paciente B → tocar "Me ajudou" várias vezes bem rápido ⇒ sem erro e sem aviso a cada toque; ao recarregar, o contador bate com o botão
-- [ ] `s14-09` Paciente sem Plus/Premium → escrever ou reagir ⇒ bloqueado (também no servidor)
+- [ ] `s14-09` Paciente sem Essencial/Flex/Completo → escrever ou reagir ⇒ bloqueado (também no servidor)
 - [ ] `s14-10` Paciente A → escrever "penso em me matar" ⇒ quadro com "Ligar 188" e "Abrir o SOS"; publicar continua possível
 - [ ] `s14-12` 3 pacientes → denunciar o mesmo depoimento ⇒ some para os outros; autor vê "Em análise"; admin descarta e volta
 

@@ -6,7 +6,7 @@
 
 ## Resumo
 
-A empresa contrata vagas de um plano (Plus ou Premium). O colaborador entra com o **código de convite** e recebe o plano sem pagar. O RH acompanha vagas e uso agregado, sem ver quem usa o quê. A cobrança da empresa é feita fora do app (proposta e nota fiscal).
+A empresa contrata vagas de um plano (Essencial, Flex ou Completo). O colaborador entra com o **código de convite** e recebe o plano sem pagar. O RH acompanha vagas e uso agregado, sem ver quem usa o quê. A cobrança da empresa é feita fora do app (proposta e nota fiscal).
 
 ## Telas
 
@@ -48,8 +48,8 @@ A empresa contrata vagas de um plano (Plus ou Premium). O colaborador entra com 
 ## Como validar
 
 ### Teste manual
-1. Admin cria a empresa "Teste" (Premium, 2 vagas, domínio `empresa.com`).
-2. Cadastrar paciente `ana@empresa.com` com o código → entra Premium (Perfil → Benefício da empresa).
+1. Admin cria a empresa "Teste" (Completo, 2 vagas, domínio `empresa.com`).
+2. Cadastrar paciente `ana@empresa.com` com o código → entra Completo (Perfil → Benefício da empresa).
 3. Paciente `joao@gmail.com` com o código → recusa ("vale só para e-mails @empresa.com").
 4. Ocupar as 2 vagas e tentar a 3ª → "As vagas acabaram".
 5. Portal do RH → desligar `ana@empresa.com` → a vaga volta; Ana mantém o plano até o fim do mês.

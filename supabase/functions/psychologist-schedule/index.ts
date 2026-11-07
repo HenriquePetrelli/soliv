@@ -614,7 +614,7 @@ serve(async (req) => {
       throw new HttpError('Esta consulta mudou enquanto você respondia (por exemplo, foi cancelada). Atualize a tela.', 409);
     }
 
-    // The appointment never happened — give the patient's monthly Premium
+    // The appointment never happened — give the patient's monthly (Flex/Completo)
     // appointment slot back. It was marked used at booking time (in the
     // `appointments` function), before anyone confirmed the request; a
     // decline (by either side, direct or after a reschedule proposal)

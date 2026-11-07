@@ -1,6 +1,6 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import type Stripe from "https://esm.sh/stripe@14.21.0";
-import { changeDirection, tierForPrice, type Tier } from "../_shared/billing.ts";
+import { changeDirection, parseTier, tierForPrice } from "../_shared/billing.ts";
 import { PLAN_PRICES, findCustomerId, liveSubscriptions, newStripe, releaseSchedule } from "../_shared/stripe.ts";
 
 // Mudanças na assinatura própria, sem passar por um novo checkout:
@@ -23,9 +23,6 @@ const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), { headers: { ...corsHeaders, "Content-Type": "application/json" }, status });
 
 const iso = (seconds: number) => new Date(seconds * 1000).toISOString();
-
-const parsePlan = (value: unknown): Tier | null =>
-  String(value ?? "").toLowerCase() === "premium" ? "Premium" : String(value ?? "").toLowerCase() === "plus" ? "Plus" : null;
 
 /** Quanto será cobrado agora ao subir de plano (só as linhas proporcionais). */
 const upgradeAmount = async (stripe: Stripe, subscription: Stripe.Subscription, price: string, prorationDate: number) => {
@@ -86,8 +83,9 @@ Deno.serve(async (req) => {
 
     if (action !== "preview_change" && action !== "change_plan") return json({ error: "Ação inválida" }, 400);
 
-    const target = parsePlan(body?.plan);
+    const target = parseTier(body?.plan);
     if (!target) return json({ error: "Plano inválido" }, 400);
+    if (!PLAN_PRICES[target]) return json({ error: `Preço do plano ${target} não configurado no Stripe` }, 500);
     if (subscription.status === "past_due") return json({ error_code: "payment_issue" });
 
     const direction = changeDirection(currentTier, target);
@@ -97,7 +95,7 @@ Deno.serve(async (req) => {
     if (direction === "upgrade") {
       // A data da prévia volta do app para cobrar o mesmo valor mostrado. Só
       // vale se for dos últimos minutos: uma data no fim do período deixaria a
-      // diferença quase zero (Premium quase de graça até a renovação).
+      // diferença quase zero (Completo quase de graça até a renovação).
       const nowSeconds = Math.floor(Date.now() / 1000);
       const sent = Number(body?.proration_date);
       const prorationDate =

@@ -2,7 +2,7 @@
 //
 // Cancelar fora do prazo de arrependimento mantém o plano até o fim do período
 // já pago (`subscriptionEnd`) e ele não renova. Nesse intervalo o app mostra
-// "Plano cancelado - Plus disponível até 15/04/2026"; depois, o plano grátis.
+// "Plano cancelado - Essencial disponível até 15/04/2026"; depois, o plano grátis.
 
 /** Data no formato do Brasil (dd/mm/aaaa), no horário de Brasília. */
 export const formatBrazilDate = (iso: string): string =>
@@ -15,7 +15,7 @@ export const cancelledPlanExpired = (
   now: Date = new Date(),
 ): boolean => cancelAtPeriodEnd && !!subscriptionEnd && new Date(subscriptionEnd).getTime() <= now.getTime();
 
-/** "Plano cancelado - Plus disponível até 15/04/2026", ou null se não se aplica. */
+/** "Plano cancelado - Essencial disponível até 15/04/2026", ou null se não se aplica. */
 export const cancelledPlanLabel = (
   tier: string | null,
   cancelAtPeriodEnd: boolean,

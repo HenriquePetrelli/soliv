@@ -16,6 +16,14 @@ const describe = (denial: SosDenial) => {
   if (denial.code === 'PATIENT_BLOCKED') {
     return { title: 'O SOS está indisponível na sua conta', text: denial.message, kind: 'blocked' as const };
   }
+  // Flex: o atendimento do mês (SOS ou consulta) já foi usado numa consulta.
+  if (/atendimento do mês já usado/i.test(denial.message)) {
+    return {
+      title: 'Você já usou o atendimento deste mês',
+      text: 'No plano Flex, o atendimento do mês vale para SOS ou consulta, e você já marcou uma consulta. Ele volta no dia 1º do próximo mês. Enquanto isso, estas ajudas estão disponíveis agora mesmo.',
+      kind: 'shared' as const,
+    };
+  }
   if (/limite mensal/i.test(denial.message)) {
     return {
       title: 'Você já usou o SOS deste mês',
@@ -24,7 +32,7 @@ const describe = (denial: SosDenial) => {
     };
   }
   return {
-    title: 'O SOS faz parte dos planos Plus e Premium',
+    title: 'O SOS faz parte dos planos Essencial, Flex e Completo',
     text: 'Com um plano, um psicólogo atende você por vídeo na hora. Agora mesmo, estas ajudas são gratuitas.',
     kind: 'plan' as const,
   };
@@ -79,7 +87,7 @@ const SosUnavailable = ({ denial, onBreathe, onSafetyPlan, onNavigate }: SosUnav
       <div className="space-y-2">
         <Option icon={Wind} title="Respirar agora" description="Um exercício curto para acalmar o corpo" onClick={onBreathe} />
         <Option icon={ShieldCheck} title="Meu plano de segurança" description="O que ajuda você e quem chamar" onClick={onSafetyPlan} />
-        {kind === 'quota' && denial.planType === 'Premium' && (
+        {kind === 'quota' && denial.planType === 'Completo' && (
           <Option
             icon={CalendarDays}
             title="Agendar uma consulta"
@@ -88,7 +96,10 @@ const SosUnavailable = ({ denial, onBreathe, onSafetyPlan, onNavigate }: SosUnav
           />
         )}
         {kind === 'plan' && (
-          <Option icon={Sparkles} title="Ver planos" description="Plus e Premium incluem o SOS" onClick={() => onNavigate('/subscription-plans')} />
+          <Option icon={Sparkles} title="Ver planos" description="Essencial, Flex e Completo incluem o SOS" onClick={() => onNavigate('/subscription-plans')} />
+        )}
+        {kind === 'shared' && (
+          <Option icon={Sparkles} title="Ver planos" description="O Completo inclui SOS e consulta todo mês" onClick={() => onNavigate('/subscription-plans')} />
         )}
       </div>
 

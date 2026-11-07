@@ -7,19 +7,19 @@ const BEFORE = new Date('2026-04-15T12:59:00.000Z');
 const AFTER = new Date('2026-04-15T13:00:01.000Z');
 
 describe('plano cancelado', () => {
-  it('mostra "Plano cancelado - Plus disponível até" com a data do fim do período pago', () => {
-    expect(cancelledPlanLabel('Plus', true, END, BEFORE)).toBe('Plano cancelado - Plus disponível até 15/04/2026');
-    expect(cancelledPlanLabel('Premium', true, END, BEFORE)).toBe('Plano cancelado - Premium disponível até 15/04/2026');
+  it('mostra "Plano cancelado - Essencial disponível até" com a data do fim do período pago', () => {
+    expect(cancelledPlanLabel('Essencial', true, END, BEFORE)).toBe('Plano cancelado - Essencial disponível até 15/04/2026');
+    expect(cancelledPlanLabel('Completo', true, END, BEFORE)).toBe('Plano cancelado - Completo disponível até 15/04/2026');
   });
 
   it('usa a data de Brasília, não a de UTC (fim às 01h UTC ainda é o dia anterior)', () => {
-    expect(cancelledPlanLabel('Plus', true, '2026-04-16T01:00:00.000Z', BEFORE)).toBe(
-      'Plano cancelado - Plus disponível até 15/04/2026',
+    expect(cancelledPlanLabel('Essencial', true, '2026-04-16T01:00:00.000Z', BEFORE)).toBe(
+      'Plano cancelado - Essencial disponível até 15/04/2026',
     );
   });
 
   it('sem cancelamento, sem texto', () => {
-    expect(cancelledPlanLabel('Plus', false, END, BEFORE)).toBeNull();
+    expect(cancelledPlanLabel('Essencial', false, END, BEFORE)).toBeNull();
     expect(cancelledPlanLabel(null, true, END, BEFORE)).toBeNull();
   });
 
@@ -32,13 +32,13 @@ describe('plano cancelado', () => {
   it('depois do período pago, o app mostra o plano grátis', () => {
     const data = {
       subscribed: true,
-      subscription_tier: 'Plus',
+      subscription_tier: 'Essencial',
       subscription_end: END,
       cancel_at_period_end: true,
       entitlement_source: 'stripe',
       plan_limits: { appointments: 0, sos_uses: 1 },
     };
-    expect(cancelledPlanLabel('Plus', true, END, AFTER)).toBeNull();
+    expect(cancelledPlanLabel('Essencial', true, END, AFTER)).toBeNull();
     expect(withExpiredCancellation(data, BEFORE)).toBe(data);
     expect(withExpiredCancellation(data, AFTER)).toMatchObject({
       subscribed: false,
@@ -49,7 +49,7 @@ describe('plano cancelado', () => {
   });
 
   it('não mexe no plano da empresa', () => {
-    const data = { subscribed: true, subscription_tier: 'Premium', subscription_end: END, cancel_at_period_end: true, entitlement_source: 'organization' };
+    const data = { subscribed: true, subscription_tier: 'Completo', subscription_end: END, cancel_at_period_end: true, entitlement_source: 'organization' };
     expect(withExpiredCancellation(data, AFTER)).toBe(data);
   });
 });

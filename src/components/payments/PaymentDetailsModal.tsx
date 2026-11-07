@@ -207,11 +207,11 @@ export const PaymentDetailsModal: React.FC<PaymentDetailsModalProps> = ({
                 <div className="grid grid-cols-2 gap-4 text-center">
                   <div className="p-4 bg-muted rounded-lg">
                     <p className="text-sm text-muted-foreground">Valor por Consulta Agendada</p>
-                    <p className="text-2xl font-bold text-success">R$ 90,00</p>
+                    <p className="text-2xl font-bold text-success">R$ 85,00</p>
                   </div>
                   <div className="p-4 bg-muted rounded-lg">
                     <p className="text-sm text-muted-foreground">Valor por Emergência</p>
-                    <p className="text-2xl font-bold text-primary">R$ 50,00</p>
+                    <p className="text-2xl font-bold text-primary">R$ 40,00</p>
                   </div>
                 </div>
                 

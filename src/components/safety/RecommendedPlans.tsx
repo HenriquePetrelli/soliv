@@ -26,6 +26,7 @@ import {
   type SafetyPlanSuggestion,
 } from '@/lib/postCrisisPlan';
 import { getFriendlyErrorMessage } from '@/utils/errorMessage';
+import { usePlanLimits } from '@/hooks/usePlanLimits';
 
 type Edited = { title: string; lists: SafetyPlanLists };
 
@@ -58,7 +59,8 @@ const RecommendedPlans = ({ plans, onSaved }: { plans: SafetyPlanSummary[]; onSa
     void load();
   }, [load]);
 
-  const limitReached = plans.length >= MAX_SAFETY_PLANS;
+  const { maxSafetyPlans, isFree } = usePlanLimits();
+  const limitReached = plans.length >= maxSafetyPlans;
 
   const save = async (suggestion: SafetyPlanSuggestion, edited?: Edited, replacePlanId?: string) => {
     if (limitReached && !replacePlanId) {
@@ -214,9 +216,12 @@ const RecommendedPlans = ({ plans, onSaved }: { plans: SafetyPlanSummary[]; onSa
       <Dialog open={!!replacing} onOpenChange={(open) => !open && setReplacing(null)}>
         <DialogContent className="max-h-[90dvh] overflow-y-auto sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Você já tem {MAX_SAFETY_PLANS} planos</DialogTitle>
+            <DialogTitle>
+              {isFree ? `No Plano Grátis cabe ${maxSafetyPlans} plano` : `Você já tem ${MAX_SAFETY_PLANS} planos`}
+            </DialogTitle>
             <DialogDescription>
               Para salvar este, escolha um plano para substituir. O plano escolhido e os contatos dele serão apagados.
+              {isFree && ` Com um plano pago, você guarda até ${MAX_SAFETY_PLANS}.`}
             </DialogDescription>
           </DialogHeader>
           <RadioGroup value={replaceId} onValueChange={setReplaceId} className="gap-2">

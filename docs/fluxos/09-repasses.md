@@ -10,8 +10,10 @@ Cada atendimento realizado vira um item a pagar ao psicólogo:
 
 | Atendimento | Valor | Quando entra |
 |---|---|---|
-| Consulta agendada | R$ 90,00 | Status `completed` **e** pelo menos 5 min de chamada com os dois conectados |
-| SOS | R$ 50,00 | Status `completed` **e** a chamada conectou os dois lados |
+| Consulta agendada | R$ 85,00 | Status `completed` **e** pelo menos 5 min de chamada com os dois conectados |
+| SOS | R$ 40,00 | Status `completed` **e** a chamada conectou os dois lados |
+
+Valores fixos, iguais para todos os planos (Essencial, Flex, Completo e empresa). Desde 2026-11-07 (migration `20261107120000_planos_essencial_flex_completo.sql`); antes eram R$ 90,00 e R$ 50,00. Cada item do livro guarda o valor de quando entrou: itens já registrados não mudam.
 
 O admin paga por PIX fora do app e registra no painel com o **código E2E do PIX**. O psicólogo vê o pendente, o pago e os comprovantes.
 
@@ -52,8 +54,8 @@ O admin paga por PIX fora do app e registra no painel com o **código E2E do PIX
 
 ### Teste manual
 1. Concluir uma consulta (com chamada conectada) e um SOS com o mesmo psicólogo.
-2. Admin → Repasses → "Sincronizar" → o psicólogo aparece com R$ 140,00 pendentes.
-3. "Sincronizar" de novo → continua R$ 140,00 (não duplica).
+2. Admin → Repasses → "Sincronizar" → o psicólogo aparece com R$ 125,00 pendentes.
+3. "Sincronizar" de novo → continua R$ 125,00 (não duplica).
 4. "Confirmar" com E2E de 32 caracteres → o pendente zera; o psicólogo vê em "Repasses recebidos".
 5. Tentar confirmar de novo com o mesmo E2E → recusado.
 6. Psicólogo entra sozinho numa consulta e sai → ela não entra no repasse (fica "não realizada").

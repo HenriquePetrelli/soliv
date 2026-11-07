@@ -16,6 +16,7 @@ import {
   allowsMultiple,
   type HabitKind,
 } from '@/lib/habits';
+import { usePlanLimits } from '@/hooks/usePlanLimits';
 
 const ALL_KINDS = Object.keys(HABIT_CATALOG) as HabitKind[];
 
@@ -35,7 +36,8 @@ const HabitSetup = () => {
   // Pelo endereço (/habitos/novo/agua) dava para abrir o formulário de um
   // hábito que já está na lista, ou passar do limite.
   const existingSameKind = !editing && kind && !allowsMultiple(kind) ? habits.find((h) => h.kind === kind) : undefined;
-  const overLimit = !editing && kind && habits.length >= MAX_ACTIVE_HABITS;
+  const { maxHabits, isFree } = usePlanLimits();
+  const overLimit = !editing && kind && habits.length >= maxHabits;
 
   const handleSubmit = async (draft: HabitDraft) => {
     setSaving(true);
@@ -54,7 +56,7 @@ const HabitSetup = () => {
       const err = error as { code?: string; message?: string };
       // Regras do banco com mensagem própria (limite de 10, hábito repetido).
       if (err?.code === '23505') toast.error('Esse hábito já está na sua lista.');
-      else if (err?.code === '23514' && err.message?.includes('10 hábitos')) toast.error(err.message);
+      else if (err?.code === '23514' && /hábitos/.test(err.message ?? '')) toast.error(err.message);
       else toast.error('Não foi possível salvar agora. Tente de novo.');
     } finally {
       setSaving(false);
@@ -73,7 +75,7 @@ const HabitSetup = () => {
           <button
             key={k}
             type="button"
-            disabled={already || habits.length >= MAX_ACTIVE_HABITS}
+            disabled={already || habits.length >= maxHabits}
             onClick={() => navigate(`/habitos/novo/${k}`)}
             className="flex w-full items-center gap-3 rounded-2xl border border-border bg-card p-4 text-left shadow-sm transition-colors hover:bg-muted/40 disabled:opacity-60 disabled:hover:bg-card"
           >
@@ -110,9 +112,14 @@ const HabitSetup = () => {
           ) : overLimit ? (
             <div className="space-y-3">
               <p className="text-foreground">
-                Você já tem {MAX_ACTIVE_HABITS} hábitos na lista. Tire um da lista para adicionar outro.
+                {isFree
+                  ? `No Plano Grátis cabem ${maxHabits} hábitos na lista. Tire um da lista ou escolha um plano para ter até ${MAX_ACTIVE_HABITS}.`
+                  : `Você já tem ${MAX_ACTIVE_HABITS} hábitos na lista. Tire um da lista para adicionar outro.`}
               </p>
               <Button onClick={() => navigate('/habitos', { replace: true })}>Ver meus hábitos</Button>
+              {isFree && (
+                <Button variant="outline" onClick={() => navigate('/subscription-plans')}>Ver planos</Button>
+              )}
             </div>
           ) : kind ? (
             <HabitForm key={editing?.id ?? kind} kind={kind} habit={editing} saving={saving} onSubmit={handleSubmit} />

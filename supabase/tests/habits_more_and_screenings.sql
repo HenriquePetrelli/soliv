@@ -9,6 +9,10 @@ INSERT INTO auth.users (id, email) VALUES
   ('00000000-0000-0000-0000-0000000000b1', 'psi@x.com'),
   ('00000000-0000-0000-0000-0000000000c1', 'outro-psi@x.com');
 INSERT INTO public.fcm_tokens (user_id, token) VALUES ('00000000-0000-0000-0000-0000000000a1', 'tok');
+-- Plano pago: no Plano Grátis cabem só 3 hábitos (migration 20261107120000).
+INSERT INTO public.subscribers (user_id, email, subscribed, subscription_tier)
+VALUES ('00000000-0000-0000-0000-0000000000a1', 'paciente@x.com', true, 'Completo')
+ON CONFLICT (email) DO UPDATE SET user_id = EXCLUDED.user_id, subscribed = true, subscription_tier = 'Completo';
 
 CREATE FUNCTION pg_temp.check(cond boolean, label text) RETURNS text LANGUAGE plpgsql AS $$
 BEGIN

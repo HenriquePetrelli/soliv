@@ -48,7 +48,7 @@ Para regras de negócio em texto corrido e o histórico de cada mudança, veja `
 
 ## Teste rápido de regressão (cerca de 20 minutos)
 
-Faça depois de cada publicação grande. São necessárias 3 contas de teste: um **paciente com plano Premium**, um **psicólogo aprovado** e um **admin**. O ideal é usar dois aparelhos ou dois navegadores, um deles em janela anônima.
+Faça depois de cada publicação grande. São necessárias 3 contas de teste: um **paciente com plano Completo**, um **psicólogo aprovado** e um **admin**. O ideal é usar dois aparelhos ou dois navegadores, um deles em janela anônima.
 
 | # | Passo | Resultado esperado | Ficha |
 |---|---|---|---|

@@ -1,25 +1,66 @@
 // Regras de assinatura sem dependências (Stripe, Supabase), para poderem ser
 // testadas no vitest (src/test/billing.test.ts) e usadas pelas edge functions.
 
-export type Tier = "Plus" | "Premium";
+export type Tier = "Essencial" | "Flex" | "Completo";
+
+export const TIERS: readonly Tier[] = ["Essencial", "Flex", "Completo"] as const;
 
 export interface PlanPrices {
-  Plus: string;
-  Premium: string;
+  Essencial: string;
+  Flex: string;
+  Completo: string;
+  /** Preços antigos que continuam valendo como um plano novo (ex.: o Premium de R$ 120 → Completo). */
+  legacy?: Record<string, Tier>;
 }
 
-export const PLAN_LIMITS: Record<Tier | "none", { appointments: number; sos_uses: number }> = {
-  Plus: { appointments: 0, sos_uses: 1 },
-  Premium: { appointments: 1, sos_uses: 1 },
-  none: { appointments: 0, sos_uses: 0 },
+/**
+ * Cotas do mês. Essencial: só SOS. Completo: SOS e consulta agendada.
+ * Flex: um atendimento só no mês (`shared`), usado como SOS ou como consulta;
+ * usou um, o outro fica indisponível até o mês seguinte.
+ */
+export const PLAN_LIMITS: Record<Tier | "none", { appointments: number; sos_uses: number; shared: boolean }> = {
+  Essencial: { appointments: 0, sos_uses: 1, shared: false },
+  Flex: { appointments: 1, sos_uses: 1, shared: true },
+  Completo: { appointments: 1, sos_uses: 1, shared: false },
+  none: { appointments: 0, sos_uses: 0, shared: false },
 };
 
-export const tierRank = (tier: string | null | undefined) => (tier === "Premium" ? 2 : tier === "Plus" ? 1 : 0);
+/**
+ * Nome do plano a partir do que vier do app ou do banco, sem diferenciar
+ * maiúsculas. Aceita os nomes antigos (Plus → Essencial, Premium → Completo).
+ */
+export const parseTier = (value: unknown): Tier | null => {
+  switch (String(value ?? "").trim().toLowerCase()) {
+    case "essencial":
+    case "plus":
+      return "Essencial";
+    case "flex":
+      return "Flex";
+    case "completo":
+    case "premium":
+      return "Completo";
+    default:
+      return null;
+  }
+};
+
+export const tierRank = (tier: string | null | undefined) => {
+  const parsed = parseTier(tier);
+  return parsed === "Completo" ? 3 : parsed === "Flex" ? 2 : parsed === "Essencial" ? 1 : 0;
+};
+
+/** Planos que têm consulta agendada. */
+export const tierHasAppointments = (tier: string | null | undefined) => {
+  const parsed = parseTier(tier);
+  return parsed ? PLAN_LIMITS[parsed].appointments > 0 : false;
+};
 
 export const tierForPrice = (prices: PlanPrices, priceId: string | null | undefined): Tier | null => {
-  if (priceId && priceId === prices.Plus) return "Plus";
-  if (priceId && priceId === prices.Premium) return "Premium";
-  return null;
+  if (!priceId) return null;
+  for (const tier of TIERS) {
+    if (prices[tier] && priceId === prices[tier]) return tier;
+  }
+  return prices.legacy?.[priceId] ?? null;
 };
 
 /**
@@ -62,7 +103,7 @@ export const rankLiveSubscriptions = <T extends SubscriptionLike>(prices: PlanPr
         a.created - b.created,
     );
 
-/** Troca de plano já agendada (ex.: Premium → Plus na renovação), se houver. */
+/** Troca de plano já agendada (ex.: Completo → Essencial na renovação), se houver. */
 export const pendingChange = (
   prices: PlanPrices,
   subscription: SubscriptionLike,

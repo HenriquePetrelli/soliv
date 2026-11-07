@@ -41,7 +41,7 @@ INSERT INTO public.profiles (user_id, user_type, full_name) VALUES
   ON CONFLICT (user_id) DO UPDATE SET user_type = EXCLUDED.user_type, full_name = EXCLUDED.full_name;
 
 INSERT INTO public.organizations (id, name, plan_tier, seats, invite_code, allowed_email_domain)
-VALUES ('e0000000-0000-0000-0000-00000000000e', 'Empresa X', 'Premium', 1, 'EMPX2026', 'empresa.com.br');
+VALUES ('e0000000-0000-0000-0000-00000000000e', 'Empresa X', 'Completo', 1, 'EMPX2026', 'empresa.com.br');
 
 -- 1. Entrar pelo código dá o plano da empresa na linha de subscribers
 SELECT pg_temp.act_as('b0000000-0000-0000-0000-00000000000b');
@@ -55,9 +55,9 @@ SELECT pg_temp.act_as('a0000000-0000-0000-0000-00000000000a');
 SELECT pg_temp.check((public.join_organization(' empx 2026 ') ->> 'ok')::boolean, 'colaborador entra pelo código (com espaços e minúsculas)');
 RESET role;
 SELECT pg_temp.check(
-  (SELECT subscribed AND subscription_tier = 'Premium' AND entitlement_source = 'organization'
+  (SELECT subscribed AND subscription_tier = 'Completo' AND entitlement_source = 'organization'
    FROM public.subscribers WHERE user_id = 'a0000000-0000-0000-0000-00000000000a'),
-  'acesso Premium pela empresa'
+  'acesso Completo pela empresa'
 );
 SELECT pg_temp.check((SELECT can_use FROM public.can_use_sos('a0000000-0000-0000-0000-00000000000a')), 'SOS liberado pelo plano da empresa');
 
@@ -71,28 +71,28 @@ RESET role;
 UPDATE public.subscribers SET subscribed = false, subscription_tier = NULL, entitlement_source = 'stripe'
 WHERE user_id = 'a0000000-0000-0000-0000-00000000000a';
 SELECT pg_temp.check(
-  (SELECT subscribed AND subscription_tier = 'Premium' FROM public.subscribers WHERE user_id = 'a0000000-0000-0000-0000-00000000000a'),
+  (SELECT subscribed AND subscription_tier = 'Completo' FROM public.subscribers WHERE user_id = 'a0000000-0000-0000-0000-00000000000a'),
   'escrita do Stripe sem assinatura mantém o plano da empresa'
 );
 
--- 4. SOS do Premium: 1 por mês
+-- 4. SOS do Completo: 1 por mês
 UPDATE public.subscribers SET sos_used_this_month = true, sos_last_used = (now() AT TIME ZONE 'America/Sao_Paulo')::date
 WHERE user_id = 'a0000000-0000-0000-0000-00000000000a';
-SELECT pg_temp.check(NOT (SELECT can_use FROM public.can_use_sos('a0000000-0000-0000-0000-00000000000a')), 'Premium: segundo SOS no mês bloqueado');
+SELECT pg_temp.check(NOT (SELECT can_use FROM public.can_use_sos('a0000000-0000-0000-0000-00000000000a')), 'Completo: segundo SOS no mês bloqueado');
 
 -- 5. Plano próprio maior vence; contrato pausado tira só o da empresa
-UPDATE public.organizations SET plan_tier = 'Plus' WHERE id = 'e0000000-0000-0000-0000-00000000000e';
-UPDATE public.subscribers SET subscribed = true, subscription_tier = 'Premium', entitlement_source = 'stripe'
+UPDATE public.organizations SET plan_tier = 'Essencial' WHERE id = 'e0000000-0000-0000-0000-00000000000e';
+UPDATE public.subscribers SET subscribed = true, subscription_tier = 'Completo', entitlement_source = 'stripe'
 WHERE user_id = 'a0000000-0000-0000-0000-00000000000a';
 SELECT pg_temp.check(
-  (SELECT subscription_tier = 'Premium' AND entitlement_source = 'stripe' FROM public.subscribers WHERE user_id = 'a0000000-0000-0000-0000-00000000000a'),
-  'Premium próprio vale mais que o Plus da empresa'
+  (SELECT subscription_tier = 'Completo' AND entitlement_source = 'stripe' FROM public.subscribers WHERE user_id = 'a0000000-0000-0000-0000-00000000000a'),
+  'Completo próprio vale mais que o Essencial da empresa'
 );
 UPDATE public.subscribers SET subscribed = false, subscription_tier = NULL, entitlement_source = 'stripe'
 WHERE user_id = 'a0000000-0000-0000-0000-00000000000a';
 SELECT pg_temp.check(
-  (SELECT subscription_tier = 'Plus' AND entitlement_source = 'organization' FROM public.subscribers WHERE user_id = 'a0000000-0000-0000-0000-00000000000a'),
-  'cancelou o próprio: volta ao Plus da empresa'
+  (SELECT subscription_tier = 'Essencial' AND entitlement_source = 'organization' FROM public.subscribers WHERE user_id = 'a0000000-0000-0000-0000-00000000000a'),
+  'cancelou o próprio: volta ao Essencial da empresa'
 );
 UPDATE public.organizations SET status = 'paused' WHERE id = 'e0000000-0000-0000-0000-00000000000e';
 SELECT pg_temp.check(

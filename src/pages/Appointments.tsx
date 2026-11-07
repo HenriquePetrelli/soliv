@@ -1,4 +1,4 @@
-import { PLANS } from "@/lib/plans";
+import { PLANS, tierHasAppointments } from "@/lib/plans";
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -22,7 +22,7 @@ const Appointments = () => {
 
   const handleScheduleSuccess = () => {
     setShowScheduler(false);
-    // O agendamento consumiu a cota mensal (Premium: 1x/mês) — recarrega
+    // O agendamento consumiu a cota mensal (Flex e Completo: 1x/mês; no Flex, também gasta o SOS do mês) — recarrega
     // pra refletir isso imediatamente na tela, sem esperar o próximo check.
     void checkSubscription();
   };
@@ -38,22 +38,20 @@ const Appointments = () => {
       return;
     }
 
-    if (subscriptionTier === 'Plus') {
+    if (!tierHasAppointments(subscriptionTier)) {
       setShowUpgradeModal(true);
       return;
     }
 
-    if (subscriptionTier === 'Premium') {
-      if (!canScheduleAppointment) {
-        toast({
-          title: "Limite mensal atingido",
-          description: appointmentReason || "Você já usou sua consulta agendada deste mês.",
-          variant: "destructive",
-        });
-        return;
-      }
-      setShowScheduler(true);
+    if (!canScheduleAppointment) {
+      toast({
+        title: "Limite mensal atingido",
+        description: appointmentReason || "Você já usou sua consulta agendada deste mês.",
+        variant: "destructive",
+      });
+      return;
     }
+    setShowScheduler(true);
   };
 
   if (showScheduler) {
@@ -85,11 +83,11 @@ const Appointments = () => {
                 size="sm"
                 className="flex items-center justify-center gap-1.5 w-full sm:w-auto"
                 onClick={handleScheduleClick}
-                disabled={subscriptionTier !== 'Premium'}
+                disabled={!tierHasAppointments(subscriptionTier)}
               >
                 <Plus className="w-4 h-4" />
                 <span>Agendar</span>
-                {subscriptionTier !== 'Premium' && <Crown className="w-3.5 h-3.5 ml-1" />}
+                {!tierHasAppointments(subscriptionTier) && <Crown className="w-3.5 h-3.5 ml-1" />}
               </Button>
             </div>
           </CardContent>
@@ -108,24 +106,26 @@ const Appointments = () => {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Crown className="w-5 h-5 text-primary" />
-              Upgrade para Premium
+              Consultas agendadas
             </DialogTitle>
             <DialogDescription>
-              O agendamento de consultas está disponível apenas para usuários Premium.
+              O agendamento de consultas está disponível nos planos Flex e Completo.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
-            <div className="bg-muted p-4 rounded-lg">
-              <h4 className="font-semibold mb-2">
-                Plano Premium - {PLANS.Premium.price}
-                {PLANS.Premium.period}
-              </h4>
-              <ul className="text-sm space-y-1">
-                {PLANS.Premium.features.map((feature) => (
-                  <li key={feature}>• {feature}</li>
-                ))}
-              </ul>
-            </div>
+            {[PLANS.Flex, PLANS.Completo].map((plan) => (
+              <div key={plan.id} className="bg-muted p-4 rounded-lg">
+                <h4 className="font-semibold mb-2">
+                  Plano {plan.name} - {plan.price}
+                  {plan.period}
+                </h4>
+                <ul className="text-sm space-y-1">
+                  {plan.features.slice(0, plan.name === 'Completo' ? 2 : 1).map((feature) => (
+                    <li key={feature}>• {feature}</li>
+                  ))}
+                </ul>
+              </div>
+            ))}
             <div className="flex gap-2">
               <Button
                 variant="outline"

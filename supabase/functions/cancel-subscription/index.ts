@@ -178,7 +178,7 @@ serve(async (req) => {
     // Cancelou na hora (arrependimento com reembolso ou pagamento em atraso):
     // consultas futuras pedidas com o plano são canceladas e o psicólogo é
     // avisado (senão viravam consulta de graça, paga ao psicólogo no repasse).
-    // Se a pessoa ainda tem Premium pela empresa, nada muda.
+    // Se a pessoa ainda tem um plano com consultas (Flex ou Completo) pela empresa, nada muda.
     let cancelledAppointments = 0;
     if (mode === "immediate") {
       const { data: count, error: apptError } = await supabaseClient.rpc("cancel_appointments_after_plan_loss", {

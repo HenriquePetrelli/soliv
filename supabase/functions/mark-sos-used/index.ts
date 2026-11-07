@@ -128,10 +128,10 @@ serve(async (req) => {
       });
     }
 
-    // Plus e Premium têm 1 SOS por mês (tela de planos, Termos, can_use_sos).
-    // Antes só o Plus era marcado, e o SOS do Premium ficava ilimitado.
+    // Essencial, Flex e Completo têm 1 SOS por mês (tela de planos, Termos,
+    // can_use_sos). No Flex o SOS gasta o atendimento do mês (SOS ou consulta).
     const tier = (subscriber.subscription_tier || '').toLowerCase();
-    if (tier !== 'plus' && tier !== 'premium') {
+    if (!['essencial', 'flex', 'completo'].includes(tier)) {
       logStep("Plan without SOS quota, no usage recorded", { patientId, tier: subscriber.subscription_tier });
       return new Response(JSON.stringify({ ok: true, skipped: true }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },

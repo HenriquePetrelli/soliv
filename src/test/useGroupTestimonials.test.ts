@@ -4,7 +4,7 @@ import { fakeDb, fakeSupabase } from './fakeSupabase';
 
 vi.mock('@/integrations/supabase/client', () => ({ supabase: fakeSupabase }));
 vi.mock('@/contexts/SubscriptionContext', () => ({
-  useSubscription: () => ({ subscribed: true, subscriptionTier: 'Premium' }),
+  useSubscription: () => ({ subscribed: true, subscriptionTier: 'Completo' }),
 }));
 
 import { useGroupTestimonials } from '@/hooks/useSupportGroups';

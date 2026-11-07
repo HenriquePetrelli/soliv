@@ -25,6 +25,10 @@ INSERT INTO auth.users (id, email) VALUES
   ('a0000000-0000-0000-0000-00000000000a', 'paciente@teste.local'),
   ('b0000000-0000-0000-0000-00000000000b', 'outro@teste.local');
 INSERT INTO public.fcm_tokens (user_id, token, is_active) VALUES ('a0000000-0000-0000-0000-00000000000a', 'token-a', true);
+-- 'a' tem plano pago (até 10 hábitos); 'b' está no Plano Grátis (até 3).
+INSERT INTO public.subscribers (user_id, email, subscribed, subscription_tier)
+VALUES ('a0000000-0000-0000-0000-00000000000a', 'paciente@teste.local', true, 'Essencial')
+ON CONFLICT (email) DO UPDATE SET user_id = EXCLUDED.user_id, subscribed = true, subscription_tier = 'Essencial';
 
 -- 1. Cada um cuida só dos próprios hábitos
 SELECT pg_temp.act_as('a0000000-0000-0000-0000-00000000000a');
@@ -104,6 +108,17 @@ DO $$ BEGIN
   END LOOP;
   RAISE EXCEPTION 'FALHOU: passou de 10 hábitos';
 EXCEPTION WHEN check_violation THEN RAISE NOTICE 'ok: no máximo 10 hábitos ativos';
+END $$;
+
+-- 5. Plano Grátis: no máximo 3 hábitos ativos
+SELECT pg_temp.act_as('b0000000-0000-0000-0000-00000000000b');
+DO $$ BEGIN
+  FOR i IN 1..4 LOOP
+    INSERT INTO public.user_habits (user_id, kind, title, quit_started_at)
+    VALUES ('b0000000-0000-0000-0000-00000000000b', 'quit_custom', 'Hábito ' || i, now());
+  END LOOP;
+  RAISE EXCEPTION 'FALHOU: Plano Grátis passou de 3 hábitos';
+EXCEPTION WHEN check_violation THEN RAISE NOTICE 'ok: Plano Grátis com no máximo 3 hábitos ativos';
 END $$;
 
 RESET role;

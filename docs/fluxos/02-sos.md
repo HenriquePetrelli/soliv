@@ -2,7 +2,7 @@
 
 > **Status:** Pronto, com pendência externa (TURN para redes restritivas; push depende do Firebase).
 > **Última verificação:** 2026-11-02 (SOS por mensagem). Antes: 2026-10-31 (triagem rápida opcional na confirmação do SOS). Antes: 2026-10-25 (varredura das regras: plano vencido sem SOS, psicólogo em consulta agendada não aceita SOS, não conta como disponível e não recebe push, aceite recusado mostra o motivo certo).
-> **Quem usa:** paciente com plano (Plus, Premium ou empresa) e psicólogo aprovado.
+> **Quem usa:** paciente com plano (Essencial, Flex, Completo ou empresa) e psicólogo aprovado.
 
 ## Resumo
 
@@ -22,7 +22,7 @@ O paciente aperta SOS, escolhe **por vídeo** (padrão) ou **por mensagem**, ent
 00. **Vídeo ou mensagem.** Na confirmação, "Por vídeo" vem marcado; "Por mensagem" serve para quem não consegue falar agora (está com outras pessoas, no trabalho, sem voz). Um toque troca. A escolha fica no pedido (`emergency_requests.channel`, `video` ou `text`, não muda depois) e a fila do psicólogo mostra "Por mensagem".
 0. **Triagem rápida (opcional).** Na tela "Precisa de ajuda agora?", o paciente pode tocar no que está sentindo: pensamentos de suicídio ou de me machucar; crise de pânico; crise de ansiedade; tristeza muito forte ou desesperança; passei por algo difícil agora; estou em perigo ou sofri violência; outra coisa. O botão "Sim, chamar um psicólogo" funciona sem marcar nada. Marcar **suicídio** mostra na hora SAMU 192 e CVV 188; marcar **perigo ou violência** mostra Polícia 190 e Ligue 180. Esses números continuam em destaque na fila de espera. A triagem fica no pedido (`emergency_requests.triage`, só as 7 opções, não muda depois) e **não filtra psicólogos**: o pedido vai para todos, como antes.
 1. O paciente toca em SOS. A edge function `emergency-sos` confere o login, o plano (com a data de fim: plano vencido não pede SOS, mesmo antes de a rotina diária atualizar a assinatura) e a cota do mês (`can_use_sos`), aplica um limite de 5 tentativas em 10 minutos e cria o pedido em `emergency_requests` com status `pending`.
-2. Sem SOS disponível (cota do mês usada, sem plano ou conta bloqueada), a tela não fica "buscando": mostra o motivo e as ajudas do momento (CVV em destaque, respirar, plano de segurança, SAMU) e, conforme o caso, "Agendar uma consulta" (Premium) ou "Ver planos" (`SosUnavailable`).
+2. Sem SOS disponível (cota do mês usada, sem plano ou conta bloqueada), a tela não fica "buscando": mostra o motivo e as ajudas do momento (CVV em destaque, respirar, plano de segurança, SAMU) e, conforme o caso, "Agendar uma consulta" (Completo) ou "Ver planos" (`SosUnavailable`).
 3. Se já existe um pedido aberto do paciente, ele volta para esse pedido em vez de criar outro. O banco garante isso mesmo com dois toques ao mesmo tempo ou duas abas (`guard_sos_concurrency`). Só conta de paciente pede SOS.
 3. Os psicólogos online veem o pedido na lista na hora (tempo real e canal `sos-queue`, com consulta a cada 10 s). Todos os psicólogos aprovados, não bloqueados, que não estão em outro SOS nem numa consulta agendada em andamento recebem um **push**, mesmo com o app fechado.
 4. Na fila, o paciente vê quantos psicólogos estão online, o tempo de espera (até 10 min), **Meu plano** (plano de segurança), **Respirar** e as ligações para o CVV 188 e o SAMU 192 (uma vez só, sem repetir). Sem ninguém online, o pedido continua na fila (todos os psicólogos recebem push e podem ficar online). As ligações para o CVV e o SAMU têm sempre o mesmo visual.
@@ -63,13 +63,13 @@ Mesma fila, mesmo aceite, mesmo endereço da sala; a tela é uma conversa em tel
 
 ### 5. Depois
 - Acompanhamento: 24 h depois, o paciente recebe uma mensagem de cuidado (`queue_sos_followups`).
-- O psicólogo recebe R$ 50 por SOS concluído no repasse semanal, se a chamada teve pelo menos 5 minutos com os dois conectados (ficha 09). **Por mensagem**: pelo menos 5 min entre a primeira resposta do psicólogo e o fim, com pelo menos 3 respostas dele e uma mensagem do paciente.
+- O psicólogo recebe R$ 40 por SOS concluído no repasse semanal, se a chamada teve pelo menos 5 minutos com os dois conectados (ficha 09). **Por mensagem**: pelo menos 5 min entre a primeira resposta do psicólogo e o fim, com pelo menos 3 respostas dele e uma mensagem do paciente.
 
 ## Regras
 
 | Regra | Valor |
 |---|---|
-| SOS por mês | 1 (Plus, Premium e empresa). Sem plano: sem SOS |
+| SOS por mês | 1 (Essencial, Flex, Completo e empresa). Sem plano: sem SOS |
 | Espera máxima na fila | 10 min; depois vira `expired` e a tela oferece o CVV e "Tentar de novo" |
 | Duração máxima da chamada | 25 min em todos os planos (gravada no pedido pelo gatilho `set_emergency_time_limit`). A consulta agendada continua com 50 min |
 | Os dois sem sinal | 10 min → `abandoned` (cota devolvida) |

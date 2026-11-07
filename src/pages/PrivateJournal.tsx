@@ -8,6 +8,8 @@ import MoodFilter from '@/components/journal/MoodFilter';
 import PatientBottomNav from '@/components/PatientBottomNav';
 import PageHeader from '@/components/PageHeader';
 import { Skeleton } from '@/components/ui/skeleton';
+import SubscriptionUpgradeModal from '@/components/SubscriptionUpgradeModal';
+import { usePlanLimits } from '@/hooks/usePlanLimits';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 
 const PrivateJournal = () => {
@@ -25,17 +27,28 @@ const PrivateJournal = () => {
   const [selectedMood, setSelectedMood] = useState<number | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [modalLoading, setModalLoading] = useState(false);
+  const [showUpgrade, setShowUpgrade] = useState(false);
+  // Plano Grátis: o diário é só para leitura (o banco também recusa).
+  const readOnly = usePlanLimits().isFree;
 
   useEffect(() => {
     fetchEntries(selectedMood ?? undefined);
   }, [fetchEntries, selectedMood]);
 
   const handleCreateEntry = () => {
+    if (readOnly) {
+      setShowUpgrade(true);
+      return;
+    }
     setEditingEntry(null);
     setIsModalOpen(true);
   };
 
   const handleEditEntry = (entry: JournalEntry) => {
+    if (readOnly) {
+      setShowUpgrade(true);
+      return;
+    }
     setEditingEntry(entry);
     setIsModalOpen(true);
   };
@@ -98,6 +111,15 @@ const PrivateJournal = () => {
 
         {/* Conteúdo */}
         <main className="p-4">
+          {readOnly && (
+            <div role="note" className="mb-4 rounded-lg border border-primary/30 bg-primary/5 p-3 text-sm">
+              No Plano Grátis o diário é só para leitura.{' '}
+              <button type="button" className="font-medium text-primary underline underline-offset-2" onClick={() => setShowUpgrade(true)}>
+                Ver planos
+              </button>{' '}
+              para voltar a escrever.
+            </div>
+          )}
           {loading ? (
             <div className="space-y-4">
               {[...Array(3)].map((_, i) => (
@@ -139,6 +161,13 @@ const PrivateJournal = () => {
           )}
         </main>
       </div>
+
+      <SubscriptionUpgradeModal
+        isOpen={showUpgrade}
+        onClose={() => setShowUpgrade(false)}
+        feature="Escrever no diário"
+        description="No Plano Grátis o diário é só para leitura. Para escrever e editar anotações, escolha o Essencial, o Flex ou o Completo."
+      />
 
       {/* Modal de anotação */}
       <JournalEntryModal

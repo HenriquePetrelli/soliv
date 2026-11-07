@@ -9,7 +9,7 @@ const state = {
   checkSubscription: vi.fn(async () => {
     // O webhook confirma na segunda verificação.
     if (state.checkSubscription.mock.calls.length >= 2) {
-      Object.assign(state, { subscribed: true, subscriptionTier: 'Premium', entitlementSource: 'stripe' });
+      Object.assign(state, { subscribed: true, subscriptionTier: 'Completo', entitlementSource: 'stripe' });
     }
   }),
 };
@@ -25,7 +25,7 @@ describe('volta do checkout', () => {
       </MemoryRouter>,
     );
     expect(screen.getByText('Confirmando seu pagamento...')).toBeInTheDocument();
-    expect(await screen.findByText('Plano Premium ativado!', {}, { timeout: 6000 })).toBeInTheDocument();
+    expect(await screen.findByText('Plano Completo ativado!', {}, { timeout: 6000 })).toBeInTheDocument();
     rerender(
       <MemoryRouter>
         <SubscriptionSuccess />

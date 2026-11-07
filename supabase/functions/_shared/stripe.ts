@@ -3,11 +3,20 @@ import type { SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.45.0
 import { rankLiveSubscriptions, type PlanPrices } from "./billing.ts";
 
 // Os planos vêm dos price IDs do Stripe configurados como secrets
-// (STRIPE_PRICE_PLUS / STRIPE_PRICE_PREMIUM), com os preços atuais como padrão.
+// (STRIPE_PRICE_ESSENCIAL / STRIPE_PRICE_FLEX / STRIPE_PRICE_COMPLETO).
 // Preço desconhecido não dá plano nenhum.
+//
+// O Essencial tem o mesmo preço (R$ 69,90) e os mesmos benefícios do antigo
+// Plus, então o preço antigo serve de padrão. Flex e Completo precisam de
+// preços novos no Stripe. Assinaturas antigas no preço do Premium (R$ 120,00,
+// com SOS e consulta) continuam valendo como Completo até serem trocadas.
+const LEGACY_PREMIUM_PRICE = Deno.env.get("STRIPE_PRICE_LEGACY_PREMIUM") ?? "price_1S3q9YPhFwqSktZsejrePGuS";
+
 export const PLAN_PRICES: PlanPrices = {
-  Plus: Deno.env.get("STRIPE_PRICE_PLUS") ?? "price_1S3qAKPhFwqSktZsXexQefrx",
-  Premium: Deno.env.get("STRIPE_PRICE_PREMIUM") ?? "price_1S3q9YPhFwqSktZsejrePGuS",
+  Essencial: Deno.env.get("STRIPE_PRICE_ESSENCIAL") ?? Deno.env.get("STRIPE_PRICE_PLUS") ?? "price_1S3qAKPhFwqSktZsXexQefrx",
+  Flex: Deno.env.get("STRIPE_PRICE_FLEX") ?? "",
+  Completo: Deno.env.get("STRIPE_PRICE_COMPLETO") ?? "",
+  legacy: { [LEGACY_PREMIUM_PRICE]: "Completo" },
 };
 
 export const newStripe = () =>

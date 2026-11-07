@@ -14,7 +14,7 @@
 |---|---|---|
 | Ver dados de outra pessoa | RLS em todas as tabelas | Como paciente A, `select` em tabela de B pela API → 0 linhas |
 | Dados pessoais do psicólogo (CPF, Pix, e-mail, documentos) | Leitura por coluna bloqueada; o próprio lê por `get_my_psychologist_private` | `has_column_privilege('authenticated','public.psychologists','cpf','select')` = `false` |
-| Virar Premium sem pagar | Gatilho `a_guard_subscriber_client_write`; sem política de inserção para o usuário | Paciente tenta gravar em `subscribers` → recusado ou ignorado |
+| Virar Completo sem pagar | Gatilho `a_guard_subscriber_client_write`; sem política de inserção para o usuário | Paciente tenta gravar em `subscribers` → recusado ou ignorado |
 | Psicólogo se aprovar ou se desbloquear | Gatilho `a_guard_psychologist_client_write` (também trava CRP e CPF já aprovados) | Update em `approved` pela API → valor não muda |
 | Paciente se desbloquear | Gatilho `a_guard_patient_client_write` | Idem em `patients.is_blocked` |
 | Pessoa não aprovada acessando a fila do SOS | Políticas exigem `psychologist_can_attend` | Conta "psicólogo" pendente → `select` em `emergency_requests` → 0 linhas |

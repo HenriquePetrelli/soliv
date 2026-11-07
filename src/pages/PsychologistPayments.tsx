@@ -183,7 +183,7 @@ const PsychologistPayments = () => {
               <Clock className="w-4 h-4" /> Detalhamento
             </CardTitle>
             <CardDescription>
-              Consultas agendadas: R$ 90,00 · Emergências: R$ 50,00
+              Consultas agendadas: R$ 85,00 · Emergências: R$ 40,00
             </CardDescription>
           </CardHeader>
           <CardContent className="grid grid-cols-1 sm:grid-cols-2 gap-3">

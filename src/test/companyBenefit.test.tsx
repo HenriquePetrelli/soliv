@@ -44,8 +44,8 @@ beforeEach(() => {
 describe('benefício da empresa (colaborador)', () => {
   it('usa o código do RH e passa a mostrar o plano da empresa', async () => {
     const join = vi.fn((_db: unknown, params: Record<string, unknown>) => {
-      entitled = { tier: 'Premium', organization_name: 'Empresa X', ends_on: null };
-      return { data: { ok: true, organization: 'Empresa X', tier: 'Premium', code: params.p_code }, error: null };
+      entitled = { tier: 'Completo', organization_name: 'Empresa X', ends_on: null };
+      return { data: { ok: true, organization: 'Empresa X', tier: 'Completo', code: params.p_code }, error: null };
     });
     fakeDb.rpcHandlers.join_organization = join;
     renderAt('/beneficio-empresa');
@@ -55,7 +55,7 @@ describe('benefício da empresa (colaborador)', () => {
 
     await waitFor(() => expect(join).toHaveBeenCalled());
     expect(join.mock.calls[0][1]).toEqual({ p_code: 'EMPX2026' });
-    expect(await screen.findByText('Plano Premium pela Empresa X')).toBeInTheDocument();
+    expect(await screen.findByText('Plano Completo pela Empresa X')).toBeInTheDocument();
     expect(screen.getByText('1 consulta agendada por mês, de 50 minutos')).toBeInTheDocument();
     expect(checkSubscription).toHaveBeenCalled();
   });
@@ -69,7 +69,7 @@ describe('benefício da empresa (colaborador)', () => {
   });
 
   it('sai do benefício com confirmação', async () => {
-    entitled = { tier: 'Plus', organization_name: 'Empresa X', ends_on: '2026-12-31' };
+    entitled = { tier: 'Essencial', organization_name: 'Empresa X', ends_on: '2026-12-31' };
     const leave = vi.fn(() => {
       entitled = null;
       return { data: null, error: null };
@@ -84,10 +84,10 @@ describe('benefício da empresa (colaborador)', () => {
   });
 
   it('avisa quem ainda paga assinatura própria com o plano da empresa ativo', async () => {
-    entitled = { tier: 'Premium', organization_name: 'Empresa X', ends_on: null };
-    personalTier = 'Plus';
+    entitled = { tier: 'Completo', organization_name: 'Empresa X', ends_on: null };
+    personalTier = 'Essencial';
     renderAt('/beneficio-empresa');
-    expect(await screen.findByRole('note')).toHaveTextContent('Você ainda paga uma assinatura própria (Plus)');
+    expect(await screen.findByRole('note')).toHaveTextContent('Você ainda paga uma assinatura própria (Essencial)');
   });
 
   it('mensagem do domínio cita o domínio da empresa', () => {
@@ -99,7 +99,7 @@ describe('portal do RH', () => {
   const dashboard = {
     id: 'org-1',
     name: 'Empresa X',
-    plan_tier: 'Premium',
+    plan_tier: 'Completo',
     status: 'active',
     starts_on: '2026-09-01',
     ends_on: null,

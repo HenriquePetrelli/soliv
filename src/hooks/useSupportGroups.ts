@@ -4,6 +4,7 @@ import { getSessionUser } from '@/lib/currentUser';
 import { useToast } from '@/hooks/use-toast';
 import { useSubscription } from '@/contexts/SubscriptionContext';
 import { getFriendlyErrorMessage } from '@/utils/errorMessage';
+import { hasPaidPlan } from '@/lib/plans';
 
 export interface SupportGroup {
   id: string;
@@ -214,10 +215,10 @@ export const useGroupTestimonials = (groupId: string, filterByUser: boolean = fa
   }, id?: string) => {
     try {
       // Check subscription for premium features
-      if (!subscribed || (subscriptionTier !== 'Plus' && subscriptionTier !== 'Premium')) {
+      if (!hasPaidPlan(subscribed, subscriptionTier)) {
         toast({
-          title: 'Funcionalidade Premium',
-          description: 'Essa funcionalidade está disponível apenas para usuários Premium ou Plus.',
+          title: 'Disponível nos planos pagos',
+          description: 'Essa funcionalidade está disponível nos planos Essencial, Flex e Completo.',
           variant: 'destructive',
         });
         return false;
@@ -341,10 +342,10 @@ export const useGroupTestimonials = (groupId: string, filterByUser: boolean = fa
   const likeTestimonial = async (testimonialId: string, tipo: 'positivo' | 'negativo' | 'none') => {
     try {
       // Check subscription for premium features
-      if (!subscribed || (subscriptionTier !== 'Plus' && subscriptionTier !== 'Premium')) {
+      if (!hasPaidPlan(subscribed, subscriptionTier)) {
         toast({
-          title: 'Funcionalidade Premium',
-          description: 'Essa funcionalidade está disponível apenas para usuários Premium ou Plus.',
+          title: 'Disponível nos planos pagos',
+          description: 'Essa funcionalidade está disponível nos planos Essencial, Flex e Completo.',
           variant: 'destructive',
         });
         return false;

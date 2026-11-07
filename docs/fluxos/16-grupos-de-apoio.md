@@ -19,9 +19,9 @@ Grupos por tema (ex.: ansiedade, depressão) onde pacientes deixam depoimentos, 
 ## Como funciona
 
 1. O paciente abre um grupo e lê os depoimentos (`get_group_testimonials`). Depoimento anônimo não traz nome nem identificação do autor na resposta.
-2. **Escrever** (planos Plus e Premium, inclusive o pago pela empresa; conferido no servidor): texto (até 500 caracteres na tela; 3.000 no banco), humor e, se quiser, um sintoma da lista do grupo, marcando ou não "Anônimo". O limite é 5 depoimentos por hora. Cada depoimento tem um id criado no aparelho: salvar de novo depois de uma resposta perdida não publica em dobro.
+2. **Escrever** (planos Essencial, Flex e Completo, inclusive o pago pela empresa; conferido no servidor): texto (até 500 caracteres na tela; 3.000 no banco), humor e, se quiser, um sintoma da lista do grupo, marcando ou não "Anônimo". O limite é 5 depoimentos por hora. Cada depoimento tem um id criado no aparelho: salvar de novo depois de uma resposta perdida não publica em dobro.
    - Se o texto fala em se machucar ou em morrer, aparece na hora um quadro com "Ligar 188" (CVV) e "Abrir o SOS". Não impede de publicar.
-3. **Reagir** (Plus e Premium): "me ajudou" ou "não me ajudou", uma por depoimento, com limite de 60 por minuto. Pôr, trocar e tirar são uma operação só no servidor (`react_to_testimonial`), feitas na ordem dos toques; a tela mostra na hora e depois usa os totais do servidor. Sem aviso de sucesso a cada toque. Ninguém reage ao próprio depoimento (também conferido no servidor). Cada pessoa vê só as próprias reações; dos outros, só os totais.
+3. **Reagir** (Essencial, Flex e Completo): "me ajudou" ou "não me ajudou", uma por depoimento, com limite de 60 por minuto. Pôr, trocar e tirar são uma operação só no servidor (`react_to_testimonial`), feitas na ordem dos toques; a tela mostra na hora e depois usa os totais do servidor. Sem aviso de sucesso a cada toque. Ninguém reage ao próprio depoimento (também conferido no servidor). Cada pessoa vê só as próprias reações; dos outros, só os totais.
 4. **Denunciar** (`report_group_testimonial`): motivo e detalhes. Vai para a moderação. Com 3 denúncias pendentes de pessoas diferentes, o depoimento fica **em análise**: sai da lista dos outros e o autor vê o aviso. Se o admin descartar as denúncias, volta a aparecer; se excluir, some.
 5. **Admin**: lista todos com curtidas e denúncias, destaca os que chegaram a 10 "não me ajudou" e pode editar ou excluir.
 6. **Favoritar** um grupo deixa ele no topo da lista.
@@ -41,7 +41,7 @@ Grupos por tema (ex.: ansiedade, depressão) onde pacientes deixam depoimentos, 
 4. O admin edita o texto → todos veem o texto novo. O admin exclui → some.
 5. Paciente A escreve 6 depoimentos seguidos → o 6º é recusado ("Muitas ações em pouco tempo").
 6. Paciente B toca "me ajudou" várias vezes bem rápido → nenhum erro, nenhum aviso a cada toque; ao recarregar, o contador bate com o botão.
-7. Paciente sem plano Plus/Premium → não consegue escrever nem reagir (nem pela API: "Escrever depoimentos e reagir é dos planos Plus e Premium.").
+7. Paciente sem plano Essencial/Flex/Completo → não consegue escrever nem reagir (nem pela API: "Escrever depoimentos e reagir é dos planos Essencial, Flex e Completo.").
 8. Paciente A escreve "às vezes penso em me matar" → aparece o quadro com "Ligar 188" e "Abrir o SOS"; dá para publicar mesmo assim.
 9. Três pacientes diferentes denunciam o mesmo depoimento → some para os outros; o autor vê "Em análise". O admin descarta as denúncias → volta a aparecer.
 
@@ -74,4 +74,4 @@ Varredura de funcionamento em 2026-10-15: migration `20261010013733_b8944b57-23f
 | Depoimento sumiu | Excluído pelo admin | `admin_audit_log` |
 | "Muitas ações em pouco tempo" | Mais de 5 depoimentos por hora | Esperado |
 | Depoimento sumiu para os outros, mas o autor vê "Em análise" | 3+ denúncias pendentes | Admin → Moderação → Grupos de apoio |
-| "Escrever depoimentos e reagir é dos planos Plus e Premium." | Sem plano pago ou plano vencido | `subscribers` da pessoa |
+| "Escrever depoimentos e reagir é dos planos Essencial, Flex e Completo." | Sem plano pago ou plano vencido | `subscribers` da pessoa |

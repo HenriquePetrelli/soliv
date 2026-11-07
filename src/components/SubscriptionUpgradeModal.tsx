@@ -3,7 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Button } from '@/components/ui/button';
 import { Crown, Sparkles } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { PLANS } from '@/lib/plans';
+import { PLAN_LIST } from '@/lib/plans';
 
 interface SubscriptionUpgradeModalProps {
   isOpen: boolean;
@@ -16,7 +16,7 @@ const SubscriptionUpgradeModal: React.FC<SubscriptionUpgradeModalProps> = ({
   isOpen,
   onClose,
   feature,
-  description = "Essa funcionalidade está disponível apenas para usuários Premium ou Plus."
+  description = "Essa funcionalidade está disponível nos planos Essencial, Flex e Completo."
 }) => {
   const navigate = useNavigate();
 
@@ -43,15 +43,21 @@ const SubscriptionUpgradeModal: React.FC<SubscriptionUpgradeModalProps> = ({
         </DialogHeader>
 
         <div className="space-y-4 pt-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div className="text-center p-3 bg-muted/50 rounded-lg">
-              <div className="text-sm font-medium text-foreground">Plano Plus</div>
-              <div className="text-xs text-muted-foreground">{PLANS.Plus.price}{PLANS.Plus.period}</div>
-            </div>
-            <div className="text-center p-3 bg-gradient-to-br from-primary/10 to-primary/5 rounded-lg border border-primary/20">
-              <div className="text-sm font-medium text-primary">Plano Premium</div>
-              <div className="text-xs text-muted-foreground">{PLANS.Premium.price}{PLANS.Premium.period}</div>
-            </div>
+          <div className="grid grid-cols-3 gap-2">
+            {PLAN_LIST.map((plan) => (
+              <div
+                key={plan.id}
+                className={
+                  plan.popular
+                    ? 'text-center p-3 bg-gradient-to-br from-primary/10 to-primary/5 rounded-lg border border-primary/20'
+                    : 'text-center p-3 bg-muted/50 rounded-lg'
+                }
+              >
+                <div className={plan.popular ? 'text-sm font-medium text-primary' : 'text-sm font-medium text-foreground'}>{plan.name}</div>
+                <div className="text-xs text-muted-foreground">{plan.price}{plan.period}</div>
+                <div className="mt-1 text-[11px] leading-tight text-muted-foreground">{plan.consultation}</div>
+              </div>
+            ))}
           </div>
 
           <div className="flex flex-col space-y-2">

@@ -12,6 +12,7 @@ import InsightsCard from '@/components/progress/InsightsCard';
 import { useHabits } from '@/hooks/useHabits';
 import { useNow } from '@/hooks/useNow';
 import { MAX_ACTIVE_HABITS, isQuitHabit } from '@/lib/habits';
+import { usePlanLimits } from '@/hooks/usePlanLimits';
 
 /** Meus hábitos: os do dia e os que estou largando. As metas da semana ficam em Meu Progresso. */
 const Habits = () => {
@@ -27,7 +28,8 @@ const Habits = () => {
 
   const daily = habits.filter((h) => !isQuitHabit(h.kind));
   const quitting = habits.filter((h) => isQuitHabit(h.kind));
-  const limitReached = habits.length >= MAX_ACTIVE_HABITS;
+  const { maxHabits, isFree } = usePlanLimits();
+  const limitReached = habits.length >= maxHabits;
 
   return (
     <div className="has-tabs">
@@ -99,7 +101,17 @@ const Habits = () => {
                 </Button>
                 {limitReached && (
                   <p className="text-center text-xs text-muted-foreground">
-                    Você chegou a {MAX_ACTIVE_HABITS} hábitos. Tire um da lista para adicionar outro.
+                    {isFree ? (
+                      <>
+                        No Plano Grátis cabem {maxHabits} hábitos. Tire um da lista ou{' '}
+                        <button type="button" className="font-medium text-primary underline underline-offset-2" onClick={() => navigate('/subscription-plans')}>
+                          escolha um plano
+                        </button>{' '}
+                        para ter até {MAX_ACTIVE_HABITS}.
+                      </>
+                    ) : (
+                      <>Você chegou a {MAX_ACTIVE_HABITS} hábitos. Tire um da lista para adicionar outro.</>
+                    )}
                   </p>
                 )}
               </div>

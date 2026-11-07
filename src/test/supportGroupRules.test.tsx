@@ -7,7 +7,7 @@ const { toastMock } = vi.hoisted(() => ({ toastMock: vi.fn() }));
 vi.mock('@/integrations/supabase/client', () => ({ supabase: fakeSupabase }));
 vi.mock('@/hooks/use-toast', () => ({ useToast: () => ({ toast: toastMock }), toast: toastMock }));
 vi.mock('@/contexts/SubscriptionContext', () => ({
-  useSubscription: () => ({ subscribed: true, subscriptionTier: 'Premium' }),
+  useSubscription: () => ({ subscribed: true, subscriptionTier: 'Completo' }),
 }));
 vi.mock('@/hooks/usePatientStatistics', () => ({ usePatientStatistics: () => ({ addActivity: vi.fn() }) }));
 
@@ -93,7 +93,7 @@ describe('Grupos de apoio — reagir', () => {
     fakeDb.rpcHandlers.get_group_testimonials = getSpy;
     fakeDb.rpcHandlers.react_to_testimonial = () => ({
       data: null,
-      error: { code: '42501', message: 'Escrever depoimentos e reagir é dos planos Plus e Premium.' },
+      error: { code: '42501', message: 'Escrever depoimentos e reagir é dos planos Essencial, Flex e Completo.' },
     });
 
     const { result } = renderHook(() => useGroupTestimonials('g1'));

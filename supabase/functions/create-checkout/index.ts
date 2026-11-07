@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { PLAN_PRICES, findCustomerId, liveSubscriptions, newStripe } from "../_shared/stripe.ts";
+import { parseTier, tierRank } from "../_shared/billing.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -39,16 +40,14 @@ serve(async (req) => {
 
     // O cliente só diz o plano; o preço vem do servidor.
     const { plan: requestedPlan } = await req.json();
-    const plan = String(requestedPlan ?? "").toLowerCase() === "premium" ? "Premium"
-      : String(requestedPlan ?? "").toLowerCase() === "plus" ? "Plus"
-      : null;
+    const plan = parseTier(requestedPlan);
     if (!plan) throw new Error("Plano inválido");
+    if (!PLAN_PRICES[plan]) throw new Error(`Preço do plano ${plan} não configurado no Stripe`);
 
     // O plano da empresa já cobre este plano (ou um maior): não há o que pagar.
     const { data: orgRows } = await supabaseClient.rpc("organization_entitlement", { p_user_id: user.id });
     const orgTier = ((orgRows ?? [])[0] as { tier?: string } | undefined)?.tier ?? null;
-    const rank = (tier: string | null) => (tier === "Premium" ? 2 : tier === "Plus" ? 1 : 0);
-    if (orgTier && rank(orgTier) >= rank(plan)) {
+    if (orgTier && tierRank(orgTier) >= tierRank(plan)) {
       logStep("Plan already covered by organization", { orgTier, plan });
       return json({ error_code: "covered_by_organization" });
     }

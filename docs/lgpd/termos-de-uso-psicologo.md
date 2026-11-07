@@ -52,8 +52,8 @@ O Soliv é uma plataforma de tecnologia que conecta pacientes a psicólogos para
 
 | Atendimento | Valor repassado ao psicólogo |
 |---|---|
-| Consulta agendada realizada | R$ 90,00 |
-| Atendimento SOS realizado | R$ 50,00 |
+| Consulta agendada realizada | R$ 85,00 |
+| Atendimento SOS realizado | R$ 40,00 |
 
 - Os valores são apurados pelo Soliv e pagos **semanalmente** por **PIX**, para a chave informada no cadastro. Cada repasse é registrado com o código de identificação da transação PIX (E2E), visível em **Meus Pagamentos**.
 - **Tributos:** o psicólogo é responsável pelos próprios tributos e obrigações fiscais, inclusive a emissão de nota fiscal ou recibo, quando exigida. ⚖️

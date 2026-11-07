@@ -176,11 +176,11 @@ Para conferir no banco: `select title, push_attempts, push_sent_at from notifica
    - `invoice.paid`
    - `invoice.payment_failed`
 4. Salve. Na página do endpoint, clique em **Reveal** no **Signing secret** (`whsec_...`) e cadastre como secret `STRIPE_WEBHOOK_SECRET`.
-5. Confira que `STRIPE_SECRET_KEY` existe nos secrets. Se os preços do modo real forem diferentes dos de teste, cadastre também `STRIPE_PRICE_PLUS` e `STRIPE_PRICE_PREMIUM` com os IDs dos preços (`price_...`).
+5. Confira que `STRIPE_SECRET_KEY` existe nos secrets. Cadastre também `STRIPE_PRICE_ESSENCIAL`, `STRIPE_PRICE_FLEX` e `STRIPE_PRICE_COMPLETO` com os IDs dos preços do modo real (`price_...`).
 
 **Teste:**
 1. Stripe → no endpoint → **Send test event** → `customer.subscription.updated` → a resposta deve ser **200**. Se for 400, o `STRIPE_WEBHOOK_SECRET` está errado.
-2. Assine um plano de teste no app (cartão `4242 4242 4242 4242`), depois cancele pelo **painel do Stripe** (não pelo app) → abra o app → aparece "Plano cancelado - Plus disponível até DD/MM/AAAA" (ou Premium).
+2. Assine um plano de teste no app (cartão `4242 4242 4242 4242`), depois cancele pelo **painel do Stripe** (não pelo app) → abra o app → aparece "Plano cancelado - Essencial disponível até DD/MM/AAAA" (ou Flex, ou Completo).
 3. Cartão de teste que recusa na renovação (`4000 0000 0000 0341`) → chega o aviso "Pagamento não aprovado".
 
 ---

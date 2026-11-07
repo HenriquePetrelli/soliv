@@ -1,3 +1,4 @@
+import type { PlanTier } from '@/lib/plans';
 // B2B: benefício oferecido pela empresa. As regras ficam no banco
 // (join_organization, organization_entitlement); aqui só os textos.
 
@@ -17,7 +18,7 @@ export interface JoinResult {
   ok: boolean;
   error?: JoinErrorCode;
   organization?: string;
-  tier?: 'Plus' | 'Premium';
+  tier?: PlanTier;
   domain?: string;
   already?: boolean;
 }
@@ -48,12 +49,16 @@ export const joinErrorMessage = (result: Pick<JoinResult, 'error' | 'domain'>): 
 };
 
 /** O que cada plano inclui (mesmas regras da tela de planos e dos Termos). */
-export const PLAN_INCLUDES: Record<'Plus' | 'Premium', string[]> = {
-  Plus: ['1 atendimento SOS por mês, de até 25 minutos', 'Respiração, sons, diário, hábitos e grupos'],
-  Premium: [
+export const PLAN_INCLUDES: Record<PlanTier, string[]> = {
+  Essencial: ['1 atendimento SOS por mês, de até 25 minutos', 'Respiração, sons, diário, hábitos, planos de segurança, grupos e chat'],
+  Flex: [
+    '1 atendimento por mês: SOS (até 25 minutos) ou consulta agendada (50 minutos)',
+    'Respiração, sons, diário, hábitos, planos de segurança, grupos e chat',
+  ],
+  Completo: [
     '1 atendimento SOS por mês, de até 25 minutos',
     '1 consulta agendada por mês, de 50 minutos',
-    'Respiração, sons, diário, hábitos e grupos',
+    'Respiração, sons, diário, hábitos, planos de segurança, grupos e chat',
   ],
 };
 

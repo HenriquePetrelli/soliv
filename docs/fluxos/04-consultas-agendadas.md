@@ -2,7 +2,7 @@
 
 > **Status:** Pronto.
 > **Última verificação:** 2026-10-29 (psicólogo excluído: consultas ficam no histórico do paciente com o nome guardado; as ativas são canceladas com aviso e devolução). Antes: 2026-10-28 (decisões de produto: anotação privada do psicólogo separada do resumo; consulta depois do fim de um plano que não renova não é marcada e, se já estava, é cancelada quando o plano termina). Antes: 2026-10-17 (segunda varredura: listas atualizam sozinhas, aceitar não ressuscita consulta cancelada, rotina de expiração não recusa o que acabou de ser aceito, pedido sem duplicar, horário proposto protegido no banco, lembretes do horário novo, plano vencido, psicólogo avisado do pedido expirado). Antes: 2026-10-05 (varredura das regras para paciente e psicólogo: horários de outros pacientes aparecem ocupados, fuso de Brasília, dois pedidos simultâneos, horário proposto reservado, cancelar com novo horário proposto, calendário até o limite do psicólogo).
-> **Quem usa:** paciente Premium (1 consulta por mês, incluindo o plano da empresa) e psicólogo aprovado.
+> **Quem usa:** paciente Flex ou Completo (1 consulta por mês; no Flex, no lugar do SOS, incluindo o plano da empresa) e psicólogo aprovado.
 
 ## Resumo
 
@@ -22,7 +22,7 @@ O paciente escolhe psicólogo, dia e horário dentro da agenda real dele. O psic
 
 ### 1. Agendar
 1. O paciente escolhe o psicólogo numa lista com nome, especialidade, CRP e quantas consultas e SOS ele já concluiu no app e a nota real dos pacientes, com o número de avaliações (função `get_psychologists_public_stats`, que devolve só os totais de psicólogos aprovados). Sem avaliação, aparece "Sem avaliações ainda". Cidade, estado e endereço do psicólogo não aparecem. Depois vê só os horários livres: horário-padrão combinado com exceções do dia, sem férias, sem conflito com outras consultas, respeitando antecedência mínima, intervalo entre consultas e até quantos dias à frente (ficha 05).
-2. Confirma. A edge function `appointments` confere de novo, no servidor, a agenda, os conflitos e o plano Premium (assinado e dentro da validade), e **reserva a cota do mês numa única operação** (dois pedidos ao mesmo tempo não passam os dois). Se a consulta não for criada, a reserva é desfeita. Também limita a 10 tentativas por hora. Toda consulta criada pelo app é do tipo `regular` (o servidor ignora outro tipo enviado) e a observação é cortada em 1.000 caracteres. Cada pedido leva um id gerado no aparelho: se a resposta se perde e a pessoa tenta de novo, o servidor devolve o pedido já criado (sem outro pedido e sem "limite do mês já usado").
+2. Confirma. A edge function `appointments` confere de novo, no servidor, a agenda, os conflitos e o plano Flex ou Completo (assinado e dentro da validade), e **reserva a cota do mês numa única operação** (dois pedidos ao mesmo tempo não passam os dois). Se a consulta não for criada, a reserva é desfeita. Também limita a 10 tentativas por hora. Toda consulta criada pelo app é do tipo `regular` (o servidor ignora outro tipo enviado) e a observação é cortada em 1.000 caracteres. Cada pedido leva um id gerado no aparelho: se a resposta se perde e a pessoa tenta de novo, o servidor devolve o pedido já criado (sem outro pedido e sem "limite do mês já usado").
 3. A consulta nasce como `pending` e o psicólogo é notificado (app e push).
 
 ### 2. Resposta do psicólogo (`psychologist-schedule`)
@@ -97,7 +97,7 @@ Toda devolução da consulta do mês (cancelar, recusar, expirar, não realizada
 ## Como validar
 
 ### Teste manual
-1. **Agendar** (paciente Premium) → aparece "Aguardando confirmação"; o psicólogo recebe a notificação.
+1. **Agendar** (paciente Completo) → aparece "Aguardando confirmação"; o psicólogo recebe a notificação.
 2. **Aceitar** → o paciente recebe "Consulta confirmada".
 3. **Propor outro horário** → o paciente aceita → o horário muda nos dois lados.
 4. **Segunda consulta no mês** → aviso de cota usada.
@@ -122,7 +122,7 @@ select a.id, a.status, s.connected_at, s.media_seconds, s.media_tracked, (s.conn
 from appointments a left join webrtc_sessions s on s.id::text = a.video_room_id
 where a.id = '<id da consulta>';
 
--- Cota Premium do mês
+-- Cota Completo do mês
 select subscription_tier, appointments_used_this_month, appointments_last_used
 from subscribers where user_id = '<id do paciente>';
 
@@ -138,7 +138,7 @@ select * from appointment_problem_reports order by created_at desc limit 20;
 | Sintoma | Causa provável | O que olhar |
 |---|---|---|
 | Nenhum horário disponível | Psicólogo sem horário-padrão, de férias ou com antecedência mínima maior que o dia escolhido | Ficha 05; `psychologist_availability`, `psychologist_vacations`, `psychologist_booking_rules` |
-| "Seu plano não inclui consultas" | Paciente não é Premium (ou plano vencido) | `subscribers` |
+| "Seu plano não inclui consultas" | Paciente não é Completo (ou plano vencido) | `subscribers` |
 | Botão "Entrar" não aparece | Fora da janela (10 min antes até 15 min depois do fim) ou consulta não confirmada | Status e horário da consulta |
 | Psicólogo não consegue concluir | A chamada nunca conectou | `webrtc_sessions.connected_at`; a rotina vai marcar `no_show` |
 | Encerrou e a consulta continuou "Em andamento" | A outra pessoa nunca entrou, ou a chamada teve menos de 5 min | Esperado; a rotina fecha como `no_show` ou "Interrompida" (e devolve a consulta do mês) |

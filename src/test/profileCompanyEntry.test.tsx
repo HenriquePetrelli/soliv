@@ -46,10 +46,10 @@ describe('Perfil: benefício da empresa', () => {
   });
 
   it('aparece para o colaborador com o plano da empresa', async () => {
-    company.benefit = { tier: 'Plus', organizationName: 'Empresa Teste' };
+    company.benefit = { tier: 'Essencial', organizationName: 'Empresa Teste' };
     renderProfile();
     expect(await screen.findByText('Benefício da empresa')).toBeInTheDocument();
-    expect(screen.getByText('Plano Plus pela Empresa Teste')).toBeInTheDocument();
+    expect(screen.getByText('Plano Essencial pela Empresa Teste')).toBeInTheDocument();
   });
 
   it('aparece para o gestor do RH, mesmo sem usar o plano', async () => {

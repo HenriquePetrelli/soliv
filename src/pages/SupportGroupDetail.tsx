@@ -22,6 +22,7 @@ import SubscriptionUpgradeModal from '@/components/SubscriptionUpgradeModal';
 import { useSubscription } from '@/contexts/SubscriptionContext';
 import { getJournalMood } from '@/components/journal/journalMoods';
 import { cn } from '@/lib/utils';
+import { hasPaidPlan } from '@/lib/plans';
 
 interface TestimonialCardProps {
   testimonial: GroupTestimonial;
@@ -309,7 +310,7 @@ const SupportGroupDetail = () => {
   };
 
   const handleAddTestimonialClick = () => {
-    if (!subscribed || (subscriptionTier !== 'Plus' && subscriptionTier !== 'Premium')) {
+    if (!hasPaidPlan(subscribed, subscriptionTier)) {
       setUpgradeModalFeature('Criar Depoimento');
       setShowUpgradeModal(true);
       return;
@@ -318,7 +319,7 @@ const SupportGroupDetail = () => {
   };
 
   const handleLikeClick = (testimonialId: string, tipo: 'positivo' | 'negativo' | 'none') => {
-    if (!subscribed || (subscriptionTier !== 'Plus' && subscriptionTier !== 'Premium')) {
+    if (!hasPaidPlan(subscribed, subscriptionTier)) {
       setUpgradeModalFeature('Avaliar Depoimentos');
       setShowUpgradeModal(true);
       return;
@@ -326,7 +327,7 @@ const SupportGroupDetail = () => {
     likeTestimonial(testimonialId, tipo);
   };
 
-  const isPremiumUser = subscribed && (subscriptionTier === 'Plus' || subscriptionTier === 'Premium');
+  const isPremiumUser = hasPaidPlan(subscribed, subscriptionTier);
   const displayGroupName = groupName || 'Grupo de Apoio';
 
   return (

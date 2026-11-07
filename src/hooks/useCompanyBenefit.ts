@@ -3,9 +3,10 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useSubscription } from '@/contexts/SubscriptionContext';
 import type { JoinResult } from '@/lib/organizations';
+import { parsePlanTier, type PlanTier } from '@/lib/plans';
 
 export interface CompanyBenefit {
-  tier: 'Plus' | 'Premium';
+  tier: PlanTier;
   organizationName: string;
   endsOn: string | null;
 }
@@ -29,7 +30,7 @@ export const useCompanyBenefit = () => {
     ]);
     const row = entitlement.data?.[0];
     setBenefit(
-      row ? { tier: row.tier as 'Plus' | 'Premium', organizationName: row.organization_name, endsOn: row.ends_on } : null,
+      row && parsePlanTier(row.tier) ? { tier: parsePlanTier(row.tier) as PlanTier, organizationName: row.organization_name, endsOn: row.ends_on } : null,
     );
     setManagedOrganizationIds(
       (memberships.data ?? []).filter((m) => m.role === 'manager' && m.status === 'active').map((m) => m.organization_id),

@@ -1,4 +1,4 @@
-import { PLAN_LIST } from "@/lib/plans";
+import { PLAN_LIST, planTierRank as tierRank } from "@/lib/plans";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -53,7 +53,6 @@ const SubscriptionPlans = () => {
   } = useSubscription();
   // B2B: o plano vem da empresa; não há o que pagar, cancelar ou trocar para baixo.
   const fromCompany = entitlementSource === 'organization';
-  const tierRank = (tier: string | null) => (tier === 'Premium' ? 2 : tier === 'Plus' ? 1 : 0);
   const [loading, setLoading] = useState<string | null>(null);
   const [showCancelModal, setShowCancelModal] = useState(false);
   // Troca de plano de quem já assina (manage-subscription), com prévia do valor.
@@ -416,7 +415,7 @@ const SubscriptionPlans = () => {
           )}
         </div>
 
-        <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+        <div className="grid md:grid-cols-3 gap-6 max-w-6xl mx-auto">
           {plans.map((plan) => (
             <Card 
               key={plan.id} 

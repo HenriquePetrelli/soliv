@@ -39,7 +39,7 @@ const emptyForm = {
   cnpj: '',
   contact_name: '',
   contact_email: '',
-  plan_tier: 'Plus',
+  plan_tier: 'Essencial',
   seats: '10',
   status: 'active',
   starts_on: today(),
@@ -304,8 +304,9 @@ export const OrganizationsPanel = () => {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="Plus">Plus</SelectItem>
-                    <SelectItem value="Premium">Premium</SelectItem>
+                    <SelectItem value="Essencial">Essencial (SOS)</SelectItem>
+                    <SelectItem value="Flex">Flex (SOS ou consulta)</SelectItem>
+                    <SelectItem value="Completo">Completo (SOS e consulta)</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

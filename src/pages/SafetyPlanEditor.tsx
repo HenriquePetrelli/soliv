@@ -26,6 +26,7 @@ import {
   telHref,
   type SafetyPlanLists,
 } from '@/lib/safetyPlan';
+import { usePlanLimits } from '@/hooks/usePlanLimits';
 
 /**
  * Create (/safety-plan/novo) or edit (/safety-plan/:planId) one safety plan.
@@ -81,7 +82,8 @@ const SafetyPlanEditor = () => {
   }, [initial, loading, draftKey, toast]);
 
   const titlePlaceholder = isNew ? defaultPlanTitle(planCount) : initial.title || defaultPlanTitle(0);
-  const limitReached = isNew && planCount >= MAX_SAFETY_PLANS;
+  const { maxSafetyPlans, isFree } = usePlanLimits();
+  const limitReached = isNew && planCount >= maxSafetyPlans;
   const dirty = useMemo(
     () =>
       JSON.stringify({ title, lists: draftPlan, contacts }) !==
@@ -207,7 +209,9 @@ const SafetyPlanEditor = () => {
 
           {limitReached && (
             <p role="alert" className="rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-sm text-foreground">
-              Você já tem {MAX_SAFETY_PLANS} planos de segurança, o máximo permitido. Exclua um na lista para criar outro.
+              {isFree
+                ? `No Plano Grátis cabe ${maxSafetyPlans} plano de segurança. Exclua o atual na lista ou escolha um plano para ter até ${MAX_SAFETY_PLANS}.`
+                : `Você já tem ${MAX_SAFETY_PLANS} planos de segurança, o máximo permitido. Exclua um na lista para criar outro.`}
             </p>
           )}
 

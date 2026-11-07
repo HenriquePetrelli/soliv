@@ -1,6 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
-import { PLAN_LIMITS, stripeState, tierRank } from "../_shared/billing.ts";
+import { PLAN_LIMITS, parseTier, stripeState, tierRank, type Tier } from "../_shared/billing.ts";
 import { PLAN_PRICES, findCustomerId, listSubscriptions, newStripe, syncCustomerEmail } from "../_shared/stripe.ts";
 
 const corsHeaders = {
@@ -95,10 +95,11 @@ serve(async (req) => {
     // entre o do Stripe e o da empresa — o mesmo que o trigger
     // apply_organization_entitlement grava em `subscribers`.
     const { data: orgRows } = await supabaseClient.rpc("organization_entitlement", { p_user_id: user.id });
-    const org = (orgRows ?? [])[0] as { tier: "Plus" | "Premium"; organization_name: string; ends_on: string | null } | undefined;
-    const fromOrganization = Boolean(org && tierRank(org.tier) > tierRank(stripeTier));
+    const org = (orgRows ?? [])[0] as { tier: string; organization_name: string; ends_on: string | null } | undefined;
+    const orgTier = parseTier(org?.tier);
+    const fromOrganization = Boolean(org && orgTier && tierRank(orgTier) > tierRank(stripeTier));
 
-    const subscriptionTier: "Plus" | "Premium" | null = fromOrganization ? org!.tier : stripeTier;
+    const subscriptionTier: Tier | null = fromOrganization ? orgTier : stripeTier;
     const hasActiveSub = subscriptionTier !== null;
     const subscriptionEnd = fromOrganization ? (org!.ends_on ? new Date(`${org!.ends_on}T23:59:59-03:00`).toISOString() : null) : stripeEnd;
     const planLimits = PLAN_LIMITS[subscriptionTier ?? "none"];
@@ -131,66 +132,29 @@ serve(async (req) => {
     let appointmentsUsedThisMonth = existingSubscriberRow?.appointments_used_this_month ?? false;
     let appointmentsLastUsed = existingSubscriberRow?.appointments_last_used ?? null as string | null;
 
-    // Compute SOS availability based on plan rules
-    let canUseSOS = false;
-    let sosReason = "Sem assinatura ativa";
+    // Disponibilidade do mês. Essencial: 1 SOS. Completo: 1 SOS e 1 consulta.
+    // Flex: 1 atendimento no mês, SOS ou consulta (usou um, o outro acaba).
     const now = new Date();
     const sameMonth = sosLastUsed
       ? isSameBrazilMonthAsDateOnly(sosLastUsed, now)
       : false;
-
-    if (!hasActiveSub || !subscriptionTier) {
-      canUseSOS = false;
-      sosReason = "Usuário não possui assinatura ativa";
-    } else if (subscriptionTier === "Plus") {
-      // Reset monthly flag when month changed
-      if (sosUsedThisMonth && sosLastUsed && !sameMonth) {
-        await supabaseClient
-          .from("subscribers")
-          .update({ sos_used_this_month: false, sos_last_used: null, updated_at: new Date().toISOString() })
-          .eq(rowFilter.column, rowFilter.value)
-          // Só zera se ninguém usou o SOS do mês novo enquanto esta checagem rodava.
-          .eq("sos_last_used", sosLastUsed);
-        sosUsedThisMonth = false;
-        sosLastUsed = null;
-      }
-      
-      canUseSOS = !sosUsedThisMonth;
-      sosReason = canUseSOS ? "Pode usar SOS (PLUS: 1x/mês)" : "Limite mensal de SOS já utilizado (PLUS: 1x/mês)";
-    } else if (subscriptionTier === "Premium") {
-      // Reset monthly flag when month changed
-      if (sosUsedThisMonth && sosLastUsed && !sameMonth) {
-        await supabaseClient
-          .from("subscribers")
-          .update({ sos_used_this_month: false, sos_last_used: null, updated_at: new Date().toISOString() })
-          .eq(rowFilter.column, rowFilter.value)
-          // Só zera se ninguém usou o SOS do mês novo enquanto esta checagem rodava.
-          .eq("sos_last_used", sosLastUsed);
-        sosUsedThisMonth = false;
-        sosLastUsed = null;
-      }
-      
-      canUseSOS = !sosUsedThisMonth;
-      sosReason = canUseSOS ? "Pode usar SOS (PREMIUM: 1x/mês)" : "Limite mensal de SOS já utilizado (PREMIUM: 1x/mês)";
-    }
-
-    // Compute appointment-scheduling availability: only Premium has any
-    // allowance (planLimits.appointments), 1x/month, same reset pattern as SOS.
-    let canScheduleAppointment = false;
-    let appointmentReason = "Sem assinatura ativa";
     const sameMonthAppointments = appointmentsLastUsed
       ? isSameBrazilMonth(new Date(appointmentsLastUsed), now)
       : false;
 
-    if (!hasActiveSub || !subscriptionTier) {
-      canScheduleAppointment = false;
-      appointmentReason = "Sem assinatura ativa";
-    } else if (subscriptionTier === "Plus") {
-      canScheduleAppointment = false;
-      appointmentReason = "Agendamento de consultas disponível apenas no plano Premium";
-    } else if (subscriptionTier === "Premium") {
-      // Reset monthly flag when month changed
-      if (appointmentsUsedThisMonth && appointmentsLastUsed && !sameMonthAppointments) {
+    if (subscriptionTier) {
+      // Virada do mês: zera as marcas do mês anterior.
+      if (sosUsedThisMonth && sosLastUsed && !sameMonth) {
+        await supabaseClient
+          .from("subscribers")
+          .update({ sos_used_this_month: false, sos_last_used: null, updated_at: new Date().toISOString() })
+          .eq(rowFilter.column, rowFilter.value)
+          // Só zera se ninguém usou o SOS do mês novo enquanto esta checagem rodava.
+          .eq("sos_last_used", sosLastUsed);
+        sosUsedThisMonth = false;
+        sosLastUsed = null;
+      }
+      if (planLimits.appointments > 0 && appointmentsUsedThisMonth && appointmentsLastUsed && !sameMonthAppointments) {
         await supabaseClient
           .from("subscribers")
           .update({ appointments_used_this_month: false, appointments_last_used: null, updated_at: new Date().toISOString() })
@@ -200,11 +164,34 @@ serve(async (req) => {
         appointmentsUsedThisMonth = false;
         appointmentsLastUsed = null;
       }
+    }
 
-      canScheduleAppointment = !appointmentsUsedThisMonth;
+    // No Flex, qualquer um dos dois usados gasta o atendimento do mês.
+    const sharedUsed = planLimits.shared && (sosUsedThisMonth || appointmentsUsedThisMonth);
+    const label = subscriptionTier ? subscriptionTier.toUpperCase() : "";
+
+    let canUseSOS = false;
+    let sosReason = "Usuário não possui assinatura ativa";
+    if (subscriptionTier) {
+      canUseSOS = !sosUsedThisMonth && !sharedUsed;
+      sosReason = canUseSOS
+        ? `Pode usar SOS (${label}: 1x/mês)`
+        : planLimits.shared && !sosUsedThisMonth
+          ? "Atendimento do mês já usado em uma consulta agendada (FLEX: SOS ou consulta, 1x/mês)"
+          : `Limite mensal de SOS já utilizado (${label}: 1x/mês)`;
+    }
+
+    let canScheduleAppointment = false;
+    let appointmentReason = "Sem assinatura ativa";
+    if (subscriptionTier && planLimits.appointments === 0) {
+      appointmentReason = "Agendamento de consultas disponível nos planos Flex e Completo";
+    } else if (subscriptionTier) {
+      canScheduleAppointment = !appointmentsUsedThisMonth && !sharedUsed;
       appointmentReason = canScheduleAppointment
-        ? "Pode agendar consulta (PREMIUM: 1x/mês)"
-        : "Limite mensal de consultas agendadas já utilizado (PREMIUM: 1x/mês)";
+        ? `Pode agendar consulta (${label}: 1x/mês)`
+        : planLimits.shared && !appointmentsUsedThisMonth
+          ? "Atendimento do mês já usado em um SOS (FLEX: SOS ou consulta, 1x/mês)"
+          : `Limite mensal de consultas agendadas já utilizado (${label}: 1x/mês)`;
     }
 
     // Update subscriber in database

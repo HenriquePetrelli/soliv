@@ -75,51 +75,62 @@ describe('planos e pagamento', () => {
   it('quem não assina vai ao checkout do plano escolhido', async () => {
     handlers['create-checkout'] = () => ({ data: { url: 'https://checkout.stripe.com/x' }, error: null });
     renderPage();
+    fireEvent.click(screen.getAllByRole('button', { name: 'Assinar Agora' })[2]);
+    await waitFor(() => expect(calls('create-checkout')).toEqual([{ plan: 'Completo' }]));
+  });
+
+  it('mostra os três planos pagos, com o Flex (SOS ou consulta) no meio', async () => {
+    handlers['create-checkout'] = () => ({ data: { url: 'https://checkout.stripe.com/x' }, error: null });
+    renderPage();
+    expect(screen.getAllByRole('button', { name: 'Assinar Agora' })).toHaveLength(3);
+    expect(screen.getByText('R$ 69,90')).toBeInTheDocument();
+    expect(screen.getByText('R$ 120,00')).toBeInTheDocument();
+    expect(screen.getByText('R$ 159,90')).toBeInTheDocument();
     fireEvent.click(screen.getAllByRole('button', { name: 'Assinar Agora' })[1]);
-    await waitFor(() => expect(calls('create-checkout')).toEqual([{ plan: 'Premium' }]));
+    await waitFor(() => expect(calls('create-checkout')).toEqual([{ plan: 'Flex' }]));
   });
 
   it('subir de plano mostra a diferença e troca na mesma assinatura, sem novo checkout', async () => {
-    subscribedTo('Plus');
+    subscribedTo('Essencial');
     handlers['manage-subscription'] = (body) =>
       body?.action === 'preview_change'
         ? { data: { direction: 'upgrade', amount_due: 2505, proration_date: 1790000000, renews_on: '2026-10-20T12:00:00.000Z' }, error: null }
         : { data: { ok: true, direction: 'upgrade' }, error: null };
     renderPage();
 
-    fireEvent.click(screen.getByRole('button', { name: 'Mudar para Premium' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Mudar para Completo' }));
     expect(await screen.findByText(/Hoje cobramos R\$\s?25,05/)).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Confirmar' }));
 
     await waitFor(() =>
-      expect(calls('manage-subscription')).toContainEqual({ action: 'change_plan', plan: 'Premium', proration_date: 1790000000 }),
+      expect(calls('manage-subscription')).toContainEqual({ action: 'change_plan', plan: 'Completo', proration_date: 1790000000 }),
     );
     expect(calls('create-checkout')).toEqual([]);
     expect(subscription.checkSubscription).toHaveBeenCalled();
   });
 
   it('descer de plano vale na renovação, sem cobrança agora', async () => {
-    subscribedTo('Premium');
+    subscribedTo('Completo');
     handlers['manage-subscription'] = () => ({ data: { direction: 'downgrade', effective_on: '2026-10-20T12:00:00.000Z' }, error: null });
     renderPage();
-    fireEvent.click(screen.getByRole('button', { name: 'Mudar para Plus' }));
-    expect(await screen.findByText(/Você continua no Premium até 20\/10\/2026.*Nada é cobrado agora/)).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Mudar para Essencial' }));
+    expect(await screen.findByText(/Você continua no Completo até 20\/10\/2026.*Nada é cobrado agora/)).toBeInTheDocument();
   });
 
   it('cartão recusado na troca: avisa e nada muda', async () => {
-    subscribedTo('Plus');
+    subscribedTo('Essencial');
     handlers['manage-subscription'] = (body) =>
       body?.action === 'preview_change'
         ? { data: { direction: 'upgrade', amount_due: 100, proration_date: 1, renews_on: '2026-10-20T12:00:00.000Z' }, error: null }
         : { data: { error_code: 'payment_failed' }, error: null };
     renderPage();
-    fireEvent.click(screen.getByRole('button', { name: 'Mudar para Premium' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Mudar para Completo' }));
     fireEvent.click(await screen.findByRole('button', { name: 'Confirmar' }));
     await waitFor(() => expect(toastMock).toHaveBeenCalledWith(expect.objectContaining({ title: 'O cartão recusou a cobrança' })));
   });
 
   it('cancelar mostra até quando o plano continua', async () => {
-    subscribedTo('Plus');
+    subscribedTo('Essencial');
     handlers['cancel-subscription'] = (body) =>
       body?.preview
         ? { data: { refund_eligible: false, mode: 'period_end', access_until: '2026-10-20T12:00:00.000Z' }, error: null }
@@ -134,7 +145,7 @@ describe('planos e pagamento', () => {
   });
 
   it('cancelar dentro dos 7 dias avisa que a consulta agendada também é cancelada', async () => {
-    subscribedTo('Premium');
+    subscribedTo('Completo');
     handlers['cancel-subscription'] = (body) =>
       body?.preview
         ? { data: { refund_eligible: true, refund_amount: 12000, mode: 'immediate', access_until: null, future_appointments: 1 }, error: null }
@@ -145,7 +156,7 @@ describe('planos e pagamento', () => {
   });
 
   it('cancelar no fim do período avisa que a consulta marcada depois do fim será cancelada', async () => {
-    subscribedTo('Premium');
+    subscribedTo('Completo');
     handlers['cancel-subscription'] = () => ({
       data: { refund_eligible: false, mode: 'period_end', access_until: '2026-10-20T12:00:00.000Z', future_appointments: 1 },
       error: null,
@@ -167,34 +178,34 @@ describe('planos e pagamento', () => {
   });
 
   it('cancelamento agendado pode ser desfeito', async () => {
-    subscribedTo('Plus', { cancelAtPeriodEnd: true });
+    subscribedTo('Essencial', { cancelAtPeriodEnd: true });
     handlers['manage-subscription'] = () => ({ data: { ok: true }, error: null });
     renderPage();
-    expect(screen.getByRole('note')).toHaveTextContent('Até 20/10/2026, tudo do Plus continua liberado; depois, sua conta passa para o plano grátis.');
+    expect(screen.getByRole('note')).toHaveTextContent('Até 20/10/2026, tudo do Essencial continua liberado; depois, sua conta passa para o plano grátis.');
     expect(screen.queryByRole('button', { name: 'Cancelar assinatura' })).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Manter minha assinatura' }));
     await waitFor(() => expect(calls('manage-subscription')).toEqual([{ action: 'resume' }]));
   });
 
   it('troca para baixo agendada aparece e pode ser desfeita', async () => {
-    subscribedTo('Premium', { pendingTier: 'Plus', pendingFrom: '2026-10-20T12:00:00.000Z' });
+    subscribedTo('Completo', { pendingTier: 'Essencial', pendingFrom: '2026-10-20T12:00:00.000Z' });
     handlers['manage-subscription'] = () => ({ data: { ok: true }, error: null });
     renderPage();
     expect(screen.getByRole('button', { name: 'Começa em 20/10/2026' })).toBeDisabled();
-    fireEvent.click(screen.getByRole('button', { name: 'Continuar no Premium' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Continuar no Completo' }));
     await waitFor(() => expect(calls('manage-subscription')).toEqual([{ action: 'keep_current' }]));
   });
 
   it('pagamento recusado na renovação pede para atualizar o cartão', () => {
-    subscribedTo('Plus', { paymentIssue: true });
+    subscribedTo('Essencial', { paymentIssue: true });
     renderPage();
     expect(screen.getAllByRole('alert')[0]).toHaveTextContent('Não conseguimos cobrar a renovação');
     expect(screen.getByRole('button', { name: 'Atualizar pagamento' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Mudar para Premium' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Mudar para Completo' })).toBeDisabled();
   });
 
   it('avisa cobrança em dobro', () => {
-    subscribedTo('Premium', { extraSubscriptions: 1 });
+    subscribedTo('Completo', { extraSubscriptions: 1 });
     renderPage();
     expect(screen.getByRole('alert')).toHaveTextContent('está sendo cobrado em dobro');
   });

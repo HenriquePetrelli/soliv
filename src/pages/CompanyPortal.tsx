@@ -21,11 +21,12 @@ import PageHeader from '@/components/PageHeader';
 import PatientBottomNav from '@/components/PatientBottomNav';
 import { supabase } from '@/integrations/supabase/client';
 import { useCompanyBenefit } from '@/hooks/useCompanyBenefit';
+import type { PlanTier } from '@/lib/plans';
 
 interface Dashboard {
   id: string;
   name: string;
-  plan_tier: 'Plus' | 'Premium';
+  plan_tier: PlanTier;
   status: 'active' | 'paused' | 'ended';
   starts_on: string;
   ends_on: string | null;

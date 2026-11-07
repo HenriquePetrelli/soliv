@@ -1,5 +1,5 @@
 import { useAuth } from "@/contexts/AuthContext";
-import { FREE_PLAN, PLANS } from "@/lib/plans";
+import { FREE_PLAN, PLANS, hasPaidPlan } from "@/lib/plans";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -88,7 +88,7 @@ const Profile = () => {
   };
 
   const getPlanInfo = () => {
-    const plan = subscribed && (subscriptionTier === "Plus" || subscriptionTier === "Premium") ? PLANS[subscriptionTier] : null;
+    const plan = hasPaidPlan(subscribed, subscriptionTier) && subscriptionTier ? PLANS[subscriptionTier] : null;
     const info = plan ? { name: `Plano ${plan.name}`, price: plan.price, features: plan.features } : FREE_PLAN;
     return { ...info, features: info.features.map((feature) => `• ${feature}`) };
   };
@@ -98,7 +98,7 @@ const Profile = () => {
   }
 
   const planInfo = getPlanInfo();
-  // "Plano cancelado - Plus disponível até 15/04/2026" (só assinatura própria).
+  // "Plano cancelado - Essencial disponível até 15/04/2026" (só assinatura própria).
   const cancelledLabel = entitlementSource === 'stripe' ? cancelledPlanLabel(subscriptionTier, cancelAtPeriodEnd, subscriptionEnd) : null;
 
   const initials = (user?.profile?.full_name || user?.email || 'U')

@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Check, ArrowRight, Clock } from "lucide-react";
 import { useSubscription } from "@/contexts/SubscriptionContext";
 import { PLAN_INCLUDES } from "@/lib/organizations";
+import { parsePlanTier } from "@/lib/plans";
 
 const ATTEMPTS = 6;
 const INTERVAL_MS = 2500;
@@ -32,7 +33,7 @@ const SubscriptionSuccess = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [attempt, confirmed]);
 
-  const tier = subscriptionTier === "Premium" || subscriptionTier === "Plus" ? subscriptionTier : null;
+  const tier = parsePlanTier(subscriptionTier);
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">

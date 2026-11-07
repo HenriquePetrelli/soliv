@@ -21,13 +21,15 @@ import { MAX_SAFETY_PLANS } from '@/lib/safetyPlan';
 import OfflinePlanNotice from '@/components/safety/OfflinePlanNotice';
 import RecommendedPlans from '@/components/safety/RecommendedPlans';
 import RecommendedBadge from '@/components/safety/RecommendedBadge';
+import { usePlanLimits } from '@/hooks/usePlanLimits';
 
 /** The patient's safety plans: titles only, each with edit and delete. */
 const SafetyPlans = () => {
   const navigate = useNavigate();
   const { plans, loading, offline, deletingId, deletePlan, reload } = useSafetyPlans();
   const [toDelete, setToDelete] = useState<SafetyPlanSummary | null>(null);
-  const limitReached = plans.length >= MAX_SAFETY_PLANS;
+  const { maxSafetyPlans, isFree } = usePlanLimits();
+  const limitReached = plans.length >= maxSafetyPlans;
 
   return (
     <div className="has-tabs">
@@ -54,8 +56,10 @@ const SafetyPlans = () => {
             {!loading && (
               <p className="text-center text-xs text-muted-foreground" aria-live="polite">
                 {limitReached
-                  ? `Você chegou ao limite de ${MAX_SAFETY_PLANS} planos. Exclua um para cadastrar outro.`
-                  : `${plans.length} de ${MAX_SAFETY_PLANS} planos`}
+                  ? isFree
+                    ? `No Plano Grátis cabe ${maxSafetyPlans} plano de segurança. Exclua o atual ou escolha um plano para ter até ${MAX_SAFETY_PLANS}.`
+                    : `Você chegou ao limite de ${MAX_SAFETY_PLANS} planos. Exclua um para cadastrar outro.`
+                  : `${plans.length} de ${maxSafetyPlans} ${maxSafetyPlans === 1 ? 'plano' : 'planos'}`}
               </p>
             )}
           </div>

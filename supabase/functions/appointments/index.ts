@@ -20,6 +20,9 @@ const brazilMonthStartIso = (now: Date): string => {
   return `${year}-${String(month + 1).padStart(2, '0')}-01T00:00:00-03:00`;
 };
 
+/** Primeiro dia do mês corrente em Brasília, como data (para `sos_last_used`). */
+const brazilMonthStartDate = (now: Date): string => brazilMonthStartIso(now).slice(0, 10);
+
 const isSameBrazilMonth = (a: Date, b: Date) => {
   const ym1 = brazilYearMonth(a);
   const ym2 = brazilYearMonth(b);
@@ -348,34 +351,36 @@ serve(async (req) => {
       }
 
       // Sempre 'regular'. Antes o tipo vinha do app e 'emergency' pulava a
-      // checagem de plano Premium e da cota: qualquer paciente agendava
+      // checagem de plano (Flex ou Completo) e da cota: qualquer paciente agendava
       // consultas sem limite chamando a API (e cada uma entrava no repasse).
       // Atendimento de emergência é o SOS, que tem fluxo próprio.
       void appointment_type;
       const finalAppointmentType = 'regular';
       const safeNotes = typeof notes === 'string' ? notes.slice(0, 1000) : null;
 
-      // Enforce the Premium-only, 1x/month scheduling quota server-side —
-      // the client-side gate (subscriptionTier === 'Premium') can be
-      // bypassed by calling this endpoint directly, so it must never be the
-      // only check. Mirrors the same-month reset used for the SOS quota.
-      let subscriberRow: { subscribed: boolean | null; subscription_tier: string | null; subscription_end: string | null; cancel_at_period_end: boolean | null; appointments_used_this_month: boolean; appointments_last_used: string | null } | null = null;
+      // Cota de consulta no servidor (Flex e Completo, 1x/mês) — a checagem
+      // da tela pode ser pulada chamando este endpoint direto. No Flex, a
+      // consulta e o SOS dividem o mesmo atendimento do mês.
+      let subscriberRow: { subscribed: boolean | null; subscription_tier: string | null; subscription_end: string | null; cancel_at_period_end: boolean | null; appointments_used_this_month: boolean; appointments_last_used: string | null; sos_used_this_month: boolean | null; sos_last_used: string | null } | null = null;
+      let isFlex = false;
       if (finalAppointmentType === 'regular') {
         const { data: subRow } = await supabase
           .from('subscribers')
-          .select('subscribed, subscription_tier, subscription_end, cancel_at_period_end, appointments_used_this_month, appointments_last_used')
+          .select('subscribed, subscription_tier, subscription_end, cancel_at_period_end, appointments_used_this_month, appointments_last_used, sos_used_this_month, sos_last_used')
           .eq('user_id', user.id)
           .maybeSingle();
         subscriberRow = subRow;
 
         // Plano ativo de verdade: assinado e dentro da validade (o plano
         // vencido só some quando a rotina diária roda).
+        const tier = String(subRow?.subscription_tier ?? '').toLowerCase();
+        isFlex = tier === 'flex';
         const planActive =
           subRow?.subscribed === true &&
-          String(subRow?.subscription_tier ?? '').toLowerCase() === 'premium' &&
+          (tier === 'flex' || tier === 'completo') &&
           (!subRow?.subscription_end || new Date(subRow.subscription_end).getTime() > Date.now());
         if (!subscriberRow || !planActive) {
-          throw new Error('O agendamento de consultas está disponível apenas para o plano Premium.');
+          throw new Error('O agendamento de consultas está disponível apenas nos planos Flex e Completo.');
         }
 
         // Plano que não vai renovar: a consulta depois do fim seria cancelada
@@ -391,7 +396,12 @@ serve(async (req) => {
         const sameMonth = lastUsed ? isSameBrazilMonth(lastUsed, nowForQuota) : false;
 
         if (subscriberRow.appointments_used_this_month && sameMonth) {
-          throw new Error('Limite mensal de consultas agendadas já utilizado (PREMIUM: 1x/mês).');
+          throw new Error('Limite mensal de consultas agendadas já utilizado (1x/mês).');
+        }
+        // Flex: o SOS do mês já gastou o atendimento.
+        if (isFlex && subscriberRow.sos_used_this_month && subscriberRow.sos_last_used &&
+            subscriberRow.sos_last_used >= brazilMonthStartDate(nowForQuota)) {
+          throw new Error('Limite mensal de atendimento já utilizado em um SOS (FLEX: SOS ou consulta, 1x/mês).');
         }
       }
 
@@ -495,15 +505,19 @@ serve(async (req) => {
       // Reserva a consulta do mês de forma atômica ANTES de criar o pedido:
       // dois pedidos ao mesmo tempo passavam pela checagem acima antes de
       // qualquer um marcar a cota, e o paciente ficava com duas no mês.
-      const { data: reserved, error: reserveError } = await supabase
+      let reserveQuery = supabase
         .from('subscribers')
         .update({ appointments_used_this_month: true, appointments_last_used: new Date().toISOString() })
         .eq('user_id', user.id)
-        .or(`appointments_used_this_month.eq.false,appointments_last_used.is.null,appointments_last_used.lt.${brazilMonthStartIso(new Date())}`)
-        .select('id');
+        .or(`appointments_used_this_month.eq.false,appointments_last_used.is.null,appointments_last_used.lt.${brazilMonthStartIso(new Date())}`);
+      if (isFlex) {
+        // Flex: também não pode ter SOS no mês (os dois filtros valem juntos).
+        reserveQuery = reserveQuery.or(`sos_used_this_month.eq.false,sos_last_used.is.null,sos_last_used.lt.${brazilMonthStartDate(new Date())}`);
+      }
+      const { data: reserved, error: reserveError } = await reserveQuery.select('id');
       if (reserveError) throw reserveError;
       if (!reserved || reserved.length === 0) {
-        throw new Error('Limite mensal de consultas agendadas já utilizado (PREMIUM: 1x/mês).');
+        throw new Error('Limite mensal de consultas agendadas já utilizado (1x/mês).');
       }
 
       const { data: appointment, error } = await supabase
@@ -567,7 +581,7 @@ serve(async (req) => {
     // limited), not server malfunctions.
     const isConflict = /ocupado/i.test(msg);
     const isRateLimited = /muitas (tentativas|solicitações)/i.test(msg);
-    const isValidation = /obrigat|inválid|intervalo|entre 07h|10 minutos|required|dispon|limite mensal|anteced|agenda|plano premium|plano termina|passou/i.test(msg);
+    const isValidation = /obrigat|inválid|intervalo|entre 07h|10 minutos|required|dispon|limite mensal|anteced|agenda|planos flex|plano termina|passou/i.test(msg);
     const status = isConflict ? 409 : isRateLimited ? 429 : isValidation ? 400 : 500;
     return new Response(
       JSON.stringify({ error: msg }),

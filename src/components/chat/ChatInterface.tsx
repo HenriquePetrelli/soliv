@@ -25,6 +25,7 @@ import { toast } from 'sonner';
 import ChatImage from './ChatImage';
 import { useMensagens, type Mensagem } from '@/hooks/useMensagens';
 import { useAuth } from '@/contexts/AuthContext';
+import { usePlanLimits } from '@/hooks/usePlanLimits';
 import { useConversas } from '@/hooks/useConversas';
 import { isTabInBackground, notifyNewMessage } from '@/lib/browserNotifications';
 import { FotoInvalidaError, prepararFoto } from '@/lib/chatPhoto';
@@ -93,7 +94,10 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ conversaId, onVolt
   /** Altura antes de carregar as anteriores: a tela fica onde estava. */
   const alturaAntesRef = useRef<{ altura: number; topo: number } | null>(null);
 
-  const { user } = useAuth();
+  const { user, userType } = useAuth();
+  // Plano Grátis: o paciente só lê o chat (o psicólogo continua respondendo).
+  const { isFree } = usePlanLimits();
+  const chatSoLeituraPorPlano = userType === 'patient' && isFree;
   const {
     mensagens,
     loading,
@@ -278,7 +282,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ conversaId, onVolt
   }
 
   const statusInfo = getStatusInfo(conversaAtual?.status || 'ativa');
-  const podeEnviarMensagens = conversaAtual?.status === 'ativa';
+  const podeEnviarMensagens = conversaAtual?.status === 'ativa' && !chatSoLeituraPorPlano;
   const restante = MAX_CARACTERES - novaMensagem.length;
 
   return (
@@ -474,7 +478,16 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ conversaId, onVolt
         </div>
       ) : (
         <div className="border-t border-border bg-muted/40 p-3">
-          <p className="text-center text-xs text-muted-foreground">{statusInfo.description}</p>
+          {chatSoLeituraPorPlano && conversaAtual?.status === 'ativa' ? (
+            <p className="text-center text-xs text-muted-foreground">
+              No Plano Grátis o chat é só para leitura.{' '}
+              <a href="/subscription-plans" className="font-medium text-primary underline underline-offset-2">
+                Ver planos
+              </a>
+            </p>
+          ) : (
+            <p className="text-center text-xs text-muted-foreground">{statusInfo.description}</p>
+          )}
         </div>
       )}
     </div>
