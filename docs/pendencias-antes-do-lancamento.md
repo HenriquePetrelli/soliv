@@ -101,6 +101,10 @@ O que precisa ser resolvido antes de o app ficar pronto. Ao resolver um item, mo
 
 ## Resolvidas
 
+### Varredura do Supabase (resolvida em 2026-11-07)
+
+- Limpeza (funções e tabela sem uso, índices duplicados), índices nas chaves estrangeiras, políticas otimizadas e unificadas, visitante sem login sem acesso além do cadastro, funções internas fechadas para o app, lembretes de hábitos 478 ms → 27 ms. Testes de ponta a ponta repetidos depois: tudo igual para o usuário. Detalhes: `docs/visao-geral-do-produto.md` (2026-11-07) e ficha 20. Ficaram de fora, por decisão: `pg_net` no schema `public` (mover reinstala a extensão das rotinas) e índices ainda sem uso (o app ainda tem pouco tráfego para julgar; revisar depois do lançamento).
+
 ### Planos Essencial, Flex e Completo no modo de teste (resolvido em 2026-11-07)
 
 - Plus virou Essencial, Premium virou Completo e o Flex é novo; Plano Grátis com limites; repasse R$ 85,00 / R$ 40,00. Migration `20261107120000_planos_essencial_flex_completo.sql` aplicada no Supabase, 12 edge functions publicadas (mesmo `verify_jwt` de antes), produtos e preços do modo de teste no Stripe e secrets `STRIPE_PRICE_ESSENCIAL`, `STRIPE_PRICE_FLEX` e `STRIPE_PRICE_COMPLETO` conferidos. Falta o modo real (pendência 17), o aviso aos psicólogos (18) e o teste pelo app (19).

@@ -40,7 +40,7 @@
 | Webhook falso do Stripe | Assinatura conferida com `STRIPE_WEBHOOK_SECRET` | Ficha 08 |
 | TURN usado por estranhos (custo) | `ice-servers` só entrega TURN a quem está numa sala de chamada das últimas 24 h | Conta sem sala recente → resposta com `"turn": false` |
 | Ler documentos de todos os psicólogos editando os próprios metadados | Removidas as regras antigas `admin_document_access` e `admin_upload_documents` (confiavam em `is_super_admin` dentro de `user_metadata`, que o usuário edita); admin só pela tabela `admin_users` | `select count(*) from pg_policy where polname in ('admin_document_access','admin_upload_documents')` = 0 |
-| Consultar plano e SOS de outra pessoa | `can_use_sos` só para o servidor; `validate_route_access`, `prune_stale_psychologist_presence`, `can_access_document` e `can_upload_document` fechadas para o app | `has_function_privilege('authenticated','public.can_use_sos(uuid)','execute')` = `false` |
+| Consultar plano e SOS de outra pessoa | `can_use_sos` só para o servidor; `prune_stale_psychologist_presence` fechada para o app (`validate_route_access`, `can_access_document` e `can_upload_document`, sem uso, foram apagadas em 2026-11-07) | `has_function_privilege('authenticated','public.can_use_sos(uuid)','execute')` = `false` |
 | Criar conta já como admin | `handle_new_user` só aceita paciente ou psicólogo vindo do cadastro | Cadastro com `user_type: "admin"` nos metadados → perfil de paciente |
 | Psicólogo se aprovar pela inscrição | Gatilho `a_guard_registration_client_insert`: inscrição feita pelo app nasce sempre "pendente" | Inserir em `psychologist_registrations` com `status: 'approved'` → fica `pending` |
 | Forjar chamada conectada, trocar participante ou o cronômetro da sala | Gatilho `a_guard_webrtc_client_update`: só o paciente grava a resposta (o que marca a conexão), só o psicólogo mexe no cronômetro (e não aumenta), ninguém troca o outro participante, o SOS da sala ou quem encerrou; o app não cria salas | Ficha 03 |
@@ -51,6 +51,9 @@
 | Virar psicólogo aprovado pela edge function de cadastro | `psychologist-management?action=register` usa só o `user_id` e o e-mail do token, só os campos do formulário e grava sempre `pending` (a service role pula o gatilho do banco) | Chamar o register com `"approved": true` ou outro `user_id` → recusado ou fica pendente |
 | Script no link do documento (ataque ao admin) | Gatilho `validate_psychologist_document_links`: `document_url`/`documents` só `https://` ou caminho do armazenamento; no app, `src/lib/safeUrl.ts` só abre links http(s) | Update em `document_url` = `javascript:alert(1)` → "Link do documento inválido" |
 | Ver o plano de outra conta pelo e-mail reaproveitado | Política `select_own_subscription`: por e-mail só linha ainda sem dono | Conta nova com e-mail antigo de outra pessoa → 0 linhas da conta antiga |
+
+| Visitante sem login lendo tabelas ou chamando funções | Desde 2026-11-07 (migration `20261107220000_varredura_limpeza_desempenho_seguranca.sql`): o papel `anon` não tem acesso a tabelas nem funções, exceto `brazilian_states`, `brazilian_cities`, `transtornos_sintomas` (leitura, cadastro) e `check_organization_code` (código da empresa no cadastro); as políticas valem só para `authenticated` (antes `public`, que inclui visitante) | Sem login: `GET /rest/v1/profiles` → 401; `GET /rest/v1/brazilian_states` → 200 |
+| App chamando funções internas ou de gatilho | Funções de gatilho e internas sem `EXECUTE` para `anon`/`authenticated` (o gatilho continua disparando); só ficam abertas as que o app chama e as usadas nas políticas | `has_function_privilege('authenticated','public.apply_organization_entitlement()','execute')` = `false` |
 
 ## Conferência rápida no banco (tudo deve dar `true`)
 
