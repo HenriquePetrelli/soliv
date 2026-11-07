@@ -33,6 +33,7 @@ O que precisa ser resolvido antes de o app ficar pronto. Ao resolver um item, mo
 ### 17. Planos e preços no Stripe em modo real
 
 - **Situação:** os planos Essencial (R$ 69,90), Flex (R$ 120,00) e Completo (R$ 159,90) estão configurados só no **modo de teste** do Stripe (produtos, preços e secrets `STRIPE_PRICE_*` conferidos em 2026-11-07). Produtos e preços do modo de teste não passam para o modo real.
+- **Antes de tudo (bloqueia o resto):** ativar a conta do Stripe para o modo real (Configurações → Ativar pagamentos): CNPJ (MEI ou empresa), dados do responsável, endereço, descrição do negócio e conta bancária para receber. Sem isso o Stripe não libera o modo real. Situação em 2026-11-07: ainda sem empresa aberta; o app segue no modo de teste.
 - **O que fazer no lançamento:**
   1. No Stripe em **modo real**, criar os 3 produtos com preço recorrente mensal em **BRL**: Essencial R$ 69,90, Flex R$ 120,00 e Completo R$ 159,90 (o Claude cria pela API se a chave `sk_live_` for salva no formulário seguro do ambiente).
   2. Supabase → Edge Functions → Secrets: trocar `STRIPE_SECRET_KEY` pela chave real e `STRIPE_PRICE_ESSENCIAL`, `STRIPE_PRICE_FLEX` e `STRIPE_PRICE_COMPLETO` pelos IDs dos preços reais (`price_...`).
