@@ -58,8 +58,9 @@ Deno.serve(async (req) => {
       if (!sessionId.startsWith("cs_")) return json({ error: "Sessão inválida" }, 400);
       const session = await stripe.checkout.sessions.retrieve(sessionId, { expand: ["payment_intent"] });
       const pi = session.payment_intent as Stripe.PaymentIntent | null;
-      if (session.metadata?.user_id !== user.id || !pi) return json({ error: "Sessão inválida" }, 400);
-      if (session.payment_status !== "paid" || pi.status !== "succeeded") return json({ ok: false, pending: true });
+      if (session.metadata?.user_id !== user.id) return json({ error: "Sessão inválida" }, 400);
+      // Ainda sem pagamento (a pessoa voltou sem pagar, ou o banco ainda está aprovando).
+      if (!pi || session.payment_status !== "paid" || pi.status !== "succeeded") return json({ ok: false, pending: true });
       const creditId = await grant(supabase, pi);
       // Cartão usado nesta compra vira o padrão para as próximas cobranças avulsas.
       const pm = typeof pi.payment_method === "string" ? pi.payment_method : pi.payment_method?.id;
