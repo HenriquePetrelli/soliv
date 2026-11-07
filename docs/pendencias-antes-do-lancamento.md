@@ -91,16 +91,6 @@ O que precisa ser resolvido antes de o app ficar pronto. Ao resolver um item, mo
 - **Observação para deploys:** o `supabase/config.toml` tem chaves que a CLI atual recusa (`port`, `refresh_token_rotation_enabled`, `security_refresh_token_reuse_interval`), e várias funções (`stripe-webhook`, `cancel-subscription`, `mark-sos-used`, `auto-decline-appointments`, `admin-delete-patient`) estão com `verify_jwt = false` no Supabase sem constar no arquivo. Ao publicar funções pela CLI, conferir o `verify_jwt` de cada uma antes, senão o deploy liga a exigência de login e quebra o webhook e as rotinas. O histórico de migrations do Supabase também não bate com os nomes dos arquivos (o Lovable registra com outros números): não usar `supabase db push`; aplicar só a migration nova.
 - **Registrado em:** 2026-11-07.
 
-### 20. Atualizar o Postgres do Supabase
-
-- **Situação (2026-11-07):** o banco está em `supabase-postgres-17.4.1.064`, com correções de segurança pendentes (alerta do Supabase). A atualização para `17.11.0.018` é possível (conferido pela API: sem extensões incompatíveis nem objetos apagados).
-- **O que fazer:** perto do lançamento, num horário sem uso, em Project Settings → Infrastructure → "Upgrade project" (ou pedir ao Claude para disparar pela API). O banco fica fora do ar por até 1 hora. Depois, refazer os índices de texto (aviso `collation_reindex_required`; pedir ao Claude).
-- **Registrado em:** 2026-11-07.
-
-## Melhorias sugeridas
-
-## Resolvidas
-
 ### Varredura do Supabase (resolvida em 2026-11-07)
 
 - Limpeza (funções e tabela sem uso, índices duplicados), índices nas chaves estrangeiras, políticas otimizadas e unificadas, visitante sem login sem acesso além do cadastro, funções internas fechadas para o app, lembretes de hábitos 478 ms → 27 ms. Testes de ponta a ponta repetidos depois: tudo igual para o usuário. Detalhes: `docs/visao-geral-do-produto.md` (2026-11-07) e ficha 20. Ficaram de fora, por decisão: `pg_net` no schema `public` (mover reinstala a extensão das rotinas) e índices ainda sem uso (o app ainda tem pouco tráfego para julgar; revisar depois do lançamento).
