@@ -28,3 +28,8 @@ dist-ssr
 /playwright-report/
 /blob-report/
 /playwright/.cache/
+
+# Local env files (never commit real secrets)
+.env
+.env.local
+.env.*.local
