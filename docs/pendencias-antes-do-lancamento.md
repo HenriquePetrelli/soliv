@@ -58,6 +58,7 @@ O que precisa ser resolvido antes de o app ficar pronto. Ao resolver um item, mo
 
 - **Situação:** o Premium custa R$ 120,00, e o repasse de quem usa a consulta e o SOS do mês é R$ 140,00 (R$ 90 + R$ 50). Com a taxa do Stripe e o imposto (15,5%), cada Premium que usa tudo dá prejuízo de cerca de R$ 44. Para empatar nesse caso, o Premium precisaria custar cerca de R$ 176. O Plus que usa o SOS deixa cerca de R$ 5.
 - **O que fazer:** decidir entre subir o preço, mudar o valor do repasse ou tirar o SOS do Premium. Ao decidir, pedir ao Claude para atualizar `src/lib/plans.ts`, os preços no Stripe, os repasses em `sync_psychologist_payments` e os Termos.
+- **Decisão (2026-11-07):** três planos. **Plus** R$ 69,90 (1 SOS por mês), **Gold** R$ 120,00 (1 SOS **ou** 1 consulta por mês) e **Premium** R$ 159,90 (1 SOS **e** 1 consulta por mês). Falta mudar o app: novo plano Gold no banco e nas edge functions (`PLAN_LIMITS` em `supabase/functions/_shared/billing.ts`), cota compartilhada do Gold, preços novos no Stripe (`STRIPE_PRICE_GOLD`), telas de planos e Termos. Com imposto de 15,5%, o Premium usado por completo ainda deixa cerca de R$ 13 de prejuízo (empata a partir de cerca de R$ 176); com 6% (Fator R), empata.
 - **Registrado em:** 2026-11-06.
 
 ### 21. SOS on-line e a norma do CFP sobre urgência e emergência
