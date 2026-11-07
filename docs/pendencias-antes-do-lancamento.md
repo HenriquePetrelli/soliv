@@ -67,10 +67,10 @@ O que precisa ser resolvido antes de o app ficar pronto. Ao resolver um item, mo
   | Premium | R$ 159,90/mês | 1 SOS **e** 1 consulta | ≈ R$ 2,23 |
   | SOS avulso, sem plano | R$ 79,90 | 1 SOS | ≈ R$ 23,94 |
   | Consulta avulsa, sem plano | R$ 149,90 | 1 consulta | ≈ R$ 35,29 |
-  | SOS avulso, com plano | R$ 50,00 | 1 SOS além da cota | **≈ −R$ 0,13** |
-  | Consulta avulsa, com plano | R$ 100,00 | 1 consulta além da cota | **≈ −R$ 4,88** |
+  | SOS avulso, com plano | R$ 54,90 | 1 SOS além da cota | ≈ R$ 3,81 |
+  | Consulta avulsa, com plano | R$ 109,90 | 1 consulta além da cota | ≈ R$ 3,09 |
 
-  "Sobra" é o preço menos a taxa do Stripe (≈ 4,7% + R$ 0,39 na assinatura; ≈ 3,99% + R$ 0,39 no avulso), o Simples Nacional e o repasse, antes dos custos fixos. **Falta decidir:** os dois avulsos para quem tem plano dão prejuízo com imposto de 15,5%; os mínimos são R$ 50,90 (SOS) e R$ 106,90 (consulta). Com imposto de 6% (Fator R), os valores atuais deixam ≈ R$ 4,62.
+  "Sobra" é o preço menos a taxa do Stripe (≈ 4,7% + R$ 0,39 na assinatura; ≈ 3,99% + R$ 0,39 no avulso), o Simples Nacional e o repasse, antes dos custos fixos. Nenhuma venda fica negativa: os avulsos para quem tem plano começaram em R$ 50,00 e R$ 100,00 (davam prejuízo) e subiram para R$ 54,90 e R$ 109,90.
 - **Falta mudar o app:** plano Gold no banco e nas edge functions (`PLAN_LIMITS` em `supabase/functions/_shared/billing.ts`) com cota compartilhada entre SOS e consulta; preço novo do Premium e do Gold no Stripe (`STRIPE_PRICE_GOLD`); **compra avulsa** de SOS e consulta (pagamento único no Stripe, que hoje não existe), com preço diferente para quem tem plano; repasses de R$ 40 e R$ 85 em `sync_psychologist_payments` (hoje R$ 50 e R$ 90); telas de planos, Termos e ficha 09.
 - **Registrado em:** 2026-11-06.
 
