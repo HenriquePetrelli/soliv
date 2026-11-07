@@ -2,7 +2,7 @@
 
 O que precisa ser resolvido antes de o app ficar pronto. Ao resolver um item, mova-o para "Resolvidas" com a data e o que foi feito.
 
-> **Passo a passo das configurações externas** (pendências 2, 5 e 6; a 1, a 3 e o webhook do Stripe já foram resolvidos): `docs/guia-configuracoes-externas.md`.
+> **Passo a passo das configurações externas** (pendências 2, 5, 6 e 17; a 1, a 3 e o webhook do Stripe já foram resolvidos): `docs/guia-configuracoes-externas.md`.
 
 ## Críticas
 
@@ -30,6 +30,17 @@ O que precisa ser resolvido antes de o app ficar pronto. Ao resolver um item, mo
 - **Como conferir:** pedir "Esqueci minha senha" com um e-mail que não é da equipe; o e-mail chega em português, com a logo e remetente "Soliv". Enviar um pedido de suporte e conferir que ele chega na caixa da equipe.
 - **Registrado em:** 2026-10-05.
 
+### 17. Planos e preços no Stripe em modo real
+
+- **Situação:** os planos Essencial (R$ 69,90), Flex (R$ 120,00) e Completo (R$ 159,90) estão configurados só no **modo de teste** do Stripe (produtos, preços e secrets `STRIPE_PRICE_*` conferidos em 2026-11-07). Produtos e preços do modo de teste não passam para o modo real.
+- **O que fazer no lançamento:**
+  1. No Stripe em **modo real**, criar os 3 produtos com preço recorrente mensal em **BRL**: Essencial R$ 69,90, Flex R$ 120,00 e Completo R$ 159,90 (o Claude cria pela API se a chave `sk_live_` for salva no formulário seguro do ambiente).
+  2. Supabase → Edge Functions → Secrets: trocar `STRIPE_SECRET_KEY` pela chave real e `STRIPE_PRICE_ESSENCIAL`, `STRIPE_PRICE_FLEX` e `STRIPE_PRICE_COMPLETO` pelos IDs dos preços reais (`price_...`).
+  3. Criar o webhook no modo real (mesmo destino e eventos do teste) e trocar `STRIPE_WEBHOOK_SECRET` (ficha 08).
+  4. Portal do cliente (Configurações → Billing → Customer portal) no modo real: se a troca de plano estiver ligada, listar só os 3 planos novos, ou deixar desligada (o app já faz a troca).
+- **Como conferir:** assinar um plano com cartão real de baixo valor (ou cupom de 100%), ver o plano no Perfil e cancelar dentro dos 7 dias (o reembolso sai automático).
+- **Registrado em:** 2026-11-07.
+
 ## Importantes
 
 ### 5. Configurar o TURN das chamadas de vídeo
@@ -56,12 +67,36 @@ O que precisa ser resolvido antes de o app ficar pronto. Ao resolver um item, mo
 ### 16. Revisão jurídica dos documentos
 
 - **Situação:** política de privacidade, termos de uso (paciente e psicólogo) e registro de tratamento (`docs/lgpd/`) estão em versão para revisão. O registro ainda tem itens **[DECIDIR]** (prazo dos logs de segurança além dos 6 meses do Marco Civil) e **[CONFIRMAR]** (hospedagem do front-end pela Lovable, regiões e cláusulas da transferência internacional de dados).
+- **Atualizado em 2026-11-07:** os Termos do paciente (planos Grátis, Essencial, Flex e Completo) e do psicólogo (repasse R$ 85,00 e R$ 40,00) mudaram e continuam na versão 1.0, porque ainda não foram publicados; incluir na revisão.
 - **O que fazer:** revisão por um advogado de proteção de dados antes do lançamento; depois, pedir ao Claude para atualizar os textos e a versão dos documentos (o app pede o aceite de novo quando a versão muda).
 - **Registrado em:** 2026-10-13 (estava só na ficha 18).
+
+### 18. Avisar os psicólogos do novo valor do repasse
+
+- **Situação:** desde 2026-11-07 o repasse é R$ 85,00 por consulta agendada e R$ 40,00 por SOS (antes R$ 90,00 e R$ 50,00), já valendo no banco para os atendimentos registrados a partir dessa data. Os Termos do psicólogo (item 7) prometem **aviso de pelo menos 30 dias** antes de mudar os valores.
+- **O que fazer:** avisar os psicólogos já cadastrados (e-mail ou aviso no app) com 30 dias de antecedência e a data em que o novo valor passa a valer. Se a mudança precisar respeitar esse prazo para quem já atende, decidir se os atendimentos até a data do aviso + 30 dias ficam com o valor antigo (pedir ao Claude para ajustar o cálculo).
+- **Registrado em:** 2026-11-07.
+
+### 19. Teste de ponta a ponta dos planos novos
+
+- **Situação:** banco, edge functions, produtos do Stripe (modo de teste) e secrets foram publicados e conferidos em 2026-11-07, mas nenhuma assinatura foi feita pelo app depois da mudança.
+- **O que fazer** (modo de teste, cartão `4242 4242 4242 4242`, qualquer data futura e CVC):
+  1. Assinar o **Flex** → o checkout mostra R$ 120,00 e o Perfil mostra "Plano Flex".
+  2. No Flex, usar o SOS → Consultas → Agendar fica bloqueado ("Atendimento do mês já usado"). Em outra conta Flex, agendar uma consulta → o SOS fica indisponível.
+  3. Subir para o **Completo** → aparece a prévia da diferença proporcional → SOS e consulta liberados no mesmo mês.
+  4. Conta sem plano: diário só leitura, 4º hábito recusado, 2º plano de segurança recusado, chat sem envio, grupos sem publicar.
+  5. Admin → Repasses → Sincronizar depois de um SOS e uma consulta → R$ 125,00 pendentes.
+- **Roteiro completo:** `docs/roteiro-de-testes.md` (seções s03, s06 e s07).
+- **Observação para deploys:** o `supabase/config.toml` tem chaves que a CLI atual recusa (`port`, `refresh_token_rotation_enabled`, `security_refresh_token_reuse_interval`), e várias funções (`stripe-webhook`, `cancel-subscription`, `mark-sos-used`, `auto-decline-appointments`, `admin-delete-patient`) estão com `verify_jwt = false` no Supabase sem constar no arquivo. Ao publicar funções pela CLI, conferir o `verify_jwt` de cada uma antes, senão o deploy liga a exigência de login e quebra o webhook e as rotinas. O histórico de migrations do Supabase também não bate com os nomes dos arquivos (o Lovable registra com outros números): não usar `supabase db push`; aplicar só a migration nova.
+- **Registrado em:** 2026-11-07.
 
 ## Melhorias sugeridas
 
 ## Resolvidas
+
+### Planos Essencial, Flex e Completo no modo de teste (resolvido em 2026-11-07)
+
+- Plus virou Essencial, Premium virou Completo e o Flex é novo; Plano Grátis com limites; repasse R$ 85,00 / R$ 40,00. Migration `20261107120000_planos_essencial_flex_completo.sql` aplicada no Supabase, 12 edge functions publicadas (mesmo `verify_jwt` de antes), produtos e preços do modo de teste no Stripe e secrets `STRIPE_PRICE_ESSENCIAL`, `STRIPE_PRICE_FLEX` e `STRIPE_PRICE_COMPLETO` conferidos. Falta o modo real (pendência 17), o aviso aos psicólogos (18) e o teste pelo app (19).
 
 ### 8. SOS por mensagem (sugerida em 2026-10-04, feita em 2026-11-02)
 
