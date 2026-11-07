@@ -363,6 +363,16 @@ serve(async (req) => {
       // consulta e o SOS dividem o mesmo atendimento do mês.
       let subscriberRow: { subscribed: boolean | null; subscription_tier: string | null; subscription_end: string | null; cancel_at_period_end: boolean | null; appointments_used_this_month: boolean; appointments_last_used: string | null; sos_used_this_month: boolean | null; sos_last_used: string | null } | null = null;
       let isFlex = false;
+      // Sem cota do plano (sem plano, Essencial ou cota do mês usada): usa
+      // uma consulta avulsa já paga, se houver (tabela extra_credits).
+      let useExtraCredit = false;
+      const { count: extraAvailable } = await supabase
+        .from('extra_credits')
+        .select('id', { count: 'exact', head: true })
+        .eq('user_id', user.id)
+        .eq('kind', 'appointment')
+        .eq('status', 'available');
+      const hasExtraCredit = (extraAvailable ?? 0) > 0;
       if (finalAppointmentType === 'regular') {
         const { data: subRow } = await supabase
           .from('subscribers')
@@ -379,30 +389,33 @@ serve(async (req) => {
           subRow?.subscribed === true &&
           (tier === 'flex' || tier === 'completo') &&
           (!subRow?.subscription_end || new Date(subRow.subscription_end).getTime() > Date.now());
-        if (!subscriberRow || !planActive) {
-          throw new Error('O agendamento de consultas está disponível apenas nos planos Flex e Completo.');
+        const nowForQuota = new Date();
+        const lastUsed = subscriberRow?.appointments_last_used ? new Date(subscriberRow.appointments_last_used) : null;
+        const sameMonth = lastUsed ? isSameBrazilMonth(lastUsed, nowForQuota) : false;
+        const planQuotaUsed = Boolean(subscriberRow?.appointments_used_this_month && sameMonth);
+        const flexSosUsed = isFlex && Boolean(subscriberRow?.sos_used_this_month && subscriberRow?.sos_last_used &&
+          subscriberRow.sos_last_used >= brazilMonthStartDate(nowForQuota));
+        const planUsable = Boolean(subscriberRow) && planActive && !planQuotaUsed && !flexSosUsed;
+
+        if (!planUsable && hasExtraCredit) {
+          useExtraCredit = true;
+        } else if (!subscriberRow || !planActive) {
+          throw new Error('O agendamento de consultas está disponível apenas nos planos Flex e Completo, ou como consulta avulsa.');
+        } else if (planQuotaUsed) {
+          throw new Error('Limite mensal de consultas agendadas já utilizado (1x/mês).');
+        } else if (flexSosUsed) {
+          // Flex: o SOS do mês já gastou o atendimento.
+          throw new Error('Limite mensal de atendimento já utilizado em um SOS (FLEX: SOS ou consulta, 1x/mês).');
         }
 
         // Plano que não vai renovar: a consulta depois do fim seria cancelada
         // quando o plano terminar, então nem é marcada.
-        if (subRow?.cancel_at_period_end && subRow.subscription_end &&
+        if (!useExtraCredit && subRow?.cancel_at_period_end && subRow.subscription_end &&
             new Date(scheduled_at).getTime() >= new Date(subRow.subscription_end).getTime()) {
           const endLabel = new Date(subRow.subscription_end).toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' });
           throw new Error(`Seu plano termina em ${endLabel}. Agende até essa data ou renove o plano.`);
         }
 
-        const lastUsed = subscriberRow.appointments_last_used ? new Date(subscriberRow.appointments_last_used) : null;
-        const nowForQuota = new Date();
-        const sameMonth = lastUsed ? isSameBrazilMonth(lastUsed, nowForQuota) : false;
-
-        if (subscriberRow.appointments_used_this_month && sameMonth) {
-          throw new Error('Limite mensal de consultas agendadas já utilizado (1x/mês).');
-        }
-        // Flex: o SOS do mês já gastou o atendimento.
-        if (isFlex && subscriberRow.sos_used_this_month && subscriberRow.sos_last_used &&
-            subscriberRow.sos_last_used >= brazilMonthStartDate(nowForQuota)) {
-          throw new Error('Limite mensal de atendimento já utilizado em um SOS (FLEX: SOS ou consulta, 1x/mês).');
-        }
       }
 
       // Psychologist's own booking rules (defaults when never configured).
@@ -505,6 +518,19 @@ serve(async (req) => {
       // Reserva a consulta do mês de forma atômica ANTES de criar o pedido:
       // dois pedidos ao mesmo tempo passavam pela checagem acima antes de
       // qualquer um marcar a cota, e o paciente ficava com duas no mês.
+      const appointmentId = requestId ?? crypto.randomUUID();
+      let extraCreditId: string | null = null;
+      if (useExtraCredit) {
+        const { data: creditId, error: creditError } = await supabase.rpc('consume_extra_credit', {
+          p_user_id: user.id,
+          p_kind: 'appointment',
+          p_emergency_request_id: null,
+          p_appointment_id: appointmentId,
+        });
+        if (creditError) throw creditError;
+        if (!creditId) throw new Error('Limite mensal de consultas agendadas já utilizado (1x/mês).');
+        extraCreditId = creditId as string;
+      } else {
       let reserveQuery = supabase
         .from('subscribers')
         .update({ appointments_used_this_month: true, appointments_last_used: new Date().toISOString() })
@@ -519,11 +545,13 @@ serve(async (req) => {
       if (!reserved || reserved.length === 0) {
         throw new Error('Limite mensal de consultas agendadas já utilizado (1x/mês).');
       }
+      }
 
       const { data: appointment, error } = await supabase
         .from('appointments')
         .insert({
-          ...(requestId ? { id: requestId } : {}),
+          id: appointmentId,
+          extra_credit_id: extraCreditId,
           patient_id: user.id,
           psychologist_id,
           scheduled_at,
@@ -542,11 +570,15 @@ serve(async (req) => {
         .single();
 
       if (error) {
-        // O pedido não foi criado: devolve a cota reservada.
-        await supabase
-          .from('subscribers')
-          .update({ appointments_used_this_month: false })
-          .eq('user_id', user.id);
+        // O pedido não foi criado: devolve a cota (ou o avulso) reservada.
+        if (extraCreditId) {
+          await supabase.rpc('return_extra_credit', { p_credit_id: extraCreditId });
+        } else {
+          await supabase
+            .from('subscribers')
+            .update({ appointments_used_this_month: false })
+            .eq('user_id', user.id);
+        }
         throw error;
       }
 

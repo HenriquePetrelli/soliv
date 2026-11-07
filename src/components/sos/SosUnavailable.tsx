@@ -1,4 +1,4 @@
-import { CalendarDays, Phone, ShieldCheck, Sparkles, Wind } from 'lucide-react';
+import { CalendarDays, CreditCard, Phone, ShieldCheck, Sparkles, Wind } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -9,6 +9,9 @@ interface SosUnavailableProps {
   onBreathe: () => void;
   onSafetyPlan: () => void;
   onNavigate: (path: string) => void;
+  /** Comprar um SOS avulso (com o preço já formatado, ex.: "R$ 54,90"). */
+  onBuyExtra?: () => void;
+  extraPriceLabel?: string;
 }
 
 /** Recusa por cota do mês, sem plano ou conta bloqueada: o texto muda, as saídas de ajuda ficam. */
@@ -58,7 +61,7 @@ const Option = ({ icon: Icon, title, description, onClick }: { icon: LucideIcon;
  * Tela da espera quando o SOS não pode ser usado. Antes aparecia só um aviso
  * flutuante e a tela continuava em "Buscando um psicólogo", sem pedido nenhum.
  */
-const SosUnavailable = ({ denial, onBreathe, onSafetyPlan, onNavigate }: SosUnavailableProps) => {
+const SosUnavailable = ({ denial, onBreathe, onSafetyPlan, onNavigate, onBuyExtra, extraPriceLabel }: SosUnavailableProps) => {
   const { title, text, kind } = describe(denial);
 
   return (
@@ -85,6 +88,14 @@ const SosUnavailable = ({ denial, onBreathe, onSafetyPlan, onNavigate }: SosUnav
       </Card>
 
       <div className="space-y-2">
+        {kind !== 'blocked' && onBuyExtra && (
+          <Option
+            icon={CreditCard}
+            title={`Comprar um SOS avulso${extraPriceLabel ? ` (${extraPriceLabel})` : ''}`}
+            description="Cobrado na hora no seu cartão; o psicólogo atende em seguida"
+            onClick={onBuyExtra}
+          />
+        )}
         <Option icon={Wind} title="Respirar agora" description="Um exercício curto para acalmar o corpo" onClick={onBreathe} />
         <Option icon={ShieldCheck} title="Meu plano de segurança" description="O que ajuda você e quem chamar" onClick={onSafetyPlan} />
         {kind === 'quota' && denial.planType === 'Completo' && (

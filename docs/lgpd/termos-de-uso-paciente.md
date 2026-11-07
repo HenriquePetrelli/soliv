@@ -42,6 +42,15 @@ Os recursos de autocuidado e os grupos de apoio **não são atendimento psicoló
 | **Flex** | R$ 120,00 por mês | 1 atendimento por mês, à sua escolha: SOS, de até 25 minutos, **ou** consulta agendada, de 50 minutos |
 | **Completo** | R$ 159,90 por mês | 1 atendimento SOS por mês, de até 25 minutos, **e** 1 consulta agendada por mês, de 50 minutos |
 
+**Atendimentos avulsos:** quem não tem plano, ou já usou o que o plano inclui no mês, pode comprar um atendimento por vez, cobrado na hora no cartão cadastrado (ou na página de pagamento, se não houver cartão):
+
+| Avulso | Sem plano | Com plano pago |
+|---|---|---|
+| SOS, de até 25 minutos | R$ 79,90 | R$ 54,90 |
+| Consulta agendada, de 50 minutos | R$ 149,90 | R$ 109,90 |
+
+O avulso comprado fica disponível até ser usado, inclusive depois que o plano termina. A cota do plano é usada antes do avulso. Se o atendimento não acontecer (SOS que não chega a conectar, consulta recusada, cancelada com antecedência ou não realizada), o avulso volta a ficar disponível para outra vez. ⚖️
+
 Os planos pagos incluem também, sem limite: respiração guiada, sons terapêuticos, grupos de apoio (ler e publicar), diário, hábitos (até 10), planos de segurança (até 10) e chat com o psicólogo.
 
 - A cobrança é mensal, feita no cartão de crédito por meio da Stripe, e **renova automaticamente** até você cancelar. O recibo de cada cobrança vai para o seu e-mail, e as faturas ficam em **Planos → Gerenciar pagamento**.

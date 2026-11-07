@@ -37,7 +37,8 @@ O que precisa ser resolvido antes de o app ficar pronto. Ao resolver um item, mo
   1. No Stripe em **modo real**, criar os 3 produtos com preço recorrente mensal em **BRL**: Essencial R$ 69,90, Flex R$ 120,00 e Completo R$ 159,90 (o Claude cria pela API se a chave `sk_live_` for salva no formulário seguro do ambiente).
   2. Supabase → Edge Functions → Secrets: trocar `STRIPE_SECRET_KEY` pela chave real e `STRIPE_PRICE_ESSENCIAL`, `STRIPE_PRICE_FLEX` e `STRIPE_PRICE_COMPLETO` pelos IDs dos preços reais (`price_...`).
   3. Criar o webhook no modo real (mesmo destino e eventos do teste) e trocar `STRIPE_WEBHOOK_SECRET` (ficha 08).
-  4. Portal do cliente (Configurações → Billing → Customer portal) no modo real: se a troca de plano estiver ligada, listar só os 3 planos novos, ou deixar desligada (o app já faz a troca).
+  4. Avulsos no modo real: criar os 4 produtos de cobrança única em BRL (SOS avulso R$ 79,90 e R$ 54,90; consulta avulsa R$ 149,90 e R$ 109,90) e cadastrar `STRIPE_PRICE_GRATIS_SOS_AVULSO`, `STRIPE_PRICE_GRATIS_AGENDADA_AVULSO`, `STRIPE_PRICE_ASSINATURA_SOS_AVULSO` e `STRIPE_PRICE_ASSINATURA_AGENDADA_AVULSO`. Sem eles o app cobra o valor de tabela com um nome genérico.
+  5. Portal do cliente (Configurações → Billing → Customer portal) no modo real: se a troca de plano estiver ligada, listar só os 3 planos novos, ou deixar desligada (o app já faz a troca).
 - **Como conferir:** assinar um plano com cartão real de baixo valor (ou cupom de 100%), ver o plano no Perfil e cancelar dentro dos 7 dias (o reembolso sai automático).
 - **Registrado em:** 2026-11-07.
 

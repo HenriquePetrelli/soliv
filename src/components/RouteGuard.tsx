@@ -54,6 +54,7 @@ export const ROUTE_PERMISSIONS = {
     '/subscription-plans',
     '/subscription-success',
     '/subscription-cancel',
+    '/avulso/sucesso',
     '/chat', // chat disponível para pacientes
     '/emergency-call', // paciente e psicólogo podem acessar
     '/emergency-call/', // rotas com parâmetros

@@ -162,3 +162,19 @@ export const changeDirection = (from: Tier | null, to: Tier): "upgrade" | "downg
  */
 export const cancelMode = (withdrawalEligible: boolean, status: string): "immediate" | "period_end" =>
   withdrawalEligible || status === "past_due" ? "immediate" : "period_end";
+
+/**
+ * Atendimentos avulsos (em centavos). Quem tem plano pago (Essencial, Flex ou
+ * Completo, inclusive pela empresa) paga o preço de assinante.
+ */
+export type ExtraKind = "sos" | "appointment";
+export const EXTRA_PRICES: Record<"free" | "plan", Record<ExtraKind, number>> = {
+  free: { sos: 7990, appointment: 14990 },
+  plan: { sos: 5490, appointment: 10990 },
+};
+export const EXTRA_LABELS: Record<ExtraKind, string> = {
+  sos: "SOS avulso (até 25 minutos)",
+  appointment: "Consulta agendada avulsa (50 minutos)",
+};
+export const parseExtraKind = (value: unknown): ExtraKind | null =>
+  value === "sos" || value === "appointment" ? value : null;

@@ -108,3 +108,14 @@ describe('regras de assinatura (Stripe)', () => {
     expect(tierForPrice({ ...prices, Flex: '' }, '')).toBeNull();
   });
 });
+
+import { EXTRA_PRICES } from '../../supabase/functions/_shared/billing';
+import { EXTRA_PRICES_CENTS } from '@/lib/plans';
+
+describe('avulsos', () => {
+  it('preços: sem plano R$ 79,90 / R$ 149,90; com plano R$ 54,90 / R$ 109,90', () => {
+    expect(EXTRA_PRICES).toEqual({ free: { sos: 7990, appointment: 14990 }, plan: { sos: 5490, appointment: 10990 } });
+    // A tela mostra o mesmo que o servidor cobra.
+    expect(EXTRA_PRICES_CENTS).toEqual(EXTRA_PRICES);
+  });
+});

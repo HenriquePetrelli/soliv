@@ -19,6 +19,19 @@ export const PLAN_PRICES: PlanPrices = {
   legacy: { [LEGACY_PREMIUM_PRICE]: "Completo" },
 };
 
+// Atendimentos avulsos (produtos de cobrança única no Stripe). Os IDs de teste
+// servem de padrão; no modo real, cadastre os secrets.
+export const EXTRA_PRICE_IDS: Record<"free" | "plan", Record<"sos" | "appointment", string>> = {
+  free: {
+    sos: Deno.env.get("STRIPE_PRICE_GRATIS_SOS_AVULSO") ?? "price_1UZHeOPhFwqSktZsgXX5nUT8",
+    appointment: Deno.env.get("STRIPE_PRICE_GRATIS_AGENDADA_AVULSO") ?? "price_1UZHewPhFwqSktZsmcxWY6jh",
+  },
+  plan: {
+    sos: Deno.env.get("STRIPE_PRICE_ASSINATURA_SOS_AVULSO") ?? "price_1UZHh6PhFwqSktZseJdXItyE",
+    appointment: Deno.env.get("STRIPE_PRICE_ASSINATURA_AGENDADA_AVULSO") ?? "price_1UZHi3PhFwqSktZsKqo9qF1v",
+  },
+};
+
 export const newStripe = () =>
   new Stripe(Deno.env.get("STRIPE_SECRET_KEY") ?? "", {
     apiVersion: "2023-10-16",

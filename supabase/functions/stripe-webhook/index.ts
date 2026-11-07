@@ -2,6 +2,7 @@ import Stripe from "https://esm.sh/stripe@14.21.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { PLAN_LIMITS, stripeState } from "../_shared/billing.ts";
 import { PLAN_PRICES, listSubscriptions, newStripe } from "../_shared/stripe.ts";
+import { grantFromPaymentIntent } from "../_shared/extras.ts";
 
 // Mantém `subscribers` em dia com o Stripe sem depender de a pessoa abrir o
 // app (check-subscription): cancelamento, renovação recusada, troca de plano
@@ -161,6 +162,14 @@ Deno.serve(async (req) => {
         const customerId = customerIdOf(session.customer);
         if (session.mode === "subscription" && customerId) {
           await syncCustomer(customerId, session.metadata?.user_id ?? session.client_reference_id ?? null);
+        }
+        // Atendimento avulso pago pela página do Stripe (buy-extra): libera o
+        // crédito mesmo que a pessoa não volte ao app.
+        if (session.mode === "payment" && session.metadata?.origin === "soliv-avulso" && session.payment_intent) {
+          const piId = typeof session.payment_intent === "string" ? session.payment_intent : session.payment_intent.id;
+          const pi = await stripe.paymentIntents.retrieve(piId);
+          const creditId = await grantFromPaymentIntent(supabase, pi);
+          log("Extra credit granted", { session: session.id, creditId });
         }
         break;
       }

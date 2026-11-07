@@ -79,6 +79,7 @@ const Achievements = lazy(() => import("./pages/Achievements"));
 const ActivityHistory = lazy(() => import("./pages/ActivityHistory"));
 const SubscriptionPlans = lazy(() => import("./pages/SubscriptionPlans"));
 const SubscriptionSuccess = lazy(() => import("./pages/SubscriptionSuccess"));
+const ExtraPurchaseSuccess = lazy(() => import("./pages/ExtraPurchaseSuccess"));
 const SubscriptionCancel = lazy(() => import("./pages/SubscriptionCancel"));
 const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
 const PsychologistDashboard = lazy(() => import("./pages/PsychologistDashboard"));
@@ -359,6 +360,11 @@ const App = () => {
                   <Route path="/subscription-success" element={
                     <RouteGuard allowedUserTypes={['patient']}>
                       <SubscriptionSuccess />
+                    </RouteGuard>
+                  } />
+                  <Route path="/avulso/sucesso" element={
+                    <RouteGuard allowedUserTypes={['patient']}>
+                      <ExtraPurchaseSuccess />
                     </RouteGuard>
                   } />
                   <Route path="/subscription-cancel" element={

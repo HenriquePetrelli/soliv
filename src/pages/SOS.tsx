@@ -14,6 +14,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { getSessionUser } from '@/lib/currentUser';
 import { useEmergencySOS, type SosDenial } from "@/hooks/useEmergencySOS";
 import SosUnavailable from "@/components/sos/SosUnavailable";
+import ExtraPurchaseDialog from "@/components/ExtraPurchaseDialog";
+import { useSubscription } from "@/contexts/SubscriptionContext";
+import { formatCents } from "@/lib/plans";
 import { notifySosQueueChanged, subscribeSosQueue } from "@/lib/sosQueueChannel";
 
 
@@ -41,6 +44,8 @@ const SOS = () => {
   const [expired, setExpired] = useState(false);
   // SOS recusado (cota do mês, sem plano, conta bloqueada): tela própria, sem busca.
   const [denial, setDenial] = useState<SosDenial | null>(null);
+  const [buyOpen, setBuyOpen] = useState(false);
+  const { extraPrices } = useSubscription();
   const { cancelRequest, createEmergencyRequest } = useEmergencySOS();
   // Triagem marcada na confirmação: mantém os números certos em destaque na espera.
   const [triage, setTriage] = useState<SosTriageKey[]>([]);
@@ -369,6 +374,16 @@ const SOS = () => {
           onBreathe={() => setBreathingOpen(true)}
           onSafetyPlan={() => setSafetyPlanOpen(true)}
           onNavigate={navigate}
+          onBuyExtra={() => setBuyOpen(true)}
+          extraPriceLabel={formatCents(extraPrices.sos)}
+        />
+        <ExtraPurchaseDialog
+          kind="sos"
+          open={buyOpen}
+          onOpenChange={setBuyOpen}
+          reason={/limite mensal|atendimento do mês/i.test(denial.message) ? denial.message : null}
+          // Crédito liberado: recomeça o pedido de SOS do zero.
+          onPurchased={() => window.location.assign('/sos')}
         />
         <SosBreathingDialog open={breathingOpen} onOpenChange={setBreathingOpen} inQueue={false} />
         <SosSafetyPlanDialog open={safetyPlanOpen} onOpenChange={setSafetyPlanOpen} inQueue={false} />

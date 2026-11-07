@@ -135,6 +135,7 @@ const ROUTES: { match: RegExp; render: (pathname: string) => ReactNode }[] = [
   { match: /^\/achievements/, render: () => screen("Minhas conquistas", <CardListSkeleton count={5} />, "max-w-3xl") },
   { match: /^\/subscription-plans/, render: () => screen("Planos de Assinatura", <SubscriptionPlansBodySkeleton />, "max-w-4xl") },
   { match: /^\/subscription-(success|cancel)/, render: () => <SubscriptionResultSkeleton /> },
+  { match: /^\/avulso\/sucesso/, render: () => <SubscriptionResultSkeleton /> },
 
   // Chamadas de vídeo.
   { match: /^\/(consultation-call|emergency-call|emergency\/call)/, render: () => <CallSkeleton /> },

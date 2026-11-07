@@ -86,7 +86,7 @@ serve(async (req) => {
     // Fetch emergency request to identify the patient
     const { data: emergency, error: emergencyError } = await supabaseService
       .from('emergency_requests')
-      .select('id, patient_id, started_at')
+      .select('id, patient_id, started_at, extra_credit_id')
       .eq('id', requestId)
       .maybeSingle();
 
@@ -112,6 +112,16 @@ serve(async (req) => {
       });
     }
 
+
+    // SOS pago com crédito avulso (gatilho mark_sos_used_on_start): a cota
+    // do plano não é tocada.
+    if ((emergency as any).extra_credit_id) {
+      logStep("SOS paid with an extra credit, plan quota untouched", { requestId });
+      return new Response(JSON.stringify({ ok: true, skipped: true, extra: true }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 200,
+      });
+    }
 
     // Fetch subscriber row for the patient
     const { data: subscriber } = await supabaseService

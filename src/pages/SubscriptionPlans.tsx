@@ -1,4 +1,4 @@
-import { PLAN_LIST, planTierRank as tierRank } from "@/lib/plans";
+import { EXTRA_NAMES, EXTRA_PRICES_CENTS, PLAN_LIST, formatCents, planTierRank as tierRank } from "@/lib/plans";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -504,6 +504,34 @@ const SubscriptionPlans = () => {
             </Card>
           ))}
         </div>
+
+        <section aria-labelledby="avulsos" className="mx-auto mt-10 max-w-3xl rounded-2xl border border-border bg-card p-5">
+          <h2 id="avulsos" className="text-lg font-semibold text-foreground">Atendimentos avulsos</h2>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Precisa de mais um atendimento no mês, ou não quer assinar? Compre só o que usar, cobrado na hora no cartão.
+          </p>
+          <table className="mt-4 w-full text-sm">
+            <thead>
+              <tr className="text-left text-muted-foreground">
+                <th className="py-1 font-medium"></th>
+                <th className="py-1 font-medium">Sem plano</th>
+                <th className="py-1 font-medium">Com plano</th>
+              </tr>
+            </thead>
+            <tbody>
+              {(['sos', 'appointment'] as const).map((kind) => (
+                <tr key={kind} className="border-t border-border">
+                  <td className="py-2 text-foreground">{EXTRA_NAMES[kind]}</td>
+                  <td className="py-2">{formatCents(EXTRA_PRICES_CENTS.free[kind])}</td>
+                  <td className="py-2 font-medium text-primary">{formatCents(EXTRA_PRICES_CENTS.plan[kind])}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          <p className="mt-3 text-xs text-muted-foreground">
+            Para comprar, toque em SOS ou em Agendar consulta quando o seu plano não tiver mais o atendimento do mês.
+          </p>
+        </section>
 
         <div className="mt-12 text-center">
           {!fromCompany && (

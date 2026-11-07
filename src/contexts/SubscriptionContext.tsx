@@ -3,7 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { withExpiredCancellation } from '@/lib/subscriptionStatus';
-import { hasPaidPlan as tierIsPaid, parsePlanTier, type PlanTier } from '@/lib/plans';
+import { EXTRA_PRICES_CENTS, hasPaidPlan as tierIsPaid, parsePlanTier, type ExtraKind, type PlanTier } from '@/lib/plans';
 
 interface SubscriptionContextType {
   subscribed: boolean;
@@ -15,6 +15,13 @@ interface SubscriptionContextType {
   currentUsage: { appointments: number; sos_uses: number };
   canScheduleAppointment: boolean;
   appointmentReason: string | null;
+  /** Cota do próprio plano (sem contar avulsos) e o motivo quando não há. */
+  planCanScheduleAppointment: boolean;
+  planAppointmentReason: string | null;
+  /** Atendimentos avulsos pagos e ainda não usados. */
+  extraCredits: Record<ExtraKind, number>;
+  /** Preço do avulso para esta pessoa (assinante paga menos), em centavos. */
+  extraPrices: Record<ExtraKind, number>;
   /** De onde vem o plano: assinatura própria (Stripe) ou benefício da empresa (B2B). */
   entitlementSource: 'stripe' | 'organization' | null;
   /** Nome da empresa, quando o plano vem dela. */
@@ -78,6 +85,10 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
   const [currentUsage, setCurrentUsage] = useState({ appointments: 0, sos_uses: 0 });
   const [canScheduleAppointment, setCanScheduleAppointment] = useState(false);
   const [appointmentReason, setAppointmentReason] = useState<string | null>(null);
+  const [planCanScheduleAppointment, setPlanCanScheduleAppointment] = useState(false);
+  const [planAppointmentReason, setPlanAppointmentReason] = useState<string | null>(null);
+  const [extraCredits, setExtraCredits] = useState<Record<ExtraKind, number>>({ sos: 0, appointment: 0 });
+  const [extraPrices, setExtraPrices] = useState<Record<ExtraKind, number>>(EXTRA_PRICES_CENTS.free);
   const [entitlementSource, setEntitlementSource] = useState<'stripe' | 'organization' | null>(null);
   const [organizationName, setOrganizationName] = useState<string | null>(null);
   const [personalSubscriptionTier, setPersonalSubscriptionTier] = useState<string | null>(null);
@@ -109,6 +120,14 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
     setCurrentUsage(data.current_usage || { appointments: 0, sos_uses: 0 });
     setCanScheduleAppointment(data.can_schedule_appointment ?? false);
     setAppointmentReason(data.appointment_reason ?? null);
+    setPlanCanScheduleAppointment(data.plan_can_schedule_appointment ?? data.can_schedule_appointment ?? false);
+    setPlanAppointmentReason(data.plan_appointment_reason ?? data.appointment_reason ?? null);
+    setExtraCredits({ sos: Number(data.extra_credits?.sos ?? 0), appointment: Number(data.extra_credits?.appointment ?? 0) });
+    setExtraPrices(
+      data.extra_prices
+        ? { sos: Number(data.extra_prices.sos), appointment: Number(data.extra_prices.appointment) }
+        : EXTRA_PRICES_CENTS[tierIsPaid(Boolean(data.subscribed), parsePlanTier(data.subscription_tier)) ? 'plan' : 'free'],
+    );
     setEntitlementSource(data.entitlement_source ?? null);
     setOrganizationName(data.organization_name ?? null);
     setPersonalSubscriptionTier(parsePlanTier(data.personal_subscription_tier));
@@ -222,6 +241,10 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
         currentUsage,
         canScheduleAppointment,
         appointmentReason,
+        planCanScheduleAppointment,
+        planAppointmentReason,
+        extraCredits,
+        extraPrices,
         entitlementSource,
         organizationName,
         personalSubscriptionTier,

@@ -107,3 +107,20 @@ export const tierHasAppointments = (tier: string | null | undefined): boolean =>
 /** Tem um plano pago (Essencial, Flex ou Completo)? */
 export const hasPaidPlan = (subscribed: boolean, tier: string | null | undefined): boolean =>
   subscribed && parsePlanTier(tier) !== null;
+
+/** Atendimentos avulsos (o servidor decide o preço; aqui é só para mostrar). */
+export type ExtraKind = 'sos' | 'appointment';
+export const EXTRA_PRICES_CENTS: Record<'free' | 'plan', Record<ExtraKind, number>> = {
+  free: { sos: 7990, appointment: 14990 },
+  plan: { sos: 5490, appointment: 10990 },
+};
+export const EXTRA_NAMES: Record<ExtraKind, string> = {
+  sos: 'SOS avulso',
+  appointment: 'Consulta agendada avulsa',
+};
+export const EXTRA_DETAILS: Record<ExtraKind, string> = {
+  sos: 'Atendimento de emergência por vídeo ou mensagem, de até 25 minutos.',
+  appointment: 'Consulta de 50 minutos, no dia e horário que você escolher.',
+};
+export const formatCents = (cents: number) =>
+  (cents / 100).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });

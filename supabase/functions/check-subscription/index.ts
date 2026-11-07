@@ -1,6 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
-import { PLAN_LIMITS, parseTier, stripeState, tierRank, type Tier } from "../_shared/billing.ts";
+import { EXTRA_PRICES, PLAN_LIMITS, parseTier, stripeState, tierRank, type Tier } from "../_shared/billing.ts";
 import { PLAN_PRICES, findCustomerId, listSubscriptions, newStripe, syncCustomerEmail } from "../_shared/stripe.ts";
 
 const corsHeaders = {
@@ -194,6 +194,31 @@ serve(async (req) => {
           : `Limite mensal de consultas agendadas já utilizado (${label}: 1x/mês)`;
     }
 
+    // Atendimentos avulsos já pagos e ainda não usados: valem quando a cota
+    // do plano não existe ou acabou.
+    const { data: creditRows } = await supabaseClient
+      .from("extra_credits")
+      .select("kind")
+      .eq("user_id", user.id)
+      .eq("status", "available");
+    const extraCredits = {
+      sos: (creditRows ?? []).filter((r) => r.kind === "sos").length,
+      appointment: (creditRows ?? []).filter((r) => r.kind === "appointment").length,
+    };
+    const planCanUseSos = canUseSOS;
+    const planCanSchedule = canScheduleAppointment;
+    const planSosReason = sosReason;
+    const planAppointmentReason = appointmentReason;
+    if (!canUseSOS && extraCredits.sos > 0) {
+      canUseSOS = true;
+      sosReason = "Pode usar SOS (avulso)";
+    }
+    if (!canScheduleAppointment && extraCredits.appointment > 0) {
+      canScheduleAppointment = true;
+      appointmentReason = "Pode agendar consulta (avulsa)";
+    }
+    const extraPrices = EXTRA_PRICES[subscriptionTier ? "plan" : "free"];
+
     // Update subscriber in database
     // Grava o estado do Stripe (entitlement_source = 'stripe'); o trigger do
     // banco soma o plano da empresa, se houver.
@@ -236,6 +261,13 @@ serve(async (req) => {
       reason: sosReason,
       can_schedule_appointment: canScheduleAppointment,
       appointment_reason: appointmentReason,
+      // Cota do próprio plano (sem contar avulsos), para a tela explicar o motivo.
+      plan_can_use_sos: planCanUseSos,
+      plan_can_schedule_appointment: planCanSchedule,
+      plan_sos_reason: planSosReason,
+      plan_appointment_reason: planAppointmentReason,
+      extra_credits: extraCredits,
+      extra_prices: extraPrices,
       plan_type: subscriptionTier,
       entitlement_source: hasActiveSub ? (fromOrganization ? "organization" : "stripe") : null,
       organization_name: fromOrganization ? org!.organization_name : null,

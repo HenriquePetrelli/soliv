@@ -15,6 +15,8 @@ Cada atendimento realizado vira um item a pagar ao psicólogo:
 
 Valores fixos, iguais para todos os planos (Essencial, Flex, Completo e empresa). Desde 2026-11-07 (migration `20261107120000_planos_essencial_flex_completo.sql`); antes eram R$ 90,00 e R$ 50,00. Cada item do livro guarda o valor de quando entrou: itens já registrados não mudam.
 
+Atendimentos avulsos (ficha 08) entram no repasse do mesmo jeito e pelos mesmos valores.
+
 O admin paga por PIX fora do app e registra no painel com o **código E2E do PIX**. O psicólogo vê o pendente, o pago e os comprovantes.
 
 ## Telas
