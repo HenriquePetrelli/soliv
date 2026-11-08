@@ -122,7 +122,7 @@ O que precisa ser resolvido antes de o app ficar pronto. Ao resolver um item, mo
 
 - **Conferido e sem problema:** 24 rotinas do `pg_cron` ativas e sem falha nos últimos 3 dias; webhook do Stripe sem entrega pendente; preços e secrets do Stripe batendo; todas as tabelas expostas com RLS; funções do banco que recebem um id de usuário conferem quem chama (`assert_caller_is` ou `auth.uid()`); funções de admin conferem `is_super_admin` com 2 etapas; as 22 edge functions sem "Verify JWT" conferem o acesso no código (login, admin, `x-cron-secret` ou assinatura do Stripe); última migration (`20261108120000`) aplicada; nenhum SOS, consulta ou chamada presa; tipos (`tsc`), 687 testes e build sem erro.
 - **Corrigido no repositório:** `supabase/config.toml` (pendência 19), lint (23), documentos com link assinado e migration pronta (21).
-- **Feito em produção depois de aprovado:** funções antigas apagadas (20). modelos de e-mail em português colados (2). **Ainda precisa de aprovação:** aplicar a migration dos buckets (21).
+- **Feito em produção depois de aprovado:** funções antigas apagadas (20); modelos de e-mail em português colados (2). **Ainda precisa de aprovação:** aplicar a migration dos buckets (21).
 - **Avisos do Supabase que continuam, por decisão:** `pg_net` no schema `public`, 75 índices ainda sem uso e 10 tabelas com duas regras de leitura (dono e público/admin), que só custam desempenho com muito tráfego.
 
 ## Resolvidas
