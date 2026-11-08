@@ -110,7 +110,7 @@ const PendingAppointments = () => {
       setPendingAppointments(prev => prev.filter(a => a.id !== appointmentId));
       setSelectedAppointmentId(null);
       return true;
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error proposing reschedule:', error);
       toast({
         title: 'Erro',

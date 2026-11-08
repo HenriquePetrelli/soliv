@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { getFriendlyErrorMessage } from '@/utils/errorMessage';
+import { errorText, getFriendlyErrorMessage } from '@/utils/errorMessage';
 
 export interface PsychologistData {
   id: string;
@@ -63,10 +63,10 @@ export const usePsychologistManagement = () => {
 
       toast.success(result.message);
       return { success: true, data: result.data };
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Erro ao cadastrar psicólogo:', error);
       toast.error(getFriendlyErrorMessage(error, 'Erro ao realizar cadastro'));
-      return { success: false, error: error.message };
+      return { success: false, error: errorText(error) };
     } finally {
       setLoading(false);
     }
@@ -85,7 +85,7 @@ export const usePsychologistManagement = () => {
 
       setPendingPsychologists(result.data);
       return result.data;
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Erro ao buscar psicólogos:', err);
       setError(getFriendlyErrorMessage(err, 'Erro ao carregar psicólogos.'));
       toast.error(getFriendlyErrorMessage(err, 'Erro ao carregar psicólogos.'));
@@ -107,7 +107,7 @@ export const usePsychologistManagement = () => {
       if (!result.success) throw new Error(result.error || 'Erro ao buscar detalhes');
 
       return result.data;
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Erro ao buscar detalhes do psicólogo:', error);
       toast.error(getFriendlyErrorMessage(error, 'Erro ao carregar detalhes'));
       return null;
@@ -134,10 +134,10 @@ export const usePsychologistManagement = () => {
       // Atualizar lista de pendentes
       await getPendingPsychologists();
       return { success: true };
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Erro ao aprovar psicólogo:', error);
       toast.error(getFriendlyErrorMessage(error, 'Erro ao aprovar psicólogo'));
-      return { success: false, error: error.message };
+      return { success: false, error: errorText(error) };
     } finally {
       setLoading(false);
     }
@@ -162,10 +162,10 @@ export const usePsychologistManagement = () => {
       // Atualizar lista de pendentes
       await getPendingPsychologists();
       return { success: true };
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Erro ao rejeitar psicólogo:', error);
       toast.error(getFriendlyErrorMessage(error, 'Erro ao rejeitar psicólogo'));
-      return { success: false, error: error.message };
+      return { success: false, error: errorText(error) };
     } finally {
       setLoading(false);
     }
@@ -185,15 +185,15 @@ export const usePsychologistManagement = () => {
         return { isApproved: false, status: 'not_registered' };
       }
 
-      const blocked = (psychologist as any).is_blocked === true &&
-        (!(psychologist as any).blocked_until || new Date((psychologist as any).blocked_until).getTime() > Date.now());
+      const blocked = (psychologist).is_blocked === true &&
+        (!(psychologist).blocked_until || new Date((psychologist).blocked_until).getTime() > Date.now());
 
       if (blocked) {
         return {
           isApproved: false,
           status: 'blocked',
-          blockedUntil: (psychologist as any).blocked_until as string | null,
-          blockedReason: (psychologist as any).blocked_reason as string | null,
+          blockedUntil: (psychologist).blocked_until as string | null,
+          blockedReason: (psychologist).blocked_reason as string | null,
         };
       }
 
@@ -212,7 +212,7 @@ export const usePsychologistManagement = () => {
         isApproved: isPsychApproved && isRegApproved,
         status: psychologist.approval_status
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Erro ao verificar aprovação:', error);
       return { isApproved: false, status: 'error' };
     }
@@ -227,7 +227,7 @@ export const usePsychologistManagement = () => {
 
       if (error) throw error;
       return data;
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Erro ao validar CRP:', error);
       return false;
     }

@@ -1,5 +1,6 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { adminMfaOk } from "../_shared/adminMfa.ts";
+import { errorMessage } from '../_shared/errors.ts';
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -52,7 +53,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
     const body = await req.json().catch(() => null);
     if (!body || typeof body !== "object") return json({ error: "Corpo inválido" }, 400);
 
-    const { patient_id, action, duration, reason } = body as Record<string, any>;
+    const { patient_id, action, duration, reason } = body as Record<string, unknown>;
     if (!patient_id || typeof patient_id !== "string") {
       return json({ error: "patient_id é obrigatório" }, 400);
     }
@@ -60,7 +61,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
       return json({ error: "Ação inválida" }, 400);
     }
 
-    let updates: Record<string, any>;
+    let updates: Record<string, unknown>;
 
     if (action === "block") {
       if (typeof duration !== "string" || !(duration in DURATIONS)) {
@@ -129,8 +130,8 @@ Deno.serve(async (req: Request): Promise<Response> => {
       data: updated,
       message: action === "block" ? "Paciente bloqueado com sucesso" : "Paciente desbloqueado com sucesso",
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("admin-block-patient error:", error);
-    return json({ error: error?.message || "Erro interno do servidor" }, 500);
+    return json({ error: errorMessage(error) || "Erro interno do servidor" }, 500);
   }
 });

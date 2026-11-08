@@ -73,7 +73,7 @@ export const usePsychologistAvailabilityOverrides = (startDate: string, endDate:
       if (error) throw error;
       await fetchOverrides();
       return true;
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Erro ao adicionar exceção:', error);
       toast({
         title: 'Erro ao salvar',
@@ -90,7 +90,7 @@ export const usePsychologistAvailabilityOverrides = (startDate: string, endDate:
       if (error) throw error;
       setOverrides((prev) => prev.filter((o) => o.id !== id));
       return true;
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Erro ao remover exceção:', error);
       toast({
         title: 'Erro ao remover',
@@ -124,7 +124,7 @@ export const usePsychologistAvailabilityOverrides = (startDate: string, endDate:
       }
       await fetchOverrides();
       return true;
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Erro ao salvar exceções da semana:', error);
       toast({
         title: 'Erro ao salvar',

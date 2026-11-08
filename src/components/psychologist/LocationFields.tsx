@@ -5,6 +5,10 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { findCity, findStateAbbreviation } from '@/lib/placeMatch';
 import AddressAutofillInputs from '@/components/AddressAutofillInputs';
+import type { UseFormReturn } from 'react-hook-form';
+
+/** Campos que este bloco preenche no formulário de quem o usa. */
+type LocationValues = { state?: string; city?: string };
 
 interface State {
   abbreviation: string;
@@ -15,11 +19,13 @@ interface City {
   name: string;
 }
 
-interface LocationFieldsProps {
-  form: any;
+interface LocationFieldsProps<T extends LocationValues> {
+  form: UseFormReturn<T>;
 }
 
-export const LocationFields = ({ form }: LocationFieldsProps) => {
+export const LocationFields = <T extends LocationValues>({ form: parentForm }: LocationFieldsProps<T>) => {
+  // Só mexe em `state` e `city`, que todo formulário que usa o bloco tem.
+  const form = parentForm as unknown as UseFormReturn<LocationValues>;
   const [states, setStates] = useState<State[]>([]);
   const [cities, setCities] = useState<City[]>([]);
   const selectedState = form.watch('state');

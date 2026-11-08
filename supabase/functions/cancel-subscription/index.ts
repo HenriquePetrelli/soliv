@@ -52,7 +52,7 @@ const findWithdrawalRefund = async (stripe: Stripe, customerId: string) => {
   return { eligible: amount > 0, deadline, charges, amount };
 };
 
-const logStep = (step: string, details?: any) => {
+const logStep = (step: string, details?: unknown) => {
   const detailsStr = details ? ` - ${JSON.stringify(details)}` : '';
   console.log(`[CANCEL-SUBSCRIPTION] ${step}${detailsStr}`);
 };

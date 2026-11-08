@@ -60,6 +60,7 @@ const HomeContent = () => {
     return () => {
       window.removeEventListener('moodToggleChanged', handleMoodToggleChange as EventListener);
     };
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- roda só quando os valores listados mudam (as funções são recriadas a cada render)
   }, [user?.id]);
 
   const checkTodayMood = async () => {

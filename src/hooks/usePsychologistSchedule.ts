@@ -8,13 +8,14 @@ interface PatientInfo {
   full_name: string;
 }
 
-interface Appointment {
+export interface Appointment {
   id: string;
   patient_id: string;
   psychologist_id: string;
   scheduled_at: string;
   status: string;
   appointment_type: string;
+  duration?: number | null;
   notes?: string;
   session_summary?: string;
   created_at: string;
@@ -45,9 +46,9 @@ export const usePsychologistSchedule = () => {
       if (error) throw error;
 
       const { data: { user } } = await getSessionUser();
-      const filtered = (data || []).filter((a: any) => a.psychologist_id === user?.id);
+      const filtered = ((data || []) as Appointment[]).filter((a) => a.psychologist_id === user?.id);
       setTodayAppointments(filtered);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error fetching today\'s appointments:', error);
       toast({
         title: 'Erro',
@@ -67,7 +68,7 @@ export const usePsychologistSchedule = () => {
       if (error) throw error;
 
       return data || [];
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error fetching pending appointments:', error);
       toast({
         title: 'Erro',
@@ -88,9 +89,9 @@ export const usePsychologistSchedule = () => {
       if (error) throw error;
 
       const { data: { user } } = await getSessionUser();
-      const filtered = (data || []).filter((a: any) => a.psychologist_id === user?.id);
+      const filtered = ((data || []) as Appointment[]).filter((a) => a.psychologist_id === user?.id);
       setUpcomingAppointments(filtered);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error fetching upcoming appointments:', error);
       toast({
         title: 'Erro',
@@ -110,7 +111,7 @@ export const usePsychologistSchedule = () => {
       if (error) throw error;
 
       return data as AppointmentHistoryResponse;
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error fetching appointment history:', error);
       toast({
         title: 'Erro',
@@ -142,7 +143,7 @@ export const usePsychologistSchedule = () => {
       fetchUpcomingAppointments();
       
       return data.appointment;
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error updating appointment:', error);
       toast({
         title: 'Erro',
@@ -173,7 +174,7 @@ export const usePsychologistSchedule = () => {
       fetchUpcomingAppointments();
       
       return data.appointment;
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error accepting appointment:', error);
       toast({
         title: 'Erro',
@@ -204,7 +205,7 @@ export const usePsychologistSchedule = () => {
       fetchUpcomingAppointments();
       
       return data.appointment;
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error declining appointment:', error);
       toast({
         title: 'Erro',
@@ -226,6 +227,7 @@ export const usePsychologistSchedule = () => {
     };
 
     loadData();
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- roda só quando os valores listados mudam (as funções são recriadas a cada render)
   }, []);
 
   return {

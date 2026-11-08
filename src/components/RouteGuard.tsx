@@ -5,6 +5,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import SplashScreen from '@/components/SplashScreen';
 import { supabase } from '@/integrations/supabase/client';
 import { isCurrentlyBlocked, notifyBlockedAccess } from '@/utils/psychologistBlock';
+import { ROUTE_PERMISSIONS } from '@/lib/routePermissions';
 
 
 interface RouteGuardProps {
@@ -13,75 +14,6 @@ interface RouteGuardProps {
   redirectTo?: string;
 }
 
-// Definição das rotas por tipo de usuário
-export const ROUTE_PERMISSIONS = {
-  public: [
-    '/',
-    '/signup-type',
-    '/patient-signup',
-    '/psychologist-signup',
-    '/psicologo/concluir-cadastro'
-  ],
-  patient: [
-    '/home',
-    '/support-groups',
-    '/support-group/:groupId',
-    '/journal',
-    '/safety-plan',
-    '/safety-plan/', // cadastro (/novo) e edição (/:id)
-    '/habitos',
-    '/habitos/', // novo, detalhe e edição
-    '/beneficio-empresa', // B2B: código da empresa
-    '/empresa', // B2B: portal do RH
-    '/sounds',
-    '/sounds/category',
-    '/sounds/subcategory', 
-    '/sounds/player',
-    '/sounds/feedback',
-    '/breathing',
-    '/comer-com-atencao',
-    '/questionarios',
-    '/questionarios/', // responder (/gad7, /phq9)
-    '/sos',
-    '/profile',
-    '/account-settings',
-    '/appointments',
-    '/consultation-call/', // rotas com parâmetro (id da consulta)
-    '/notifications',
-    '/statistics',
-    '/statistics/activity-history',
-    '/achievements',
-    '/subscription-plans',
-    '/subscription-success',
-    '/subscription-cancel',
-    '/avulso/sucesso',
-    '/chat', // chat disponível para pacientes
-    '/emergency-call', // paciente e psicólogo podem acessar
-    '/emergency-call/', // rotas com parâmetros
-    '/emergency/call', // rota legacy para psicólogo
-    '/paciente/suporte' // suporte para pacientes
-  ],
-  psychologist: [
-    '/psychologist-dashboard',
-    '/psychologist-profile',
-    '/psychologist-availability',
-    '/psychologist-payments',
-    '/psychologist-notifications',
-    '/psicologo/consultas',
-    '/consultation-call/', // rotas com parâmetro (id da consulta)
-    '/chat', // chat disponível para psicólogos
-    '/emergency-call', // psicólogo pode atender chamada
-    '/emergency-call/', // rotas com parâmetros
-    '/emergency/call', // rota legacy
-    '/emergency/call/', // rotas com parâmetros legacy
-    '/psicologo/suporte' // suporte para psicólogos
-  ],
-  admin: [
-    '/admin/verificacao', // código da verificação em duas etapas
-    '/admin-dashboard',
-    '/admin-notifications' // sino de avisos do painel
-  ]
-};
 
 // URLs de redirecionamento por tipo de usuário
 const REDIRECT_URLS = {
@@ -124,7 +56,9 @@ const clearLegacyLastRoute = () => {
   try {
     localStorage.removeItem('lastRoute');
     localStorage.removeItem('lastUserType');
-  } catch {}
+  } catch {
+    // Armazenamento bloqueado (janela anônima): não há o que limpar.
+  }
 };
 clearLegacyLastRoute();
 
@@ -151,14 +85,15 @@ const RouteGuard: React.FC<RouteGuardProps> = ({
         .select('is_blocked, blocked_until, blocked_reason')
         .eq('user_id', user.id)
         .maybeSingle();
-      if (cancelled || !data || !isCurrentlyBlocked(data as any)) return;
-      await notifyBlockedAccess(data as any);
+      if (cancelled || !data || !isCurrentlyBlocked(data)) return;
+      await notifyBlockedAccess(data);
       await goOfflineOnSignOut(user.id);
       await supabase.auth.signOut();
 
       navigate('/', { replace: true });
     })();
     return () => { cancelled = true; };
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- roda só quando os valores listados mudam (as funções são recriadas a cada render)
   }, [user?.id, userType, navigate, isPublicRoute]);
 
 
@@ -183,7 +118,7 @@ const RouteGuard: React.FC<RouteGuardProps> = ({
       // tela de cadastro virava a de carregamento para sempre logo depois de
       // criar a conta. Nas outras telas, aguarda a resolução do tipo.
       accessState = isPublicRoute ? 'allowed' : 'loading';
-    } else if (!allowedUserTypes.includes(userType as any)) {
+    } else if (!allowedUserTypes.includes(userType)) {
       accessState = 'denied';
       redirectTarget = redirectTo || getDefaultRouteForUserType(userType);
     } else if (!isRouteAllowed(currentPath, userType)) {

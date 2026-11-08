@@ -11,9 +11,8 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import type { PaymentRecord } from '@/hooks/usePayments';
+import { isValidPixE2eId } from '@/components/payments/pixE2e';
 
-/** PIX end-to-end id: 32 chars, starts with E (shown on every PIX receipt). */
-export const isValidPixE2eId = (value: string): boolean => /^E[0-9A-Z]{31}$/.test(value.trim().toUpperCase());
 
 const MAX_RECEIPT_BYTES = 5 * 1024 * 1024;
 

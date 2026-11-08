@@ -35,7 +35,7 @@ export interface EndEmergencySessionParams {
   closeWebRTC?: () => void;
   /** Called once the teardown finished (open feedback / redirect). */
   onFinished?: () => void;
-  client?: any;
+  client?: typeof defaultClient;
 }
 
 export interface EndEmergencySessionResult {

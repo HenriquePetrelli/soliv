@@ -37,6 +37,7 @@ export const EditSymptomsModal: React.FC<EditSymptomsModalProps> = ({
     if (open) {
       loadSymptoms();
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- roda só quando os valores listados mudam (as funções são recriadas a cada render)
   }, [open, userId]);
 
   const loadSymptoms = async () => {

@@ -60,6 +60,7 @@ const PsychologistPayments = () => {
   useEffect(() => {
     document.title = 'Meus Pagamentos | Soliv';
     load();
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- roda só quando os valores listados mudam (as funções são recriadas a cada render)
   }, []);
 
   const load = async () => {
@@ -90,7 +91,7 @@ const PsychologistPayments = () => {
 
       if (error) throw error;
       setPayment(data as PaymentRow | null);
-    } catch (e: any) {
+    } catch (e: unknown) {
       toast({
         title: 'Erro ao carregar pagamentos',
         description: getFriendlyErrorMessage(e, 'Não foi possível concluir a operação.'),

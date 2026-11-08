@@ -97,9 +97,9 @@ const PsychologistProfile = () => {
     };
   }, []);
 
-  const updatePsych = async (values: Record<string, any>) => {
+  const updatePsych = async (values: Record<string, unknown>) => {
     if (!userId) return;
-    const { error } = await supabase.from('psychologists').update(values as any).eq('user_id', userId);
+    const { error } = await supabase.from('psychologists').update(values).eq('user_id', userId);
     if (error) throw error;
   };
 
@@ -110,7 +110,7 @@ const PsychologistProfile = () => {
       setFullName(tempName.trim());
       setEditName(false);
       toast({ title: 'Nome atualizado' });
-    } catch (e: any) {
+    } catch (e: unknown) {
       toast({ title: 'Erro ao salvar', description: getFriendlyErrorMessage(e, 'Não foi possível salvar.'), variant: 'destructive' });
     }
   };
@@ -122,7 +122,7 @@ const PsychologistProfile = () => {
       setSpecialization(tempSpec);
       setEditSpec(false);
       toast({ title: 'Especialização atualizada' });
-    } catch (e: any) {
+    } catch (e: unknown) {
       toast({ title: 'Erro', description: getFriendlyErrorMessage(e, 'Não foi possível salvar.'), variant: 'destructive' });
     }
   };
@@ -133,7 +133,7 @@ const PsychologistProfile = () => {
       setBio(tempBio.trim());
       setEditBio(false);
       toast({ title: 'Biografia atualizada' });
-    } catch (e: any) {
+    } catch (e: unknown) {
       toast({ title: 'Erro', description: getFriendlyErrorMessage(e, 'Não foi possível salvar.'), variant: 'destructive' });
     }
   };
@@ -153,13 +153,15 @@ const PsychologistProfile = () => {
         if (user?.email === tempEmail) {
           try {
             await updatePsych({ email: tempEmail });
-          } catch {}
+          } catch {
+            // O e-mail de login já mudou; a cópia no perfil é atualizada na próxima edição.
+          }
           setEmail(tempEmail);
           setPendingEmail(false);
           if (pollRef.current) window.clearInterval(pollRef.current);
         }
       }, 8000);
-    } catch (e: any) {
+    } catch (e: unknown) {
       toast({ title: 'Erro ao atualizar email', description: getFriendlyErrorMessage(e, 'Não foi possível atualizar o email. Verifique o endereço informado.'), variant: 'destructive' });
     }
   };

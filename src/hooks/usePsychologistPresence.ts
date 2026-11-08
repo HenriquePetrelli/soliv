@@ -105,8 +105,8 @@ const bootstrap = async () => {
       // outros (com muitos online, milhares de mensagens por segundo).
       { event: '*', schema: 'public', table: 'psychologist_presence', filter: `psychologist_id=eq.${userId}` },
       (payload) => {
-        const newRow: any = payload.new;
-        const oldRow: any = payload.old;
+        const newRow = payload.new as { psychologist_id?: string } | null;
+        const oldRow = payload.old as { psychologist_id?: string } | null;
         if (payload.eventType === 'DELETE') {
           if (oldRow?.psychologist_id === userId) {
             stopHeartbeat();
@@ -171,7 +171,7 @@ export const usePsychologistPresence = () => {
         }
 
         setState({ isOnline: nextStatus, userId });
-      } catch (err: any) {
+      } catch (err: unknown) {
         console.error('Error updating presence:', err);
         toast({
           title: 'Erro',

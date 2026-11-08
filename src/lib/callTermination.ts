@@ -1,3 +1,5 @@
+import type { supabase } from '@/integrations/supabase/client';
+
 /**
  * Shared, pure logic that decides whether a realtime `webrtc_sessions` update
  * represents a REAL call termination (someone pressed "encerrar chamada") or
@@ -82,7 +84,7 @@ export interface PersistTerminationParams {
 }
 
 export async function persistExplicitTermination(
-  client: any,
+  client: typeof supabase,
   {
     requestId,
     sessionId,
@@ -95,7 +97,7 @@ export async function persistExplicitTermination(
   }: PersistTerminationParams
 ): Promise<{ duration: number; alreadyEnded: boolean }> {
   let duration = 0;
-  let alreadyEnded = false;
+  const alreadyEnded = false;
 
   if (requestId) {
     const { data: emergencyData } = await client

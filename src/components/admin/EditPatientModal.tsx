@@ -73,7 +73,7 @@ export const EditPatientModal = ({ open, onOpenChange, patient, onSaved }: EditP
       toast.success(data?.warning || data?.message || 'Paciente atualizado');
       onOpenChange(false);
       onSaved(data?.data);
-    } catch (err: any) {
+    } catch (err: unknown) {
       toast.error(getFriendlyErrorMessage(err, 'Erro ao atualizar paciente'));
     } finally {
       setSaving(false);

@@ -2,7 +2,7 @@ import React, { createContext, useContext, useState, useEffect, useRef } from 'r
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
-import { withExpiredCancellation } from '@/lib/subscriptionStatus';
+import { withExpiredCancellation, type CheckSubscriptionData } from '@/lib/subscriptionStatus';
 import { EXTRA_PRICES_CENTS, hasPaidPlan as tierIsPaid, parsePlanTier, type ExtraKind, type PlanTier } from '@/lib/plans';
 
 interface SubscriptionContextType {
@@ -108,8 +108,7 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
   const activeUserId = useRef<string | null>(null);
   activeUserId.current = patientId;
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const applySubscriptionData = (raw: any) => {
+  const applySubscriptionData = (raw: CheckSubscriptionData | null) => {
     // Plano cancelado cujo período pago acabou: já mostra o plano grátis, sem
     // esperar o Stripe e o banco encerrarem (alguns minutos depois).
     const data = withExpiredCancellation(raw ?? {});

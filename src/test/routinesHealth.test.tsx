@@ -4,7 +4,8 @@ import { fakeDb, fakeSupabase } from './fakeSupabase';
 
 vi.mock('@/integrations/supabase/client', () => ({ supabase: fakeSupabase }));
 
-import RoutinesHealthCard, { routinesNeedingAttention, type RoutineHealth } from '@/components/admin/RoutinesHealthCard';
+import RoutinesHealthCard from '@/components/admin/RoutinesHealthCard';
+import { routinesNeedingAttention, type RoutineHealth } from '@/components/admin/routinesHealth';
 
 const ok = (name: string): RoutineHealth => ({
   jobname: name, schedule: '* * * * *', active: true, last_status: 'succeeded',

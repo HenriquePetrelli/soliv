@@ -1,6 +1,7 @@
 import { Fragment, ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { LEGAL_PAGES } from "@/lib/legal";
+import { cleanLegalMarkdown } from "@/components/legal/cleanLegalMarkdown";
 
 // Renderiza os documentos de docs/lgpd. Cobre só o Markdown que eles usam
 // (títulos, parágrafos, listas, tabelas, citações, negrito e links) e monta
@@ -13,14 +14,6 @@ const LINK_TARGETS: Record<string, string> = {
   "./termos-de-uso-psicologo.md": LEGAL_PAGES.terms_psychologist.path,
 };
 
-// Tira o aviso interno de revisão e as marcações ⚖️ para o advogado.
-export const cleanLegalMarkdown = (markdown: string): string =>
-  markdown
-    .split("\n")
-    .filter((line) => !/^>\s*\*\*Versão para revisão/.test(line))
-    .join("\n")
-    .replace(/\s*\*\*⚖️\*\*/g, "")
-    .replace(/\s*⚖️/g, "");
 
 const renderInline = (text: string, keyPrefix: string): ReactNode[] => {
   const nodes: ReactNode[] = [];

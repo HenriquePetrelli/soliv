@@ -21,6 +21,7 @@ import { useCompanyBenefit } from "@/hooks/useCompanyBenefit";
 import EditSymptomsModal from "@/components/EditSymptomsModal";
 import { cancelledPlanLabel } from "@/lib/subscriptionStatus";
 import { ProfileSkeleton } from "@/components/skeletons/PageSkeletons";
+import type { User } from '@supabase/supabase-js';
 
 const Profile = () => {
   const navigate = useNavigate();
@@ -35,7 +36,7 @@ const Profile = () => {
   // Nome e e-mail já estão na sessão: a tela aparece na hora e o nome do
   // cadastro (profiles) chega em seguida, sem esqueleto de espera.
   const { user: authUser, signOut } = useAuth();
-  const [user, setUser] = useState<any>(() =>
+  const [user, setUser] = useState<(User & { profile: { full_name: string | null } }) | null>(() =>
     authUser ? { ...authUser, profile: { full_name: authUser.user_metadata?.full_name ?? null } } : null,
   );
   const [loading, setLoading] = useState(!authUser);
@@ -45,6 +46,7 @@ const Profile = () => {
   useEffect(() => {
     fetchUserData();
     loadGoalModalPreference();
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- roda só quando os valores listados mudam (as funções são recriadas a cada render)
   }, []);
 
   const loadGoalModalPreference = async () => {

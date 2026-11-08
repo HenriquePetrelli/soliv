@@ -292,7 +292,13 @@ serve(async (req) => {
     }
 
     // Create new WebRTC session with extended expiration
-    const sessionData: any = {
+    const sessionData: {
+      emergency_request_id: string;
+      status: string;
+      expires_at: string;
+      patient_id?: string;
+      psychologist_id?: string;
+    } = {
       emergency_request_id,
       status: "pending",
       expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString() // 24 hours from now

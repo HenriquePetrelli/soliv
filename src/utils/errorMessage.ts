@@ -80,3 +80,21 @@ export const unwrapFunctionError = async (error: unknown): Promise<unknown> => {
 /** Mensagem amigável para um erro de edge function (usa o motivo do servidor). */
 export const getFunctionErrorMessage = async (error: unknown, fallback: string): Promise<string> =>
   getFriendlyErrorMessage(await unwrapFunctionError(error), fallback);
+
+/**
+ * O texto cru de um erro pego num `catch` (Error, erro do Supabase em
+ * objeto `{ message }` ou string), sem traduzir. Para mostrar ao usuário,
+ * prefira `getFriendlyErrorMessage`.
+ */
+export const errorText = (error: unknown): string => {
+  if (error instanceof Error) return error.message;
+  if (typeof error === 'string') return error;
+  const message = (error as { message?: unknown } | null)?.message;
+  return typeof message === 'string' ? message : '';
+};
+
+/** Nome do erro do navegador (ex.: `NotAllowedError` da câmera), ou ''. */
+export const errorName = (error: unknown): string => {
+  const name = (error as { name?: unknown } | null)?.name;
+  return typeof name === 'string' ? name : '';
+};

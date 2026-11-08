@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import InputMask from 'react-input-mask';
+import type { InputHTMLAttributes } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -18,7 +19,8 @@ import { PsychologistService } from "@/services/psychologist.service";
 import { TRANSTORNOS } from "@/data/transtornos";
 import MultiSelectModal from "@/components/ui/multi-select-modal";
 import { validateCPF } from "@/utils/cpf";
-import LegalConsents, { EMPTY_CONSENTS, allConsentsGiven, consentKeysFor } from "@/components/legal/LegalConsents";
+import LegalConsents from "@/components/legal/LegalConsents";
+import { EMPTY_CONSENTS, allConsentsGiven, consentKeysFor } from "@/components/legal/consents";
 import { passwordProblem, PASSWORD_HINT } from '@/lib/password';
 
 const specializations = [
@@ -270,7 +272,7 @@ const PsychologistSignUpPublic = () => {
                             value={field.value}
                             onChange={field.onChange}
                           >
-                            {(inputProps: any) => <Input placeholder="000.000.000-00" {...inputProps} />}
+                            {(inputProps: InputHTMLAttributes<HTMLInputElement>) => <Input placeholder="000.000.000-00" {...inputProps} />}
                           </InputMask>
                         </FormControl>
                         <FormMessage />
@@ -332,7 +334,7 @@ const PsychologistSignUpPublic = () => {
                             value={field.value}
                             onChange={field.onChange}
                           >
-                            {(inputProps: any) => <Input placeholder="XX/XXXXXX" {...inputProps} />}
+                            {(inputProps: InputHTMLAttributes<HTMLInputElement>) => <Input placeholder="XX/XXXXXX" {...inputProps} />}
                           </InputMask>
                         </FormControl>
                         <FormMessage />

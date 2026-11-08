@@ -1,6 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
-import { ConfirmPayoutDialog, isValidPixE2eId } from '@/components/payments/ConfirmPayoutDialog';
+import { ConfirmPayoutDialog } from '@/components/payments/ConfirmPayoutDialog';
+import { isValidPixE2eId } from '@/components/payments/pixE2e';
 
 const payment = {
   id: 'p1',

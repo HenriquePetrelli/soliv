@@ -44,7 +44,7 @@ export const useActiveEmergencyCall = () => {
       return;
     }
 
-    const row: any = data?.[0];
+    const row = data?.[0];
     const sessionId = row?.video_room_id || row?.room_url;
 
     if (row && sessionId) {

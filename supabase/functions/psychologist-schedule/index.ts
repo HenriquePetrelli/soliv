@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.52.1";
+import { createClient, type SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.52.1";
+import { errorCode, errorMessage } from '../_shared/errors.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -39,8 +40,7 @@ const subtractRange = (ranges: Block[], blocked: Block): Block[] => {
  * (or a direct API call) sent, with no check against their own agenda.
  */
 const isWithinPsychologistAvailability = async (
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  supabase: any,
+  supabase: SupabaseClient,
   psychologistId: string,
   scheduledAtISO: string
 ): Promise<boolean> => {
@@ -76,8 +76,8 @@ const isWithinPsychologistAvailability = async (
 
   if ((vacation ?? []).length > 0) return false;
 
-  let ranges: Block[] = (baseRows ?? []).map((r: any) => ({ start_time: r.start_time.slice(0, 5), end_time: r.end_time.slice(0, 5) }));
-  const overrides = (overrideRows ?? []).map((r: any) => ({ start_time: r.start_time.slice(0, 5), end_time: r.end_time.slice(0, 5), type: r.type as string }));
+  let ranges: Block[] = (baseRows ?? []).map((r: { start_time: string; end_time: string }) => ({ start_time: r.start_time.slice(0, 5), end_time: r.end_time.slice(0, 5) }));
+  const overrides = (overrideRows ?? []).map((r: { start_time: string; end_time: string; type: string }) => ({ start_time: r.start_time.slice(0, 5), end_time: r.end_time.slice(0, 5), type: r.type as string }));
   for (const o of overrides) {
     if (o.type === 'bloqueio') ranges = subtractRange(ranges, o);
   }
@@ -105,8 +105,7 @@ const SLOT_MS = 50 * 60 * 1000;
  * (prevent_appointment_overlap), mesmo com dois pedidos ao mesmo tempo.
  */
 const assertNoConflict = async (
-  // deno-lint-ignore no-explicit-any
-  supabase: any,
+  supabase: SupabaseClient,
   psychologistId: string,
   startISO: string,
   excludeId: string,
@@ -568,7 +567,7 @@ serve(async (req) => {
       throw new HttpError('A mensagem da proposta pode ter até 1.000 caracteres.', 400);
     }
 
-    const updateData: any = {};
+    const updateData: Record<string, string | null> = {};
     if (status) updateData.status = status;
     if (sessionSummary) updateData.session_summary = sessionSummary;
     if (proposedScheduledAt) updateData.proposed_scheduled_at = proposedScheduledAt;
@@ -703,13 +702,13 @@ serve(async (req) => {
 
     return new Response('Method not allowed', { status: 405, headers: corsHeaders });
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error in psychologist-schedule function:', error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: errorMessage(error) }),
       {
         // 23P01: o banco recusou horário sobreposto (prevent_appointment_overlap).
-        status: error instanceof HttpError ? error.status : error?.code === '23P01' ? 409 : 500,
+        status: error instanceof HttpError ? error.status : errorCode(error) === '23P01' ? 409 : 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       }
     );

@@ -2,7 +2,7 @@ import { ProgressSection } from './ProgressSection';
 import { lazy, Suspense } from 'react';
 import { Smile, TrendingUp, TrendingDown, Minus } from 'lucide-react';
 import { usePatientMoodHistory } from '@/hooks/usePatientMoodHistory';
-import { MOOD_OPTIONS } from '@/components/MoodAccordion';
+import { MOOD_OPTIONS } from '@/components/moodOptions';
 
 const MoodAreaChart = lazy(() => import('./MoodAreaChart'));
 

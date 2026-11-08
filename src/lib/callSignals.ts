@@ -174,7 +174,7 @@ export function attachCallSignalChannel(
   };
 
   try {
-    outgoing = pc.createDataChannel(CALL_SIGNAL_CHANNEL, { ordered: true } as any);
+    outgoing = pc.createDataChannel(CALL_SIGNAL_CHANNEL, { ordered: true });
     outgoing.onmessage = dispatch;
   } catch {
     outgoing = null;

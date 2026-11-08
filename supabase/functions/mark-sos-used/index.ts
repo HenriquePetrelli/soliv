@@ -18,7 +18,7 @@ const getCorsHeaders = (_origin: string | null) => {
   };
 };
 
-const logStep = (step: string, details?: any) => {
+const logStep = (step: string, details?: unknown) => {
   const detailsStr = details ? ` - ${JSON.stringify(details)}` : '';
   console.log(`[MARK-SOS-USED] ${step}${detailsStr}`);
 };
@@ -66,7 +66,7 @@ serve(async (req) => {
       });
     }
 
-    let body: any = {};
+    let body: { request_id?: string } = {};
     try {
       const raw = await req.text();
       body = raw ? JSON.parse(raw) : {};
@@ -98,7 +98,7 @@ serve(async (req) => {
       });
     }
 
-    const patientId = (emergency as any).patient_id as string;
+    const patientId = emergency.patient_id as string;
 
     // Only the owner of the emergency request may consume their own SOS quota.
     const { data: authData } = await supabaseService.auth.getUser(
@@ -115,7 +115,7 @@ serve(async (req) => {
 
     // SOS pago com crédito avulso (gatilho mark_sos_used_on_start): a cota
     // do plano não é tocada.
-    if ((emergency as any).extra_credit_id) {
+    if (emergency.extra_credit_id) {
       logStep("SOS paid with an extra credit, plan quota untouched", { requestId });
       return new Response(JSON.stringify({ ok: true, skipped: true, extra: true }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -164,7 +164,7 @@ serve(async (req) => {
     }
 
     // If month changed, reset first (optional)
-    let updatePayload: any = {
+    const updatePayload = {
       sos_used_this_month: true,
       sos_last_used: brazilDateString(today), // store as Brazil calendar date
       updated_at: new Date().toISOString(),

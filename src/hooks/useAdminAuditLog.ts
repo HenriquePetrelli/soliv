@@ -10,7 +10,7 @@ export interface AuditLogEntry {
   target_type: string;
   target_id: string | null;
   target_name: string | null;
-  details: Record<string, any>;
+  details: Record<string, unknown>;
   created_at: string;
 }
 
@@ -37,7 +37,7 @@ export const useAdminAuditLog = () => {
       setEntries((prev) => (nextPage === 0 ? rows : [...prev, ...rows]));
       setHasMore(rows.length === PAGE_SIZE);
       setPage(nextPage);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error fetching audit log:', error);
       toast({
         title: 'Erro',

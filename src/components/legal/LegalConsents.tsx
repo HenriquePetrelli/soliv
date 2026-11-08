@@ -8,25 +8,11 @@ import {
   LegalUserType,
   termsPageFor,
 } from "@/lib/legal";
+import { allConsentsGiven, consentKeysFor, EMPTY_CONSENTS, type ConsentKey, type ConsentState } from "@/components/legal/consents";
 
 // Caixas de aceite do cadastro (e do novo aceite quando um texto muda).
 // Termos e Política são aceitos juntos; o consentimento para dados de saúde
 // fica separado e destacado, como pede a LGPD (art. 11, I).
-export type ConsentKey = "age_18" | "terms" | "health_data_consent";
-export type ConsentState = Record<ConsentKey, boolean>;
-
-export const EMPTY_CONSENTS: ConsentState = { age_18: false, terms: false, health_data_consent: false };
-
-export const consentKeysFor = (userType: LegalUserType, documents?: LegalDocumentId[]): ConsentKey[] => {
-  const keys: ConsentKey[] = [];
-  const needs = (doc: LegalDocumentId) => !documents || documents.includes(doc);
-  if (needs("age_18")) keys.push("age_18");
-  if (needs(termsPageFor(userType).id) || needs("privacy_policy")) keys.push("terms");
-  if (userType === "patient" && needs("health_data_consent")) keys.push("health_data_consent");
-  return keys;
-};
-
-export const allConsentsGiven = (state: ConsentState, keys: ConsentKey[]) => keys.every((key) => state[key]);
 
 const linkClass = "text-primary underline underline-offset-2 font-medium";
 

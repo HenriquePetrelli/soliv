@@ -59,6 +59,7 @@ export const useSignedDocumentUrl = (
 
   useEffect(() => {
     fetchSignedUrl();
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- roda só quando os valores listados mudam (as funções são recriadas a cada render)
   }, [documentPath, bucket, fallbackUrl]);
 
 

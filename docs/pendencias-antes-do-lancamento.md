@@ -97,19 +97,18 @@ O que precisa ser resolvido antes de o app ficar pronto. Ao resolver um item, mo
 
 ## Menores
 
-### 23. Avisos do lint
-
-- **Situação:** o `npx eslint .` não rodava (erro ao carregar uma regra: `typescript-eslint` 8.11 com ESLint 9.39). Corrigido em 2026-11-08 subindo o `typescript-eslint` para 8.46. Agora roda e mostra 397 avisos já existentes: 324 de `any`, 31 de dependências de hooks, 24 de "fast refresh" e alguns de estilo (`prefer-const`, `case` sem chaves, blocos vazios). Nenhum é defeito visível; vale limpar aos poucos ao mexer em cada arquivo, e só depois pôr o lint no CI.
-- **Registrado em:** 2026-11-08.
-
-### Varredura do app, Stripe e Supabase (2026-11-08)
-
-- **Conferido e sem problema:** 24 rotinas do `pg_cron` ativas e sem falha nos últimos 3 dias; webhook do Stripe sem entrega pendente; preços e secrets do Stripe batendo; todas as tabelas expostas com RLS; funções do banco que recebem um id de usuário conferem quem chama (`assert_caller_is` ou `auth.uid()`); funções de admin conferem `is_super_admin` com 2 etapas; as 22 edge functions sem "Verify JWT" conferem o acesso no código (login, admin, `x-cron-secret` ou assinatura do Stripe); última migration (`20261108120000`) aplicada; nenhum SOS, consulta ou chamada presa; tipos (`tsc`), 687 testes e build sem erro.
-- **Corrigido no repositório:** `supabase/config.toml` (pendência 19), lint (23), documentos com link assinado e migration pronta (21).
-- **Feito em produção depois de aprovado:** funções antigas apagadas (20); modelos de e-mail em português colados (2); migration dos buckets aplicada (21).
-- **Avisos do Supabase que continuam, por decisão:** `pg_net` no schema `public`, 75 índices ainda sem uso e 10 tabelas com duas regras de leitura (dono e público/admin), que só custam desempenho com muito tráfego.
+Nenhuma no momento.
 
 ## Resolvidas
+
+### 23. Avisos do lint (registrada e resolvida em 2026-11-08)
+
+- O `npx eslint .` não rodava (`typescript-eslint` 8.11 com ESLint 9.39); subiu para 8.46 e passou a mostrar 397 avisos. Todos tratados: **0 erros e 0 avisos**, sem mudar o que o app faz (tipos, 690 testes, build e as telas públicas no navegador conferidos depois).
+- `any` (324): trocados por tipos de verdade no app e nas edge functions (`catch (error: unknown)` com `errorText`/`errorName` em `src/utils/errorMessage.ts` e `_shared/errors.ts` nas funções, que devolvem o mesmo texto de antes). Nos testes, o `any` continua liberado na configuração (os falsos do Supabase e do navegador precisam dele). Nenhum `any` implícito novo (128 antes e depois, todos antigos).
+- Dependências de hooks (31): os efeitos que buscam dados quando o usuário ou um id muda ficaram marcados como intencionais, com o motivo na linha; incluir as funções faria o efeito rodar sem parar.
+- Fast refresh (24): funções e constantes que estavam junto dos componentes foram para arquivos próprios (ex.: `src/components/moodOptions.ts`, `src/lib/routePermissions.ts`, `src/components/legal/consents.ts`); a regra fica desligada só para os componentes do shadcn/ui e os contextos (provider e hook no mesmo arquivo).
+- Estilo (18): `const`, chaves nos `case`, blocos vazios comentados, `import` no `tailwind.config.ts`.
+- As edge functions mudaram só em tipos (mesmo comportamento); vão junto na próxima publicação delas. Não foi possível checar os tipos delas com o Deno nesta sessão (a rede não chega a `esm.sh` e `deno.land`); o `deno lint` passa sem erro de sintaxe.
 
 ### 22. Limpezas no Stripe de teste e nos secrets (registrada e resolvida em 2026-11-08)
 

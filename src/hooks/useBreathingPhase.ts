@@ -70,6 +70,7 @@ export function useBreathingPhase(
     };
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- roda só quando os valores listados mudam (as funções são recriadas a cada render)
   }, [isActive, phase, pattern, onPhaseChange, onCycleComplete]);
 
   const durationMs = pattern[phase] * 1000;

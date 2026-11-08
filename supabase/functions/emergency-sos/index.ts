@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.52.1";
 import { isPriorityTriage, sanitizeTriage } from "../_shared/sosTriage.ts";
+import { errorMessage } from '../_shared/errors.ts';
 
 const getCorsHeaders = (origin: string | null) => {
   // Check if origin is from Lovable domains or localhost
@@ -386,10 +387,10 @@ serve(async (req) => {
 
     return new Response('Method not allowed', { status: 405, headers: corsHeaders });
 
-  } catch (error: any) {
-    console.error('Error in emergency-sos function:', error.message);
+  } catch (error: unknown) {
+    console.error('Error in emergency-sos function:', errorMessage(error));
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: errorMessage(error) }),
       {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },

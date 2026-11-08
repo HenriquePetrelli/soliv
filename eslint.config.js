@@ -25,5 +25,16 @@ export default tseslint.config(
       ],
       "@typescript-eslint/no-unused-vars": "off",
     },
-  }
+  },
+  {
+    // Componentes do shadcn/ui (exportam as variantes junto) e contextos
+    // (provider e hook no mesmo arquivo, como os testes simulam o módulo).
+    files: ["src/components/ui/**/*.{ts,tsx}", "src/contexts/**/*.{ts,tsx}"],
+    rules: { "react-refresh/only-export-components": "off" },
+  },
+  {
+    // Testes: os falsos do Supabase, do WebRTC e do navegador usam `any` de propósito.
+    files: ["src/test/**/*.{ts,tsx}", "e2e/**/*.ts"],
+    rules: { "@typescript-eslint/no-explicit-any": "off" },
+  },
 );

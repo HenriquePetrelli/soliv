@@ -11,6 +11,7 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { sosLog, sosWarn } from './sosLogger';
+import type { Json } from '@/integrations/supabase/types';
 
 export type SosActorType = 'patient' | 'psychologist' | 'system';
 
@@ -56,7 +57,7 @@ export interface SosTraceEvent {
  */
 export async function traceSosEvent(
   event: SosTraceEvent,
-  client: any = supabase
+  client: typeof supabase = supabase
 ): Promise<void> {
   const traceId = event.traceId ?? buildTraceId(event.requestId, event.sessionId);
   try {
@@ -78,7 +79,7 @@ export async function traceSosEvent(
       actor_user_id: actorUserId,
       actor_type: event.actorType ?? 'system',
       message: event.message ?? null,
-      metadata: event.metadata ?? {},
+      metadata: (event.metadata ?? {}) as Json,
     });
     if (error) sosWarn('SESSION', 'failed to persist trace event', error);
   } catch (error) {
@@ -87,6 +88,6 @@ export async function traceSosEvent(
 }
 
 /** Fire-and-forget helper for hot paths (e.g. hanging up). */
-export function trackSosEvent(event: SosTraceEvent, client: any = supabase): void {
+export function trackSosEvent(event: SosTraceEvent, client: typeof supabase = supabase): void {
   void traceSosEvent(event, client);
 }

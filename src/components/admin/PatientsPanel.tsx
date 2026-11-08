@@ -110,7 +110,7 @@ export const PatientsPanel = () => {
       toast.success(data?.warning || data?.message || 'Paciente excluído');
       setDeleteTarget(null);
       fetchPatients();
-    } catch (err: any) {
+    } catch (err: unknown) {
       toast.error(getFriendlyErrorMessage(err, 'Erro ao excluir paciente'));
     } finally {
       setDeleting(false);

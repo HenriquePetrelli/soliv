@@ -17,7 +17,7 @@ interface BlockPatientModalProps {
   patientName: string;
   mode: 'block' | 'unblock';
   blockInfo?: BlockInfo | null;
-  onDone: (updated?: any) => void;
+  onDone: (updated?: unknown) => void;
 }
 
 export const BlockPatientModal = ({
@@ -55,7 +55,7 @@ export const BlockPatientModal = ({
       setReason('');
       onOpenChange(false);
       onDone(data?.data);
-    } catch (err: any) {
+    } catch (err: unknown) {
       toast.error(getFriendlyErrorMessage(err, 'Erro ao processar solicitação'));
     } finally {
       setSaving(false);

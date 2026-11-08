@@ -20,18 +20,19 @@ import { FirstTimeAvailabilityModal } from '@/components/psychologist/FirstTimeA
 import ActiveCallBanner from '@/components/sos/ActiveCallBanner';
 import { getWeekStartISO } from '@/lib/psychologistAvailability';
 import RouteSkeleton from "@/components/skeletons/RouteSkeleton";
+import type { Tables } from '@/integrations/supabase/types';
 
 const weeklyConfirmStorageKey = (userId: string) => `soliv:availability-week-confirmed:${userId}`;
 
 
 const PsychologistDashboard = () => {
   const navigate = useNavigate();
-  const [profile, setProfile] = useState<any>(null);
+  const [profile, setProfile] = useState<Tables<'profiles'> | null>(null);
   const [loading, setLoading] = useState(true);
   const [showPixModal, setShowPixModal] = useState(false);
   const [showWeeklyScheduleModal, setShowWeeklyScheduleModal] = useState(false);
   const [showFirstTimeModal, setShowFirstTimeModal] = useState(false);
-  const [psychologistData, setPsychologistData] = useState<any>(null);
+  const [psychologistData, setPsychologistData] = useState<{ pix_key: string | null; pix_type: string | null } | null>(null);
 
   const { todayAppointments, upcomingAppointments, fetchPendingAppointments, fetchTodayAppointments, fetchUpcomingAppointments } = usePsychologistSchedule();
   const { isOnline, loading: presenceLoading, toggle: togglePresence } = usePsychologistPresence();

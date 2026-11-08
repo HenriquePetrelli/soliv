@@ -108,7 +108,7 @@ export const PsychologistSelection: React.FC<PsychologistSelectionProps> = ({
       );
       setSpecialties(uniqueSpecialties);
       
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error fetching psychologists:', error);
       toast({
         title: 'Erro',
@@ -136,6 +136,7 @@ export const PsychologistSelection: React.FC<PsychologistSelectionProps> = ({
 
   useEffect(() => {
     fetchPsychologists();
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- roda só quando os valores listados mudam (as funções são recriadas a cada render)
   }, [user?.id]);
 
   const handlePsychologistSelect = (psychologist: PsychologistData) => {

@@ -179,7 +179,7 @@ export class PsychologistService {
         p_document_url: finalDocumentUrl,
         p_cpf: formData.cpf,
         p_area_atendimento: JSON.stringify(formData.areaAtendimento),
-      } as any);
+      });
 
       if (dbError) {
         console.error('Erro na função create_psychologist_profile:', dbError);
@@ -357,7 +357,7 @@ export class PsychologistService {
     return { valid: true };
   }
 
-  private static handleSupabaseError(error: any): string {
+  private static handleSupabaseError(error: { message?: string; code?: string } | null | undefined): string {
     if (!error) return 'Erro desconhecido';
     
     // Erros de autenticação

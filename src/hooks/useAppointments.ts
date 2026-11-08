@@ -48,7 +48,7 @@ export const useAppointments = () => {
       if (error) throw error;
       
       setAppointments(data || []);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error fetching appointments:', error);
       toast({
         title: 'Erro',
@@ -85,7 +85,7 @@ export const useAppointments = () => {
         full_name: p.full_name,
         specialty: p.specialization
       })) || []);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error fetching psychologists:', error);
       toast({
         title: 'Erro',
@@ -122,7 +122,7 @@ export const useAppointments = () => {
       // O aviso de sucesso (com a data) fica com a tela de agendamento.
       await fetchAppointments();
       return data.appointment;
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error creating appointment:', error);
       toast({
         title: 'Erro',
@@ -174,7 +174,7 @@ export const useAppointments = () => {
             (savedName ? { full_name: savedName, specialization: null } : null),
         };
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error fetching appointment history:', error);
       toast({
         title: 'Erro',
@@ -210,7 +210,7 @@ export const useAppointments = () => {
       
       await fetchAppointments();
       return data.appointment;
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error responding to reschedule:', error);
       toast({
         title: 'Erro',
@@ -234,6 +234,7 @@ export const useAppointments = () => {
   useEffect(() => {
     fetchAppointments();
     fetchPsychologists();
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- roda só quando os valores listados mudam (as funções são recriadas a cada render)
   }, []);
 
   return {

@@ -212,6 +212,7 @@ const ContextualPhrases = ({ currentPhase, patternType, cycleCount }: Contextual
       const phasePhrases = phrases[currentPhase];
       setCurrentPhraseIndex(Math.floor(Math.random() * phasePhrases.length));
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- roda só quando os valores listados mudam (as funções são recriadas a cada render)
   }, [cycleCount, currentPhase, patternType]);
 
   return (

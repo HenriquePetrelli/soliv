@@ -115,7 +115,7 @@ export const usePsychologistVacation = () => {
       });
       await fetchVacations();
       return true;
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Erro ao salvar férias:', error);
       toast({
         title: 'Erro ao salvar',
@@ -142,7 +142,7 @@ export const usePsychologistVacation = () => {
       toast({ title: 'Férias canceladas', description: 'Sua agenda voltou ao normal.' });
       await fetchVacations();
       return true;
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Erro ao cancelar férias:', error);
       toast({
         title: 'Erro',

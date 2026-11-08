@@ -27,9 +27,32 @@ export const cancelledPlanLabel = (
   return `Plano cancelado - ${tier} disponível até ${formatBrazilDate(subscriptionEnd)}`;
 };
 
+/** Resposta da edge function check-subscription (e o cache dela no aparelho). */
+export interface CheckSubscriptionData {
+  subscribed?: boolean;
+  subscription_tier?: string | null;
+  subscription_end?: string | null;
+  plan_type?: string | null;
+  entitlement_source?: 'organization' | 'stripe' | null;
+  cancel_at_period_end?: boolean;
+  plan_limits?: { appointments: number; sos_uses: number };
+  current_usage?: { appointments: number; sos_uses: number };
+  can_schedule_appointment?: boolean;
+  appointment_reason?: string | null;
+  plan_can_schedule_appointment?: boolean;
+  plan_appointment_reason?: string | null;
+  extra_credits?: { sos?: number; appointment?: number };
+  extra_prices?: { sos: number; appointment: number };
+  organization_name?: string | null;
+  personal_subscription_tier?: string | null;
+  pending_tier?: string | null;
+  pending_from?: string | null;
+  payment_issue?: boolean;
+  extra_subscriptions?: number;
+}
+
 /** Dados de check-subscription com o plano cancelado já vencido tratados como plano grátis. */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const withExpiredCancellation = <T extends Record<string, any>>(data: T, now: Date = new Date()): T => {
+export const withExpiredCancellation = <T extends CheckSubscriptionData>(data: T, now: Date = new Date()): T => {
   if (data?.entitlement_source !== 'stripe') return data;
   if (!cancelledPlanExpired(Boolean(data.cancel_at_period_end), data.subscription_end ?? null, now)) return data;
   return {

@@ -35,7 +35,7 @@ describe('plano cancelado', () => {
       subscription_tier: 'Essencial',
       subscription_end: END,
       cancel_at_period_end: true,
-      entitlement_source: 'stripe',
+      entitlement_source: 'stripe' as const,
       plan_limits: { appointments: 0, sos_uses: 1 },
     };
     expect(cancelledPlanLabel('Essencial', true, END, AFTER)).toBeNull();
@@ -49,7 +49,7 @@ describe('plano cancelado', () => {
   });
 
   it('não mexe no plano da empresa', () => {
-    const data = { subscribed: true, subscription_tier: 'Completo', subscription_end: END, cancel_at_period_end: true, entitlement_source: 'organization' };
+    const data = { subscribed: true, subscription_tier: 'Completo', subscription_end: END, cancel_at_period_end: true, entitlement_source: 'organization' as const };
     expect(withExpiredCancellation(data, AFTER)).toBe(data);
   });
 });

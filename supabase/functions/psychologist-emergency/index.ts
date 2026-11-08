@@ -1,7 +1,8 @@
 
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.52.1";
+import { createClient, type SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.52.1";
 import { isPriorityTriage } from '../_shared/sosTriage.ts';
+import { errorMessage } from '../_shared/errors.ts';
 
 const getCorsHeaders = (origin: string | null) => {
   // Check if origin is from Lovable domains or localhost
@@ -20,7 +21,7 @@ const getCorsHeaders = (origin: string | null) => {
 };
 
 // Helper function to check if psychologist can help with patient symptoms
-async function canPsychologistHelp(supabase: any, psychologistId: string, patientSymptoms: string[]) {
+async function canPsychologistHelp(supabase: SupabaseClient, psychologistId: string, patientSymptoms: string[]) {
   try {
     // 1. Get psychologist's area of attention
     const { data: psychologist, error: psychError } = await supabase
@@ -513,10 +514,10 @@ serve(async (req) => {
 
     return new Response('Method not allowed', { status: 405, headers: corsHeaders });
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error in psychologist-emergency function:', error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: errorMessage(error) }),
       {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },

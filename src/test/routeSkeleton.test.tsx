@@ -2,7 +2,8 @@ import { describe, expect, it } from 'vitest';
 import { readFileSync } from 'fs';
 import { render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
-import RouteSkeleton, { hasRouteSkeleton } from '@/components/skeletons/RouteSkeleton';
+import RouteSkeleton from '@/components/skeletons/RouteSkeleton';
+import { hasRouteSkeleton } from '@/components/skeletons/routeSkeletons';
 
 // Todos os endereços declarados no App, com parâmetros trocados por um valor.
 const appRoutes = [...readFileSync('src/App.tsx', 'utf8').matchAll(/path="([^"]+)"/g)]

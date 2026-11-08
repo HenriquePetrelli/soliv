@@ -33,7 +33,8 @@ import AdminLayout from '@/components/admin/AdminLayout';
 import PageTitle from '@/components/PageTitle';
 import { ADMIN_NAV_ITEMS, isAdminSection, type AdminSection } from '@/components/admin/adminNavConfig';
 import { Button } from '@/components/ui/button';
-import { getFriendlyErrorMessage } from '@/utils/errorMessage';
+import { errorText, getFriendlyErrorMessage } from '@/utils/errorMessage';
+import type { User } from '@supabase/supabase-js';
 
 interface AdminMetrics {
   total_patients: number;
@@ -45,7 +46,7 @@ interface AdminMetrics {
 }
 
 const AdminDashboard = () => {
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<User | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [metrics, setMetrics] = useState<AdminMetrics | null>(null);
   const [metricsLoading, setMetricsLoading] = useState(true);
@@ -66,6 +67,7 @@ const AdminDashboard = () => {
 
   useEffect(() => {
     checkAdminAccess();
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- roda só quando os valores listados mudam (as funções são recriadas a cada render)
   }, []);
 
   const checkAdminAccess = async () => {
@@ -104,8 +106,8 @@ const AdminDashboard = () => {
       setUser(session.user);
       setIsAdmin(true);
       fetchMetrics();
-    } catch (error: any) {
-      console.error('Error checking admin access:', error.message);
+    } catch (error: unknown) {
+      console.error('Error checking admin access:', errorText(error));
       navigate('/');
     }
   };
@@ -117,8 +119,8 @@ const AdminDashboard = () => {
       const { data, error } = await supabase.rpc('get_admin_metrics');
       if (error) throw error;
       if (data && data.length > 0) setMetrics(data[0]);
-    } catch (error: any) {
-      console.error('Error fetching metrics:', error.message);
+    } catch (error: unknown) {
+      console.error('Error fetching metrics:', errorText(error));
       setMetricsError(getFriendlyErrorMessage(error, 'Falha ao carregar métricas.'));
       toast({
         title: "Erro",

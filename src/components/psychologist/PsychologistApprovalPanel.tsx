@@ -37,7 +37,7 @@ export const PsychologistApprovalPanel = ({ adminUserId, onDataChange }: Psychol
   const [rejectionReason, setRejectionReason] = useState('');
   const [filter, setFilter] = useState<'all' | 'pending' | 'approved' | 'rejected'>('pending');
   const [editOpen, setEditOpen] = useState(false);
-  const [blockTarget, setBlockTarget] = useState<any | null>(null);
+  const [blockTarget, setBlockTarget] = useState<PsychologistData | null>(null);
   const [blockMode, setBlockMode] = useState<'block' | 'unblock'>('block');
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
@@ -58,6 +58,7 @@ export const PsychologistApprovalPanel = ({ adminUserId, onDataChange }: Psychol
 
   useEffect(() => {
     getPendingPsychologists();
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- roda só quando os valores listados mudam (as funções são recriadas a cada render)
   }, []);
 
   const handleViewDetails = async (psychologist: PsychologistData) => {
@@ -90,7 +91,7 @@ export const PsychologistApprovalPanel = ({ adminUserId, onDataChange }: Psychol
   };
 
 
-  const getStatusBadge = (status: string, psych?: any) => {
+  const getStatusBadge = (status: string, psych?: PsychologistData) => {
     if (isCurrentlyBlocked(psych)) {
       return <Badge className="bg-black text-white hover:bg-black">Bloqueado</Badge>;
     }
@@ -140,8 +141,8 @@ export const PsychologistApprovalPanel = ({ adminUserId, onDataChange }: Psychol
       p.specialization || '',
       p.state || '',
       p.city || '',
-      isCurrentlyBlocked(p as any) ? 'Bloqueado' : (statusLabels[p.approval_status] || p.approval_status),
-      isCurrentlyBlocked(p as any) ? formatBlockPeriod(p as any) : 'Não',
+      isCurrentlyBlocked(p) ? 'Bloqueado' : (statusLabels[p.approval_status] || p.approval_status),
+      isCurrentlyBlocked(p) ? formatBlockPeriod(p) : 'Não',
     ]);
     const csv = [headers, ...rows].map((row) => row.map(escape).join(';')).join('\n');
     const blob = new Blob([`\uFEFF${csv}`], { type: 'text/csv;charset=utf-8;' });
@@ -180,7 +181,7 @@ export const PsychologistApprovalPanel = ({ adminUserId, onDataChange }: Psychol
       setSelectedPsychologist(null);
       getPendingPsychologists();
       onDataChange?.();
-    } catch (err: any) {
+    } catch (err: unknown) {
       toast.error(getFriendlyErrorMessage(err, 'Erro ao excluir psicólogo'));
     } finally {
       setDeletingId(null);
@@ -208,7 +209,7 @@ export const PsychologistApprovalPanel = ({ adminUserId, onDataChange }: Psychol
         </div>
       </div>
 
-      <Tabs value={filter} onValueChange={(value) => setFilter(value as any)} className="w-full">
+      <Tabs value={filter} onValueChange={(value) => setFilter(value as typeof filter)} className="w-full">
         <TabsList className="w-full h-auto p-1 bg-muted/60 grid grid-cols-2 sm:grid-cols-4 gap-1 rounded-lg">
           <TabsTrigger value="pending" className="text-xs sm:text-sm data-[state=active]:bg-card data-[state=active]:text-primary data-[state=active]:shadow-sm">Pendentes ({pendingPsychologists.filter(p => p.approval_status === 'pending').length})</TabsTrigger>
           <TabsTrigger value="approved" className="text-xs sm:text-sm data-[state=active]:bg-card data-[state=active]:text-primary data-[state=active]:shadow-sm">Aprovados ({pendingPsychologists.filter(p => p.approval_status === 'approved').length})</TabsTrigger>
@@ -290,7 +291,7 @@ export const PsychologistApprovalPanel = ({ adminUserId, onDataChange }: Psychol
                             <Eye className="h-4 w-4 mr-2" />
                             Detalhes
                           </DropdownMenuItem>
-                          {isCurrentlyBlocked(psychologist as any) ? (
+                          {isCurrentlyBlocked(psychologist) ? (
                             <DropdownMenuItem
                               onClick={() => { setBlockTarget(psychologist); setBlockMode('unblock'); }}
                             >
@@ -422,13 +423,13 @@ export const PsychologistApprovalPanel = ({ adminUserId, onDataChange }: Psychol
                               </div>
                             )}
                           </div>
-                          {isCurrentlyBlocked(selectedPsychologist as any) && (
+                          {isCurrentlyBlocked(selectedPsychologist) && (
                             <div className="mt-4 space-y-2">
                               <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Bloqueio</label>
                               <div className="text-sm p-3 bg-muted rounded-md border">
-                                <p className="font-medium">{formatBlockPeriod(selectedPsychologist as any)}</p>
+                                <p className="font-medium">{formatBlockPeriod(selectedPsychologist)}</p>
                                 <p className="text-muted-foreground mt-1">
-                                  Motivo: {(selectedPsychologist as any).blocked_reason || 'Não informado'}
+                                  Motivo: {(selectedPsychologist).blocked_reason || 'Não informado'}
                                 </p>
                               </div>
                             </div>
@@ -597,7 +598,7 @@ export const PsychologistApprovalPanel = ({ adminUserId, onDataChange }: Psychol
 
                         {selectedPsychologist.approval_status !== 'pending' && (
                         <div className="flex flex-col sm:flex-row gap-2 pt-4 border-t">
-                          {isCurrentlyBlocked(selectedPsychologist as any) ? (
+                          {isCurrentlyBlocked(selectedPsychologist) ? (
                             <Button
                               className="flex-1 bg-success text-success-foreground hover:bg-success/90"
                               onClick={() => { setBlockTarget(selectedPsychologist); setBlockMode('unblock'); setDetailsOpen(false); }}
@@ -750,7 +751,7 @@ export const PsychologistApprovalPanel = ({ adminUserId, onDataChange }: Psychol
         <EditPsychologistModal
           open={editOpen}
           onOpenChange={setEditOpen}
-          psychologist={selectedPsychologist as any}
+          psychologist={selectedPsychologist}
           onUpdated={(data) => {
             if (data) setSelectedPsychologist(data);
             getPendingPsychologists();

@@ -2,6 +2,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 import { Resend } from "https://esm.sh/resend@2.0.0";
 import { adminMfaOk } from "../_shared/adminMfa.ts";
+import { errorMessage } from '../_shared/errors.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -113,7 +114,7 @@ const generatePendingEmail = (name: string) => `
 </html>
 `;
 
-const validateInput = (data: any, requiredFields: string[]) => {
+const validateInput = (data: Record<string, unknown>, requiredFields: string[]) => {
   for (const field of requiredFields) {
     if (!data[field]) {
       throw new Error(`Campo obrigatório ausente: ${field}`);
@@ -486,10 +487,10 @@ const handler = async (req: Request): Promise<Response> => {
       status: 400,
     });
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Erro na função:', error);
     return new Response(JSON.stringify({ 
-      error: error.message || 'Erro interno do servidor' 
+      error: errorMessage(error) || 'Erro interno do servidor' 
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 500,

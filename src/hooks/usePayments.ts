@@ -39,7 +39,7 @@ export const usePayments = () => {
       if (error) throw error;
       
       setPayments(data || []);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Error fetching payments:', err);
       setError(getFriendlyErrorMessage(err, 'Erro ao carregar pagamentos.'));
       toast({
@@ -93,7 +93,7 @@ export const usePayments = () => {
       
       await fetchPayments();
       return data;
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error confirming payment:', error);
       toast({
         title: 'Erro',
@@ -117,7 +117,7 @@ export const usePayments = () => {
       
       await fetchPayments();
       return data;
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error syncing payments:', error);
       toast({
         title: 'Erro',
@@ -132,6 +132,7 @@ export const usePayments = () => {
 
   useEffect(() => {
     fetchPayments();
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- roda só quando os valores listados mudam (as funções são recriadas a cada render)
   }, []);
 
   return {

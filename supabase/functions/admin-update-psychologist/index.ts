@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { adminMfaOk } from "../_shared/adminMfa.ts";
+import { errorMessage } from '../_shared/errors.ts';
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -42,7 +43,7 @@ serve(async (req: Request): Promise<Response> => {
     const body = await req.json().catch(() => null);
     if (!body || typeof body !== "object") return json({ error: "Corpo inválido" }, 400);
 
-    const { psychologist_id, password, ...fields } = body as Record<string, any>;
+    const { psychologist_id, password, ...fields } = body as Record<string, unknown>;
     if (!psychologist_id || typeof psychologist_id !== "string") {
       return json({ error: "psychologist_id é obrigatório" }, 400);
     }
@@ -71,7 +72,7 @@ serve(async (req: Request): Promise<Response> => {
       "pix_type",
     ];
 
-    const updates: Record<string, any> = {};
+    const updates: Record<string, string | null> = {};
     for (const key of allowed) {
       if (key in fields) {
         const value = fields[key];
@@ -137,7 +138,7 @@ serve(async (req: Request): Promise<Response> => {
 
     // Keep profiles in sync
     if (current.user_id) {
-      const profileUpdates: Record<string, any> = {};
+      const profileUpdates: Record<string, string | null> = {};
       if ("full_name" in updates) profileUpdates.full_name = updates.full_name;
       if ("cpf" in updates) profileUpdates.cpf = updates.cpf;
       if ("crp_number" in updates) profileUpdates.crp = updates.crp_number;
@@ -149,7 +150,7 @@ serve(async (req: Request): Promise<Response> => {
       }
 
       // Auth account updates (email / password)
-      const authUpdates: Record<string, any> = {};
+      const authUpdates: { email?: string; password?: string } = {};
       if (updates.email && updates.email !== current.email) authUpdates.email = updates.email;
       if (typeof password === "string" && password.length > 0) {
         if (password.length < 6) return json({ error: "A senha deve ter ao menos 6 caracteres" }, 400);
@@ -185,8 +186,8 @@ serve(async (req: Request): Promise<Response> => {
     });
 
     return json({ success: true, data: updated, message: "Informações atualizadas com sucesso" });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("admin-update-psychologist error:", error);
-    return json({ error: error?.message || "Erro interno do servidor" }, 500);
+    return json({ error: errorMessage(error) || "Erro interno do servidor" }, 500);
   }
 });

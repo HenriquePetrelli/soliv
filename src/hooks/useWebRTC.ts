@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import type { Json } from '@/integrations/supabase/types';
 import { getSessionUser } from '@/lib/currentUser';
 import { isRealTermination } from '@/lib/callTermination';
 import { attachCallSignalChannel, type CallSignalChannel, type MediaStateSignal } from '@/lib/callSignals';
@@ -50,10 +51,10 @@ const getUfrags = (sdp?: string): string[] => {
 
 /** Stable identity for a remote candidate, used to avoid re-adding duplicates. */
 const candidateKey = (c: RTCIceCandidateInit) =>
-  `${(c as any).usernameFragment ?? ''}|${c.sdpMid ?? ''}|${c.sdpMLineIndex ?? ''}|${c.candidate ?? ''}`;
+  `${(c).usernameFragment ?? ''}|${c.sdpMid ?? ''}|${c.sdpMLineIndex ?? ''}|${c.candidate ?? ''}`;
 
 /** Postgres "function does not exist" through PostgREST (migration not applied yet). */
-const isMissingFunction = (error: any) =>
+const isMissingFunction = (error: { code?: string; message?: string } | null) =>
   error?.code === 'PGRST202' || error?.code === '42883' || /could not find the function/i.test(error?.message ?? '');
 
 /** Video ceiling while the network is healthy, and the relief applied when it is poor. */
@@ -281,8 +282,8 @@ export const useWebRTC = ({ sessionId, userType, onConnectionStateChange }: UseW
 
     const stream = result.stream;
     // Hints help the encoder: speech for the voice, motion for a face on camera.
-    stream.getAudioTracks().forEach((t) => { try { (t as any).contentHint = 'speech'; } catch { /* noop */ } });
-    stream.getVideoTracks().forEach((t) => { try { (t as any).contentHint = 'motion'; } catch { /* noop */ } });
+    stream.getAudioTracks().forEach((t) => { try { (t).contentHint = 'speech'; } catch { /* noop */ } });
+    stream.getVideoTracks().forEach((t) => { try { (t).contentHint = 'motion'; } catch { /* noop */ } });
     localStreamRef.current = stream;
     setLocalStream(stream);
     if (localVideoRef.current) localVideoRef.current.srcObject = stream;
@@ -306,12 +307,12 @@ export const useWebRTC = ({ sessionId, userType, onConnectionStateChange }: UseW
         if (!params.encodings || params.encodings.length === 0) params.encodings = [{}];
         if (sender.track.kind === 'audio') {
           params.encodings[0].priority = 'high';
-          (params.encodings[0] as any).networkPriority = 'high';
+          (params.encodings[0]).networkPriority = 'high';
         } else {
           params.encodings[0].maxBitrate = poor ? VIDEO_POOR_BITRATE : VIDEO_MAX_BITRATE;
           params.encodings[0].scaleResolutionDownBy = poor ? 2 : 1;
           params.encodings[0].priority = 'medium';
-          (params as any).degradationPreference = 'balanced';
+          (params).degradationPreference = 'balanced';
         }
         await sender.setParameters(params);
       } catch {
@@ -328,9 +329,9 @@ export const useWebRTC = ({ sessionId, userType, onConnectionStateChange }: UseW
     if (batch.length === 0 || disposedRef.current) return;
 
     if (!legacyIceWriteRef.current) {
-      const { error: rpcError } = await supabase.rpc('append_webrtc_ice_candidates' as any, {
+      const { error: rpcError } = await supabase.rpc('append_webrtc_ice_candidates', {
         p_session_id: sessionId,
-        p_candidates: batch as any,
+        p_candidates: batch as unknown as Json,
       });
       if (!rpcError) {
         if (candidateBufferRef.current.length > 0) void flushCandidates();
@@ -348,10 +349,10 @@ export const useWebRTC = ({ sessionId, userType, onConnectionStateChange }: UseW
 
     // Legacy path (before the migration): read, append and write back.
     const { data } = await supabase.from('webrtc_sessions').select('ice_candidates').eq('id', sessionId).maybeSingle();
-    const current = ((data as any)?.ice_candidates ?? []) as RTCIceCandidateInit[];
+    const current = ((data)?.ice_candidates ?? []) as RTCIceCandidateInit[];
     await supabase
       .from('webrtc_sessions')
-      .update({ ice_candidates: [...current, ...batch] as any })
+      .update({ ice_candidates: [...current, ...batch] as unknown as Json[] })
       .eq('id', sessionId);
     if (candidateBufferRef.current.length > 0) void flushCandidates();
   }, [sessionId]);
@@ -378,7 +379,7 @@ export const useWebRTC = ({ sessionId, userType, onConnectionStateChange }: UseW
     mediaQueueRef.current = mediaQueueRef.current.then(async () => {
       for (let attempt = 0; attempt < 6; attempt++) {
         if (disposedRef.current || mediaWantedRef.current !== connected) return;
-        const { error: rpcError } = await supabase.rpc('report_call_media' as any, {
+        const { error: rpcError } = await supabase.rpc('report_call_media', {
           p_session_id: sessionId,
           p_connected: connected,
         });
@@ -465,7 +466,7 @@ export const useWebRTC = ({ sessionId, userType, onConnectionStateChange }: UseW
 
     // In-call control channel: CALL_ENDED and camera/mic state, instantly.
     signalChannelRef.current?.close();
-    signalChannelRef.current = attachCallSignalChannel(pc as any, (signal) => {
+    signalChannelRef.current = attachCallSignalChannel(pc as unknown as Parameters<typeof attachCallSignalChannel>[0], (signal) => {
       if (pc !== pcRef.current) return;
       if (signal.type === 'MEDIA_STATE') {
         if (signal.userType === userType) return;
@@ -577,7 +578,7 @@ export const useWebRTC = ({ sessionId, userType, onConnectionStateChange }: UseW
     const { data: auth } = await getSessionUser();
     const { error: writeError } = await supabase
       .from('webrtc_sessions')
-      .update({ offer: { type: 'offer', sdp } as any, answer: null, psychologist_id: auth.user?.id } as any)
+      .update({ offer: { type: 'offer', sdp }, answer: null, psychologist_id: auth.user?.id })
       .eq('id', sessionId);
     if (writeError) throw writeError;
   }, [sessionId]);
@@ -602,9 +603,9 @@ export const useWebRTC = ({ sessionId, userType, onConnectionStateChange }: UseW
     const { error: writeError } = await supabase
       .from('webrtc_sessions')
       .update({
-        answer: { type: 'answer', sdp: answerSdp, forOffer: sdpTag(offerSdp) } as any,
+        answer: { type: 'answer', sdp: answerSdp, forOffer: sdpTag(offerSdp) },
         patient_id: auth.user?.id,
-      } as any)
+      })
       .eq('id', sessionId);
     if (writeError) throw writeError;
   }, [sessionId]);
@@ -617,7 +618,7 @@ export const useWebRTC = ({ sessionId, userType, onConnectionStateChange }: UseW
     const remoteUfrags = getUfrags(pc.remoteDescription.sdp);
     for (const candidateData of candidates) {
       if (!candidateData || typeof candidateData !== 'object') continue;
-      const ufrag = (candidateData as any).usernameFragment;
+      const ufrag = (candidateData).usernameFragment;
       if (ufrag && remoteUfrags.length > 0 && !remoteUfrags.includes(ufrag)) continue;
       const key = candidateKey(candidateData);
       if (appliedCandidatesRef.current.has(key)) continue;
@@ -644,7 +645,7 @@ export const useWebRTC = ({ sessionId, userType, onConnectionStateChange }: UseW
         pc = (await rebuildPeerConnection('conexão local fechada')) ?? pc;
         await supabase
           .from('webrtc_sessions')
-          .update({ renegotiate_requested_at: new Date().toISOString() } as any)
+          .update({ renegotiate_requested_at: new Date().toISOString() })
           .eq('id', sessionId);
         return;
       }
@@ -768,13 +769,13 @@ export const useWebRTC = ({ sessionId, userType, onConnectionStateChange }: UseW
           await rebuildPeerConnection('conexão local fechada');
           await supabase
             .from('webrtc_sessions')
-            .update({ renegotiate_requested_at: new Date().toISOString() } as any)
+            .update({ renegotiate_requested_at: new Date().toISOString() })
             .eq('id', sessionId);
         });
       } else if (patientShouldRequestRenegotiation(attempt)) {
         await supabase
           .from('webrtc_sessions')
-          .update({ renegotiate_requested_at: new Date().toISOString() } as any)
+          .update({ renegotiate_requested_at: new Date().toISOString() })
           .eq('id', sessionId);
       }
 
@@ -808,7 +809,7 @@ export const useWebRTC = ({ sessionId, userType, onConnectionStateChange }: UseW
       void (async () => {
         await supabase
           .from('webrtc_sessions')
-          .update({ renegotiate_requested_at: new Date().toISOString() } as any)
+          .update({ renegotiate_requested_at: new Date().toISOString() })
           .eq('id', sessionId);
       })();
     }
@@ -873,7 +874,7 @@ export const useWebRTC = ({ sessionId, userType, onConnectionStateChange }: UseW
         let rttMs: number | null = null;
         let lost = 0;
         let received = 0;
-        stats.forEach((report: any) => {
+        stats.forEach((report: RTCStats & { nominated?: boolean; state?: string; currentRoundTripTime?: number; isRemote?: boolean; packetsLost?: number; packetsReceived?: number }) => {
           if (report.type === 'candidate-pair' && report.nominated && report.state === 'succeeded' && typeof report.currentRoundTripTime === 'number') {
             rttMs = report.currentRoundTripTime * 1000;
           }
@@ -986,7 +987,7 @@ export const useWebRTC = ({ sessionId, userType, onConnectionStateChange }: UseW
         return false;
       }
       try {
-        (track as any).contentHint = 'motion';
+        (track).contentHint = 'motion';
       } catch {
         /* noop */
       }
@@ -1052,7 +1053,7 @@ export const useWebRTC = ({ sessionId, userType, onConnectionStateChange }: UseW
     const timer = setInterval(() => {
       if (disposedRef.current || pcRef.current?.connectionState !== 'connected') return;
       mediaQueueRef.current = mediaQueueRef.current.then(async () => {
-        await supabase.rpc('report_call_media' as any, { p_session_id: sessionId, p_connected: true });
+        await supabase.rpc('report_call_media', { p_session_id: sessionId, p_connected: true });
       }).catch(() => undefined);
     }, 20_000);
     return () => clearInterval(timer);
@@ -1294,7 +1295,7 @@ export const useWebRTC = ({ sessionId, userType, onConnectionStateChange }: UseW
           if (!isMounted || !row) return;
           setSession(row);
           window.dispatchEvent(new CustomEvent('webrtc-session-update', { detail: row }));
-          if (isRealTermination(row as any, joinedAtRef.current)) {
+          if (isRealTermination(row, joinedAtRef.current)) {
             setCallEndedBy({ userId: row.ended_by!, userType: row.ended_by_type! });
             return;
           }

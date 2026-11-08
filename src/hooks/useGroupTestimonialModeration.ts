@@ -64,7 +64,7 @@ export const useGroupTestimonialModeration = () => {
       toast({ title: 'Depoimento atualizado' });
       await load();
       return true;
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Erro ao editar depoimento:', error);
       toast({
         title: 'Erro ao salvar',
@@ -86,7 +86,7 @@ export const useGroupTestimonialModeration = () => {
       toast({ title: 'Depoimento excluído' });
       await load();
       return true;
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Erro ao excluir depoimento:', error);
       toast({
         title: 'Erro',
@@ -108,7 +108,7 @@ export const useGroupTestimonialModeration = () => {
       toast({ title: 'Denúncias arquivadas' });
       await load();
       return true;
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Erro ao arquivar denúncias:', error);
       toast({
         title: 'Erro',

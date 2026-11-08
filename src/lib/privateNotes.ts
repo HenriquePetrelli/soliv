@@ -5,7 +5,7 @@ import { getSessionUser } from '@/lib/currentUser';
  * Anotação privada do psicólogo sobre uma consulta. Fica separada do resumo
  * da sessão (que o paciente vê): a tabela só é lida pelo psicólogo da consulta.
  */
-const table = () => supabase.from('appointment_private_notes' as never) as any;
+const table = () => supabase.from('appointment_private_notes');
 
 export const PRIVATE_NOTE_MAX = 10000;
 

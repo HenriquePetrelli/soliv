@@ -14,6 +14,8 @@ import { getFriendlyErrorMessage } from "@/utils/errorMessage";
 import DeleteAccountCard from "@/components/DeleteAccountCard";
 import { passwordProblem } from "@/lib/password";
 import { Skeleton } from "@/components/ui/skeleton";
+import type { User } from '@supabase/supabase-js';
+import type { Tables } from '@/integrations/supabase/types';
 const AccountSettings = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -21,7 +23,7 @@ const AccountSettings = () => {
   // Enquanto nome e e-mail chegam, os campos aparecem como skeleton (antes
   // apareciam vazios e se preenchiam depois).
   const [loadingUser, setLoadingUser] = useState(true);
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<(User & { profile: Tables<'profiles'> | null }) | null>(null);
   const [formData, setFormData] = useState({
     fullName: "",
     email: "",
@@ -78,7 +80,7 @@ const AccountSettings = () => {
       toast({ title: "Dados atualizados" });
 
       fetchUserData();
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast({
         title: "Erro",
         description: getFriendlyErrorMessage(error, "Erro ao atualizar dados"),
@@ -154,7 +156,7 @@ const AccountSettings = () => {
         newPassword: "",
         confirmPassword: "",
       }));
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast({
         title: "Erro",
         description: getFriendlyErrorMessage(error, "Erro ao atualizar senha"),

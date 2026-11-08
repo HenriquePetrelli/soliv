@@ -89,16 +89,16 @@ const LoginForm = ({ onForgotPassword, onSignUp }: LoginFormProps) => {
       }
 
       // Pacientes: verificar bloqueio administrativo
-      if (profile.user_type === 'patient' && state.patient && isCurrentlyBlocked(state.patient as any)) {
-        await notifyBlockedAccess(state.patient as any);
+      if (profile.user_type === 'patient' && state.patient && isCurrentlyBlocked(state.patient)) {
+        await notifyBlockedAccess(state.patient);
         await supabase.auth.signOut();
         return;
       }
 
       // Para psicólogos, verificar bloqueio e se o cadastro foi aprovado ou rejeitado
       if (profile.user_type === 'psychologist') {
-        if (state.psychologist && isCurrentlyBlocked(state.psychologist as any)) {
-          await notifyBlockedAccess(state.psychologist as any);
+        if (state.psychologist && isCurrentlyBlocked(state.psychologist)) {
+          await notifyBlockedAccess(state.psychologist);
           await supabase.auth.signOut();
           return;
         }

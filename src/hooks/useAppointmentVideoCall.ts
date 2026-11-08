@@ -27,7 +27,7 @@ export const useAppointmentVideoCall = () => {
       if (error) throw error;
 
       return data;
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error starting consultation:', error);
       toast({
         title: 'Erro',
@@ -73,7 +73,7 @@ export const useAppointmentVideoCall = () => {
       }
 
       return data;
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error ending consultation:', error);
       toast({
         title: 'Erro',

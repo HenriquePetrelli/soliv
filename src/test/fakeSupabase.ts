@@ -364,57 +364,56 @@ export class FakeDB {
     this.tables[table] = rows.map((r) => ({ ...r }));
   }
 
-  get client() {
-    const db = this;
+  get client(): any {
     return {
-      from: (table: string) => new QueryBuilder(db, table),
+      from: (table: string) => new QueryBuilder(this, table),
       rpc: (fnName: string, params?: Record<string, any>) => {
-        const handler = db.rpcHandlers[fnName] ?? DEFAULT_RPC_HANDLERS[fnName];
-        if (handler) return Promise.resolve(handler(db, params ?? {}));
+        const handler = this.rpcHandlers[fnName] ?? DEFAULT_RPC_HANDLERS[fnName];
+        if (handler) return Promise.resolve(handler(this, params ?? {}));
         return Promise.resolve({ data: null, error: null });
       },
       channel: (topic: string, opts?: { config?: { presence?: { key?: string } } }) => {
         const ch = new FakeChannel(topic, opts?.config?.presence?.key ?? 'anon');
-        db.channels.push(ch);
+        this.channels.push(ch);
         return ch;
       },
       removeChannel: (ch: FakeChannel) => {
-        db.channels = db.channels.filter((c) => c !== ch);
+        this.channels = this.channels.filter((c) => c !== ch);
         return Promise.resolve('ok');
       },
       auth: {
         getUser: async () => ({
-          data: { user: db.currentUserId ? { id: db.currentUserId } : null },
-          error: db.currentUserId ? null : { message: 'not authenticated' },
+          data: { user: this.currentUserId ? { id: this.currentUserId } : null },
+          error: this.currentUserId ? null : { message: 'not authenticated' },
         }),
         getSession: async () => ({
-          data: { session: db.currentUserId ? { user: { id: db.currentUserId } } : null },
+          data: { session: this.currentUserId ? { user: { id: this.currentUserId } } : null },
           error: null,
         }),
         onAuthStateChange: (callback: (event: string, session: unknown) => void) => {
-          db.authListeners.push(callback);
+          this.authListeners.push(callback);
           return {
             data: {
               subscription: {
                 unsubscribe: () => {
-                  db.authListeners = db.authListeners.filter((l) => l !== callback);
+                  this.authListeners = this.authListeners.filter((l) => l !== callback);
                 },
               },
             },
           };
         },
         updateUser: async (attrs: Row) => {
-          db.authUpdates.push(attrs);
-          return { data: { user: db.currentUserId ? { id: db.currentUserId } : null }, error: db.authUpdateError };
+          this.authUpdates.push(attrs);
+          return { data: { user: this.currentUserId ? { id: this.currentUserId } : null }, error: this.authUpdateError };
         },
         signInWithPassword: async ({ email }: { email: string; password: string }) => {
-          const user = db.loginUsers[email];
+          const user = this.loginUsers[email];
           if (!user) return { data: { user: null, session: null }, error: { message: 'Invalid login credentials' } };
-          db.currentUserId = user.id;
+          this.currentUserId = user.id;
           return { data: { user, session: { user } }, error: null };
         },
         signOut: async () => {
-          db.currentUserId = null;
+          this.currentUserId = null;
           return { error: null };
         },
       },

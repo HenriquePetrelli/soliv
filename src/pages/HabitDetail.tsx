@@ -22,7 +22,7 @@ import ProgressRing from '@/components/habits/ProgressRing';
 import CravingDialog from '@/components/habits/CravingDialog';
 import RelapseDialog from '@/components/habits/RelapseDialog';
 import { HABIT_VISUALS, OVER_LIMIT_COLOR } from '@/components/habits/habitVisuals';
-import { OFFLINE_ITEM, offlineEventToday } from '@/components/habits/DailyHabitCard';
+import { OFFLINE_ITEM, offlineEventToday } from '@/components/habits/dailyHabit';
 import { customItem, useHabitLogger } from '@/components/habits/useHabitLogger';
 import { cn } from '@/lib/utils';
 import { useHabits } from '@/hooks/useHabits';

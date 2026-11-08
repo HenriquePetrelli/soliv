@@ -18,6 +18,7 @@ export const DailyMoodToggle: React.FC<DailyMoodToggleProps> = ({ initialEnabled
 
   useEffect(() => {
     fetchMoodSetting();
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- roda só quando os valores listados mudam (as funções são recriadas a cada render)
   }, []);
 
   const fetchMoodSetting = async () => {

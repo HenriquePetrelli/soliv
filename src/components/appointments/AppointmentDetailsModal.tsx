@@ -105,7 +105,7 @@ export const AppointmentDetailsModal: React.FC<AppointmentDetailsModalProps> = (
       onUpdate?.();
       onClose();
 
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error responding to reschedule:', error);
       toast({
         title: 'Erro',

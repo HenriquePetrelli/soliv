@@ -18,6 +18,7 @@ import ExtraPurchaseDialog from "@/components/ExtraPurchaseDialog";
 import { useSubscription } from "@/contexts/SubscriptionContext";
 import { formatCents } from "@/lib/plans";
 import { notifySosQueueChanged, subscribeSosQueue } from "@/lib/sosQueueChannel";
+import type { RealtimeChannel } from '@supabase/supabase-js';
 
 
 /** Server-side TTL for pending SOS requests (finalize_stale_emergency_sessions). */
@@ -29,7 +30,7 @@ const formatCountdown = (seconds: number) => {
   return `${m}:${String(s).padStart(2, '0')}`;
 };
 
-const SOS = () => {
+const SosPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [availableProfessionals, setAvailableProfessionals] = useState(0);
@@ -77,6 +78,7 @@ const SOS = () => {
         console.log('Skipping cleanup: emergency was accepted, preserving request and session.');
       }
     };
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- roda só quando os valores listados mudam (as funções são recriadas a cada render)
   }, []); // Empty dependency array - only runs on unmount
 
   // O beacon não manda cabeçalho de login: vai o token no corpo, para o
@@ -121,7 +123,7 @@ const SOS = () => {
 
   // Fetch latest emergency request for current user and subscribe for acceptance
   useEffect(() => {
-    let reqChannel: any = null;
+    let reqChannel: RealtimeChannel | null = null;
     
     // Listen for emergency acceptance events
     const handleEmergencyAccepted = (event: CustomEvent) => {
@@ -145,7 +147,7 @@ const SOS = () => {
 
       // If we have an expected requestId from navigation, use it
       // Otherwise, get the most recent pending request
-      let data: any = null;
+      let data: { id: string; status: string; room_url: string | null; video_room_id: string | null; created_at: string; channel: string | null } | null = null;
       
       if (expectedRequestId) {
         // Fetch the specific request we just created
@@ -207,17 +209,17 @@ const SOS = () => {
       }
 
       if (data) {
-        const id = (data as any).id as string;
+        const id = (data).id as string;
         setRequestId(id);
         setChannel(sanitizeSosChannel((data as { channel?: unknown }).channel));
-        setCreatedAt((data as any).created_at ?? new Date().toISOString());
+        setCreatedAt((data).created_at ?? new Date().toISOString());
         // Wake up every psychologist dashboard immediately.
         notifySosQueueChanged({ requestId: id });
 
 
         // Only navigate to call if this specific request is accepted
-        const sessionId = (data as any).video_room_id || (data as any).room_url;
-        if (['accepted', 'in_progress'].includes((data as any).status) && sessionId) {
+        const sessionId = (data).video_room_id || (data).room_url;
+        if (['accepted', 'in_progress'].includes((data).status) && sessionId) {
           acceptedRef.current = true;
           navigate(`/emergency-call/${sessionId}?userType=patient&requestId=${id}`);
           return;
@@ -227,7 +229,7 @@ const SOS = () => {
         reqChannel = supabase
           .channel(`emergency_watch_${id}`)
           .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'emergency_requests', filter: `id=eq.${id}` }, (payload) => {
-            const n = payload.new as any;
+            const n = payload.new;
             const sessionId = n.video_room_id || n.room_url;
             if (['accepted', 'in_progress'].includes(n.status) && sessionId) {
               console.log('✅ Realtime acceptance received. Redirecting to call.', { sessionId, id });
@@ -251,6 +253,7 @@ const SOS = () => {
       if (reqChannel) supabase.removeChannel(reqChannel);
       window.removeEventListener('emergencyAccepted', handleEmergencyAccepted as EventListener);
     };
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- roda só quando os valores listados mudam (as funções são recriadas a cada render)
   }, [navigate]);
 
   // Rede alternativa ao realtime: se o socket cair (tela apagada, troca de
@@ -554,4 +557,4 @@ const SOS = () => {
   );
 };
 
-export default SOS;
+export default SosPage;

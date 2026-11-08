@@ -144,6 +144,7 @@ const SoundAnimation = ({ type, isPlaying, levelsRef, circular = false, audioRef
     return () => {
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
     };
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- roda só quando os valores listados mudam (as funções são recriadas a cada render)
   }, [type, isPlaying, levelsRef, circular]);
 
   if (circular) {

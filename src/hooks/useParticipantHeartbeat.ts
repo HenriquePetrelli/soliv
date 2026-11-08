@@ -54,7 +54,7 @@ export const useParticipantHeartbeat = ({
             user_id: userId,
             user_type: userType,
             last_seen: new Date().toISOString(),
-          } as any,
+          },
           { onConflict: 'session_id,user_id' }
         );
     };
@@ -68,7 +68,7 @@ export const useParticipantHeartbeat = ({
         .maybeSingle();
 
       if (cancelled) return;
-      const seen = (data as any)?.last_seen ? new Date((data as any).last_seen).getTime() : null;
+      const seen = (data)?.last_seen ? new Date((data).last_seen).getTime() : null;
       setRemoteLastSeen(seen);
       setRemoteRecentlySeen(seen !== null && Date.now() - seen < staleAfterMs);
     };
@@ -92,7 +92,7 @@ export const useParticipantHeartbeat = ({
           filter: `session_id=eq.${sessionId}`,
         },
         (payload) => {
-          const row = payload.new as any;
+          const row = payload.new as { user_type?: string; last_seen?: string | null } | null;
           if (!row || row.user_type !== remoteType) return;
           const seen = row.last_seen ? new Date(row.last_seen).getTime() : null;
           setRemoteLastSeen(seen);

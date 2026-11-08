@@ -1,7 +1,8 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
-import RouteGuard, { ROUTE_PERMISSIONS } from '@/components/RouteGuard';
+import RouteGuard from '@/components/RouteGuard';
+import { ROUTE_PERMISSIONS } from '@/lib/routePermissions';
 
 vi.mock('@/integrations/supabase/client', () => ({
   supabase: {

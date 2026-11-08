@@ -49,6 +49,7 @@ export const VideoCallSettingsModal = ({
       loadDevices();
       setCurrentStream(localStream);
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- roda só quando os valores listados mudam (as funções são recriadas a cada render)
   }, [isOpen, localStream]);
 
   // Load saved preferences when modal opens or set current devices
@@ -199,7 +200,7 @@ export const VideoCallSettingsModal = ({
       console.log('✅ Device test successful, proceeding to save and apply...');
 
       // Apply changes in real time to current call
-      let updatedStream = testResult.stream;
+      const updatedStream = testResult.stream;
       
       if (tempAudioOutputDevice) {
         try {

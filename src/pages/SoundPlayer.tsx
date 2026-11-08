@@ -183,6 +183,7 @@ const SoundPlayer = () => {
       audio.removeEventListener("pause", onPause);
       audio.removeEventListener("play", onPlayEvent);
     };
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- roda só quando os valores listados mudam (as funções são recriadas a cada render)
   }, [currentSound?.id]);
 
 
@@ -220,6 +221,7 @@ const SoundPlayer = () => {
       rafRef.current = null;
       lastTickRef.current = null;
     };
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- roda só quando os valores listados mudam (as funções são recriadas a cada render)
   }, [isPlaying, isScrubbing, duration, currentTime < duration]);
 
   // Tela bloqueada ou app em segundo plano: o requestAnimationFrame para,
@@ -422,7 +424,6 @@ const SoundPlayer = () => {
       window.removeEventListener("keydown", onKey);
       if (fsInactivityRef.current) clearTimeout(fsInactivityRef.current);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isFullscreen]);
 
 

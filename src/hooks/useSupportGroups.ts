@@ -155,6 +155,7 @@ export const useSupportGroups = () => {
 
   useEffect(() => {
     fetchGroups();
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- roda só quando os valores listados mudam (as funções são recriadas a cada render)
   }, []);
 
   return {
@@ -337,6 +338,7 @@ export const useGroupTestimonials = (groupId: string, filterByUser: boolean = fa
 
   useEffect(() => {
     fetchTestimonials();
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- roda só quando os valores listados mudam (as funções são recriadas a cada render)
   }, [groupId, filterByUser]); // Remove real-time subscription complexity for now
 
   const likeTestimonial = async (testimonialId: string, tipo: 'positivo' | 'negativo' | 'none') => {

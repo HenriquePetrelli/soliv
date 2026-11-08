@@ -484,7 +484,7 @@ _Cartão de teste `4242 4242 4242 4242`; para pedir autenticação, `4000 0025 0
 _Para quem publica edge functions ou migrations (detalhes na pendência 19 de `docs/pendencias-antes-do-lancamento.md`)._
 
 - [ ] `s19-06` `npx tsc -p tsconfig.app.json --noEmit`, `npx vitest run` e `npm run build` ⇒ sem erro
-- [ ] `s19-07` `npx eslint .` ⇒ roda até o fim (os avisos de `any` são conhecidos; nenhum erro novo nos arquivos mexidos)
+- [ ] `s19-07` `npx eslint . --max-warnings 0` ⇒ 0 erros e 0 avisos (zerado em 2026-11-08)
 - [ ] `s19-08` Publicar função pela CLI ⇒ `verify_jwt` de cada função igual ao do `supabase/config.toml` (conferir em Edge Functions depois)
 - [ ] `s19-09` Migration nova ⇒ aplicar só ela (sem `supabase db push`) e conferir em `supabase_migrations.schema_migrations`
 - [ ] `s19-10` Depois de publicar ⇒ repetir s06-41 (webhook com 200) e s19-01 (rotinas sem erro)

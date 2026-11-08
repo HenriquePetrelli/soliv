@@ -4,7 +4,8 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useAuth } from "@/contexts/AuthContext";
-import LegalConsents, { EMPTY_CONSENTS, allConsentsGiven, consentKeysFor } from "@/components/legal/LegalConsents";
+import LegalConsents from "@/components/legal/LegalConsents";
+import { EMPTY_CONSENTS, allConsentsGiven, consentKeysFor } from "@/components/legal/consents";
 import { setLegalGateStatus } from "@/lib/legalGateStatus";
 import { LEGAL_PAGES, LegalDocumentId, fetchMissingAcceptances, recordAcceptances } from "@/lib/legal";
 

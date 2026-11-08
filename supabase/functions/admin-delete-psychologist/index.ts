@@ -1,5 +1,6 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { adminMfaOk } from "../_shared/adminMfa.ts";
+import { errorMessage } from '../_shared/errors.ts';
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -142,8 +143,8 @@ Deno.serve(async (req: Request): Promise<Response> => {
     }
 
     return json({ success: true, message: "Psicólogo excluído permanentemente" });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("admin-delete-psychologist error:", error);
-    return json({ error: error?.message || "Erro interno do servidor" }, 500);
+    return json({ error: errorMessage(error) || "Erro interno do servidor" }, 500);
   }
 });

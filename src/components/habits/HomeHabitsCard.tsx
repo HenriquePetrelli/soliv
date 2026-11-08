@@ -4,7 +4,7 @@ import ExpandableCard from '@/components/ExpandableCard';
 import { Button } from '@/components/ui/button';
 import ProgressRing from '@/components/habits/ProgressRing';
 import { HABIT_VISUALS } from '@/components/habits/habitVisuals';
-import { dailySummary } from '@/components/habits/DailyHabitCard';
+import { dailySummary } from '@/components/habits/dailyHabit';
 import { useHabitLogger } from '@/components/habits/useHabitLogger';
 import { useHabits } from '@/hooks/useHabits';
 import { useNow } from '@/hooks/useNow';

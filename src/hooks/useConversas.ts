@@ -199,12 +199,14 @@ export const useConversas = () => {
     if (user) {
       fetchConversas();
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- roda só quando os valores listados mudam (as funções são recriadas a cada render)
   }, [user, userType]);
 
   useEffect(() => {
     if (user && userType === 'patient') {
       fetchPsicologosDisponiveis();
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- roda só quando os valores listados mudam (as funções são recriadas a cada render)
   }, [user, userType, conversas]);
 
   // Tempo real: muda a conversa (status, nova conversa) ou chega/é lida uma

@@ -33,7 +33,7 @@ export const usePatientManagement = () => {
         .order('created_at', { ascending: false });
       if (fetchError) throw fetchError;
       setPatients((data || []) as AdminPatient[]);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Erro ao carregar pacientes:', err);
       setError(getFriendlyErrorMessage(err, 'Erro ao carregar pacientes.'));
     } finally {

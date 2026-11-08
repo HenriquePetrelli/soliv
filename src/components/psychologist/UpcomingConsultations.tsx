@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Clock, User, Calendar, MessageSquare, Video, History, XCircle } from 'lucide-react';
 import { canCancelAppointment, type CancellableAppointment } from '@/lib/appointmentCancellation';
 import CancelAppointmentDialog from '@/components/appointments/CancelAppointmentDialog';
-import { usePsychologistSchedule } from '@/hooks/usePsychologistSchedule';
+import { usePsychologistSchedule, type Appointment } from '@/hooks/usePsychologistSchedule';
 import { format, isToday, isTomorrow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { formatBrazilTime, formatTimeOnly } from '@/utils/timezone';
@@ -44,16 +44,16 @@ const UpcomingConsultations = () => {
 
   const now = new Date();
   const acceptedStatuses = ['scheduled', 'confirmed', 'in_progress'];
-  const isAppointmentActive = (a: any) => isConsultationUpcoming(a, now.getTime());
+  const isAppointmentActive = (a: Appointment) => isConsultationUpcoming(a, now.getTime());
   const todayAppointments = todayRaw
-    .filter((a: any) => acceptedStatuses.includes(a.status))
+    .filter((a) => acceptedStatuses.includes(a.status))
     .filter(isAppointmentActive);
-  const todayIds = new Set(todayAppointments.map((a: any) => a.id));
+  const todayIds = new Set(todayAppointments.map((a) => a.id));
   const isSameLocalDay = (d1: Date, d2: Date) =>
     d1.getFullYear() === d2.getFullYear() &&
     d1.getMonth() === d2.getMonth() &&
     d1.getDate() === d2.getDate();
-  const upcomingAppointments = upcomingRaw.filter((a: any) => {
+  const upcomingAppointments = upcomingRaw.filter((a) => {
     if (todayIds.has(a.id)) return false;
     if (isSameLocalDay(new Date(a.scheduled_at), now)) return false;
     return isAppointmentActive(a);
@@ -98,7 +98,7 @@ const UpcomingConsultations = () => {
     return { badge: 'Encerrada', style: 'bg-muted text-foreground border-border' };
   };
 
-  const renderAppointmentCard = (appointment: any) => {
+  const renderAppointmentCard = (appointment: Appointment) => {
     const timeInfo = getAppointmentTimeInfo(appointment.scheduled_at);
 
     return (

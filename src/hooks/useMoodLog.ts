@@ -35,7 +35,7 @@ export const useMoodLog = () => {
         await addActivity('Registro de Humor');
       }
       return true;
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Erro ao registrar humor:', error);
       toast({
         title: 'Erro',

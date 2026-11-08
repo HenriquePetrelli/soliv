@@ -1,5 +1,6 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { adminMfaOk } from "../_shared/adminMfa.ts";
+import { errorMessage } from '../_shared/errors.ts';
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -44,7 +45,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
     const body = await req.json().catch(() => null);
     if (!body || typeof body !== "object") return json({ error: "Corpo inválido" }, 400);
 
-    const { patient_id, full_name, email, cpf, phone, state, city, password } = body as Record<string, any>;
+    const { patient_id, full_name, email, cpf, phone, state, city, password } = body as Record<string, unknown>;
     if (!patient_id || typeof patient_id !== "string") {
       return json({ error: "patient_id é obrigatório" }, 400);
     }
@@ -85,7 +86,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
         .update({ full_name: name, cpf: str(cpf) || null, updated_at: new Date().toISOString() })
         .eq("user_id", patient.user_id);
 
-      const authUpdates: Record<string, any> = {};
+      const authUpdates: { email?: string; password?: string } = {};
       if (mail && mail !== patient.email) authUpdates.email = mail;
       if (password) authUpdates.password = String(password);
       if (Object.keys(authUpdates).length > 0) {
@@ -118,8 +119,8 @@ Deno.serve(async (req: Request): Promise<Response> => {
     });
 
     return json({ success: true, data: updated, message: "Paciente atualizado com sucesso" });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("admin-update-patient error:", error);
-    return json({ error: error?.message || "Erro interno do servidor" }, 500);
+    return json({ error: errorMessage(error) || "Erro interno do servidor" }, 500);
   }
 });

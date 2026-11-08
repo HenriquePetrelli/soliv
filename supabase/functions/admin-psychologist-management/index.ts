@@ -129,9 +129,10 @@ const generateRejectionEmailTemplate = (psychologistName: string, reason: string
 </html>
 `;
 
-const validateInput = (data: any, requiredFields: string[]): string | null => {
+const validateInput = (data: Record<string, unknown>, requiredFields: string[]): string | null => {
   for (const field of requiredFields) {
-    if (!data[field] || (typeof data[field] === 'string' && data[field].trim() === '')) {
+    const value = data[field];
+    if (!value || (typeof value === 'string' && value.trim() === '')) {
       return `Missing required field: ${field}`;
     }
   }

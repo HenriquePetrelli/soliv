@@ -64,7 +64,7 @@ export const usePsychologistAvailability = () => {
       toast({ title: 'Agenda salva', description: 'Sua disponibilidade semanal foi atualizada.' });
       await fetchAvailability();
       return true;
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Erro ao salvar disponibilidade:', error);
       toast({
         title: 'Erro ao salvar',

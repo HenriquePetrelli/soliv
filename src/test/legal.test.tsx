@@ -16,9 +16,10 @@ import {
   hasPendingPlaceholders,
   signupAcceptanceMetadata,
 } from '@/lib/legal';
-import LegalMarkdown, { cleanLegalMarkdown } from '@/components/legal/LegalMarkdown';
+import LegalMarkdown from '@/components/legal/LegalMarkdown';
+import { cleanLegalMarkdown } from '@/components/legal/cleanLegalMarkdown';
 import LegalAcceptanceGate from '@/components/legal/LegalAcceptanceGate';
-import { consentKeysFor } from '@/components/legal/LegalConsents';
+import { consentKeysFor } from '@/components/legal/consents';
 import { renderHook } from '@testing-library/react';
 import { useLegalGateStatus } from '@/lib/legalGateStatus';
 

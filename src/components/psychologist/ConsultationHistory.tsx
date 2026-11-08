@@ -105,7 +105,7 @@ const ConsultationHistory = () => {
         loadEmergencyHistory(),
       ]);
 
-      const scheduled: ConsultationRow[] = (historyResult?.appointments ?? []).map((apt: any) => ({
+      const scheduled: ConsultationRow[] = (historyResult?.appointments ?? []).map((apt) => ({
         id: apt.id,
         kind: 'scheduled',
         occurred_at: apt.scheduled_at,
@@ -151,8 +151,8 @@ const ConsultationHistory = () => {
     const byRequest = new Map((feedbacks ?? []).map((f) => [f.emergency_request_id, f]));
 
     return requests.map((r) => {
-      const details = (r.patient_details ?? {}) as Record<string, any>;
-      const feedback = byRequest.get(r.id) as any;
+      const details = (r.patient_details ?? {}) as { full_name?: string; name?: string };
+      const feedback = byRequest.get(r.id);
       return {
         id: r.id,
         kind: 'emergency' as const,
@@ -356,7 +356,7 @@ const ConsultationHistory = () => {
             </div>
             <div className="w-44">
               <Label htmlFor="type">Tipo</Label>
-              <Select value={typeFilter} onValueChange={(v) => setTypeFilter(v as any)}>
+              <Select value={typeFilter} onValueChange={(v) => setTypeFilter(v as 'all' | ConsultationKind)}>
                 <SelectTrigger id="type">
                   <SelectValue placeholder="Filtrar por tipo" />
                 </SelectTrigger>

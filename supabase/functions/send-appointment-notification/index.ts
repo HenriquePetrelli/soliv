@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.52.1";
 import { Resend } from "https://esm.sh/resend@2.0.0";
+import { errorMessage } from '../_shared/errors.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -63,7 +64,7 @@ serve(async (req) => {
 
   console.log('Sending notification for appointment:', appointment_id, 'status:', status);
 
-  let recipientId, recipientProfile, recipientEmail;
+  let recipientId, recipientProfile;
 
   // Determine who should receive the notification
   if (psychologist_id) {
@@ -110,7 +111,7 @@ serve(async (req) => {
     throw userError;
   }
 
-  recipientEmail = user.user.email;
+  const recipientEmail = user.user.email;
 
   // HTML-escaped variants for the raw email templates below — psychologist_name
   // and proposal_notes ultimately come from a psychologist's own profile
@@ -218,7 +219,7 @@ serve(async (req) => {
   // the chat/achievement notification triggers already do, since the RLS
   // policy on this table only checks that column against auth.uid(),
   // regardless of the recipient's user type.
-  const notificationData: any = {
+  const notificationData = {
     appointment_id,
     title,
     message,
@@ -263,10 +264,10 @@ serve(async (req) => {
       }
     );
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error in send-appointment-notification:', error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: errorMessage(error) }),
       {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },

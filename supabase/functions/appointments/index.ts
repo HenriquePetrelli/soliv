@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.52.1";
+import { errorMessage } from '../_shared/errors.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -99,8 +100,8 @@ const isWithinPsychologistAvailability = async (
 
   if ((vacation ?? []).length > 0) return false;
 
-  let ranges: Block[] = (baseRows ?? []).map((r: any) => ({ start_time: r.start_time.slice(0, 5), end_time: r.end_time.slice(0, 5) }));
-  const overrides = (overrideRows ?? []).map((r: any) => ({ start_time: r.start_time.slice(0, 5), end_time: r.end_time.slice(0, 5), type: r.type as string }));
+  let ranges: Block[] = (baseRows ?? []).map((r: { start_time: string; end_time: string }) => ({ start_time: r.start_time.slice(0, 5), end_time: r.end_time.slice(0, 5) }));
+  const overrides = (overrideRows ?? []).map((r: { start_time: string; end_time: string; type: string }) => ({ start_time: r.start_time.slice(0, 5), end_time: r.end_time.slice(0, 5), type: r.type as string }));
   for (const o of overrides) {
     if (o.type === 'bloqueio') ranges = subtractRange(ranges, o);
   }
@@ -113,8 +114,11 @@ const isWithinPsychologistAvailability = async (
 
 // Psicólogo da consulta para a tela. Se ele foi excluído, a consulta fica no
 // histórico do paciente com o nome guardado (psychologist_name).
-// deno-lint-ignore no-explicit-any
-const psychologistOf = (appointment: any) => {
+type PsychologistInfo = { full_name: string | null; specialization: string | null };
+const psychologistOf = (appointment: {
+  psychologists?: PsychologistInfo | PsychologistInfo[] | null;
+  psychologist_name?: string | null;
+}) => {
   const joined = Array.isArray(appointment.psychologists) ? appointment.psychologists[0] : appointment.psychologists;
   if (joined) return joined;
   return appointment.psychologist_name ? { full_name: appointment.psychologist_name, specialization: null } : null;
@@ -478,7 +482,7 @@ serve(async (req) => {
       }
       const holding = [
         ...(conflictingAppointments ?? []),
-        ...(proposedRows ?? []).map((r: any) => ({ scheduled_at: r.proposed_scheduled_at, duration: r.duration })),
+        ...(proposedRows ?? []).map((r: { proposed_scheduled_at: string; duration: number | null }) => ({ scheduled_at: r.proposed_scheduled_at, duration: r.duration })),
       ];
 
       const bufferMs = bufferMin * 60 * 1000;
@@ -605,9 +609,9 @@ serve(async (req) => {
 
     return new Response('Method not allowed', { status: 405, headers: corsHeaders });
 
-  } catch (error: any) {
-    console.error('Error in appointments function:', error.message);
-    const msg = error?.message || 'Erro interno';
+  } catch (error: unknown) {
+    console.error('Error in appointments function:', errorMessage(error));
+    const msg = errorMessage(error) || 'Erro interno';
     // Validation/business errors → 400/409/429 (not 500) — these are
     // expected outcomes (agenda full, plan restriction, quota used, rate
     // limited), not server malfunctions.

@@ -49,7 +49,7 @@ export const usePsychologistEmergency = () => {
         return pa - pb || new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
       });
       setEmergencyRequests(list);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error fetching emergency requests:', error);
       if (!silent) {
         toast({
@@ -167,7 +167,7 @@ export const usePsychologistEmergency = () => {
         console.log('📋 Full response data:', data);
         throw new Error('Falha ao obter ID da sessão - tente novamente');
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('❌ Error accepting emergency request:', error);
       toast({
         title: 'Erro',
@@ -207,7 +207,7 @@ export const usePsychologistEmergency = () => {
       // Refresh the list
       fetchEmergencyRequests();
       notifySosQueueChanged({ requestId });
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error declining emergency request:', error);
       toast({
         title: 'Erro',
@@ -262,6 +262,7 @@ export const usePsychologistEmergency = () => {
       window.clearInterval(poll);
       if (refreshTimer.current) clearTimeout(refreshTimer.current);
     };
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- roda só quando os valores listados mudam (as funções são recriadas a cada render)
   }, []);
 
 

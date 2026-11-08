@@ -68,7 +68,7 @@ export const PasswordChangeModal = ({ open, onOpenChange, currentEmail }: Passwo
 
       toast({ title: 'Senha atualizada' });
       onOpenChange(false);
-    } catch (e: any) {
+    } catch (e: unknown) {
       toast({ title: 'Erro ao alterar senha', description: getFriendlyErrorMessage(e, 'Não foi possível alterar a senha.'), variant: 'destructive' });
     } finally {
       setLoading(false);

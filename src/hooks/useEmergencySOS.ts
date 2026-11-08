@@ -4,6 +4,7 @@ import { getSessionUser } from '@/lib/currentUser';
 import { END_REASONS } from '@/lib/emergencyEndReasons';
 import { useToast } from '@/hooks/use-toast';
 import { findPatientOpenRequest } from '@/lib/emergencyCallGuard';
+import { errorText } from '@/utils/errorMessage';
 
 export interface EmergencyRequest {
   id: string;
@@ -61,7 +62,7 @@ export const useEmergencySOS = () => {
           description: 'Você já possui uma chamada de emergência em andamento.',
           duration: 4000,
         });
-        setCurrentRequest(existing as any);
+        setCurrentRequest(existing as unknown as EmergencyRequest);
         return existing.id;
       }
 
@@ -76,9 +77,9 @@ export const useEmergencySOS = () => {
       if (error) {
         // Business rules (no subscription, quota, blocked account) come back as
         // non-2xx responses. They are NOT runtime errors: show a friendly toast.
-        let payload: any = null;
+        let payload: { code?: SosDenial['code']; error?: string; plan_type?: string | null } | null = null;
         try {
-          payload = await (error as any)?.context?.json?.();
+          payload = await (error as { context?: { json?: () => Promise<unknown> } })?.context?.json?.() as typeof payload;
         } catch (_e) {
           payload = null;
         }
@@ -144,10 +145,10 @@ export const useEmergencySOS = () => {
       setStopPolling(() => cleanupFn);
       
       return data.emergency_request_id;
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error creating emergency request:', error);
       
-      const errorMessage = error.message || 'Erro ao enviar solicitação de emergência';
+      const errorMessage = errorText(error) || 'Erro ao enviar solicitação de emergência';
       
       toast({
         title: 'Erro na Solicitação',
@@ -183,7 +184,7 @@ export const useEmergencySOS = () => {
       
       setCurrentRequest(data);
       return data;
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error checking request status:', error);
       
       // Re-throw error to let polling function handle it appropriately
@@ -287,7 +288,7 @@ export const useEmergencySOS = () => {
           }
           return;
         }
-      } catch (error: any) {
+      } catch (error: unknown) {
         consecutiveFailures++;
         temporaryFailures++;
         
@@ -378,7 +379,7 @@ export const useEmergencySOS = () => {
       
       console.log('Emergency request cancelled successfully');
 
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error cancelling request:', error);
       toast({
         title: 'Erro',
@@ -389,6 +390,7 @@ export const useEmergencySOS = () => {
     } finally {
       setLoading(false);
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- roda só quando os valores listados mudam (as funções são recriadas a cada render)
   }, [toast]);
 
   return {

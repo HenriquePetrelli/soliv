@@ -12,6 +12,7 @@ import { getFriendlyErrorMessage } from '@/utils/errorMessage';
 import { Eye, EyeOff, FileText, Loader2, Upload } from 'lucide-react';
 import { passwordProblem } from '@/lib/password';
 import { openStorageDocument } from '@/lib/storageDocument';
+import type { PsychologistData } from '@/hooks/usePsychologistManagement';
 
 interface EditablePsychologist {
   id: string;
@@ -33,7 +34,7 @@ interface EditPsychologistModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   psychologist: EditablePsychologist;
-  onUpdated: (data: any) => void;
+  onUpdated: (data?: PsychologistData) => void;
 }
 
 const PIX_TYPES = [
@@ -102,7 +103,7 @@ export const EditPsychologistModal = ({
       const { data } = supabase.storage.from('psychologist-documents').getPublicUrl(path);
       set('document_url', data.publicUrl);
       toast.success('Documento enviado');
-    } catch (err: any) {
+    } catch (err: unknown) {
       toast.error(getFriendlyErrorMessage(err, 'Erro ao enviar documento'));
     } finally {
       setUploading(false);
@@ -136,13 +137,13 @@ export const EditPsychologistModal = ({
         },
       });
 
-      if (error) throw new Error((data as any)?.error || error.message);
-      if ((data as any)?.error) throw new Error((data as any).error);
+      if (error) throw new Error((data)?.error || error.message);
+      if ((data)?.error) throw new Error((data).error);
 
-      toast.success((data as any)?.message || 'Informações atualizadas');
-      onUpdated((data as any)?.data);
+      toast.success((data)?.message || 'Informações atualizadas');
+      onUpdated((data)?.data);
       onOpenChange(false);
-    } catch (err: any) {
+    } catch (err: unknown) {
       toast.error(getFriendlyErrorMessage(err, 'Erro ao salvar alterações'));
     } finally {
       setSaving(false);
@@ -214,7 +215,7 @@ export const EditPsychologistModal = ({
                     {SPECIALIZATIONS.map((s) => (
                       <SelectItem key={s} value={s}>{s}</SelectItem>
                     ))}
-                    {form.specialization && !SPECIALIZATIONS.includes(form.specialization as any) && (
+                    {form.specialization && !(SPECIALIZATIONS as readonly string[]).includes(form.specialization) && (
                       <SelectItem value={form.specialization}>{form.specialization}</SelectItem>
                     )}
                   </SelectContent>

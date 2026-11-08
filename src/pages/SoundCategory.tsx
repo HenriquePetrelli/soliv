@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Play, Clock, Music } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
-import { soundsData } from "@/data/soundsData";
+import { soundsData, type Category } from "@/data/soundsData";
 import PageHeader from "@/components/PageHeader";
 import PatientBottomNav from "@/components/PatientBottomNav";
 
@@ -11,7 +11,7 @@ const SoundCategory = () => {
 
   const isSubcategory = subcategoryId !== undefined;
   const id = isSubcategory ? subcategoryId : categoryId;
-  const category = isSubcategory
+  const category: Category | undefined = isSubcategory
     ? soundsData.subcategories[subcategoryId as keyof typeof soundsData.subcategories]
     : soundsData.categories[categoryId as keyof typeof soundsData.categories];
 
@@ -38,11 +38,11 @@ const SoundCategory = () => {
       <PatientBottomNav />
       <PageHeader title={category.title} backTo="/sounds" />
 
-      {(category as any).description && (
+      {(category).description && (
         <div className="bg-card border-b border-border">
           <div className="max-w-4xl mx-auto px-4 sm:px-6 py-4">
             <p className="text-sm sm:text-base text-muted-foreground">
-              {(category as any).description}
+              {(category).description}
             </p>
           </div>
         </div>

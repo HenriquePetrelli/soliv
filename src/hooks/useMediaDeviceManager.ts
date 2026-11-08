@@ -1,4 +1,5 @@
 import { useState, useCallback, useEffect } from 'react';
+import { errorName, errorText } from '@/utils/errorMessage';
 
 export interface MediaDevice {
   deviceId: string;
@@ -78,15 +79,15 @@ export const useMediaDeviceManager = () => {
     try {
       const probe = await navigator.mediaDevices.getUserMedia({ audio: true, video: true });
       probe.getTracks().forEach((track) => track.stop());
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('❌ Permission check failed:', error);
 
-      if (['NotAllowedError', 'NotFoundError', 'NotReadableError', 'OverconstrainedError'].includes(error.name)) {
+      if (['NotAllowedError', 'NotFoundError', 'NotReadableError', 'OverconstrainedError'].includes(errorName(error))) {
         const audioOnly = await audioOnlyFallback();
         if (audioOnly) return audioOnly;
       }
 
-      if (error.name === 'NotAllowedError') {
+      if (errorName(error) === 'NotAllowedError') {
         return {
           stream: new MediaStream(),
           error: {
@@ -151,10 +152,10 @@ export const useMediaDeviceManager = () => {
         const stream = await navigator.mediaDevices.getUserMedia(exactConstraints);
         console.log('✅ Media stream obtained with exact constraints');
         return { stream };
-      } catch (error: any) {
-        console.warn('⚠️ Exact constraints failed, trying with ideal constraints:', error.name);
+      } catch (error: unknown) {
+        console.warn('⚠️ Exact constraints failed, trying with ideal constraints:', errorName(error));
         
-        if (error.name === 'OverconstrainedError') {
+        if (errorName(error) === 'OverconstrainedError') {
           // Try with ideal constraints instead
           try {
             const idealConstraints = getConstraints(false);
@@ -162,8 +163,8 @@ export const useMediaDeviceManager = () => {
             const stream = await navigator.mediaDevices.getUserMedia(idealConstraints);
             console.log('✅ Media stream obtained with ideal constraints');
             return { stream };
-          } catch (idealError: any) {
-            console.warn('⚠️ Ideal constraints also failed, falling back to default:', idealError.name);
+          } catch (idealError: unknown) {
+            console.warn('⚠️ Ideal constraints also failed, falling back to default:', errorName(idealError));
           }
         }
       }
@@ -201,7 +202,7 @@ export const useMediaDeviceManager = () => {
       }
       
       return { stream };
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('❌ All media constraints failed:', error);
       const audioOnly = await audioOnlyFallback();
       if (audioOnly) return audioOnly;
@@ -211,7 +212,7 @@ export const useMediaDeviceManager = () => {
         message: 'Erro desconhecido ao acessar mídia'
       };
 
-      switch (error.name) {
+      switch (errorName(error)) {
         case 'NotFoundError':
           mediaError = {
             type: 'device',
@@ -241,7 +242,7 @@ export const useMediaDeviceManager = () => {
           };
           break;
         default:
-          mediaError.details = error.message;
+          mediaError.details = errorText(error);
       }
 
       return { stream: new MediaStream(), error: mediaError };
@@ -253,7 +254,7 @@ export const useMediaDeviceManager = () => {
     try {
       const targetElements = elements || document.querySelectorAll('audio, video');
       const promises = Array.from(targetElements).map(async (element) => {
-        const anyElement = element as any;
+        const anyElement = element;
         if (typeof anyElement.setSinkId === 'function') {
           try {
             await anyElement.setSinkId(deviceId);

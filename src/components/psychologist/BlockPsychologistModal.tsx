@@ -9,6 +9,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { getFriendlyErrorMessage } from '@/utils/errorMessage';
 import { BLOCK_DURATIONS, formatRemainingTime, type BlockInfo } from '@/utils/psychologistBlock';
+import type { PsychologistData } from '@/hooks/usePsychologistManagement';
 
 interface BlockPsychologistModalProps {
   open: boolean;
@@ -17,7 +18,7 @@ interface BlockPsychologistModalProps {
   psychologistName: string;
   mode: 'block' | 'unblock';
   blockInfo?: BlockInfo | null;
-  onDone: (updated?: any) => void;
+  onDone: (updated?: PsychologistData) => void;
 }
 
 export const BlockPsychologistModal = ({
@@ -55,7 +56,7 @@ export const BlockPsychologistModal = ({
       setReason('');
       onOpenChange(false);
       onDone(data?.data);
-    } catch (err: any) {
+    } catch (err: unknown) {
       toast.error(getFriendlyErrorMessage(err, 'Erro ao processar solicitação'));
     } finally {
       setSaving(false);

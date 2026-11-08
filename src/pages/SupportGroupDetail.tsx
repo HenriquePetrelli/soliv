@@ -29,7 +29,7 @@ interface TestimonialCardProps {
   symptomName?: string;
   onLike: (testimonialId: string, tipo: 'positivo' | 'negativo' | 'none') => void;
   isPremiumUser?: boolean;
-  onEdit: (testimonial: any) => void;
+  onEdit: (testimonial: GroupTestimonial) => void;
   onDelete: (testimonialId: string) => void;
   onReport: (testimonial: GroupTestimonial) => void;
   groupName: string;
@@ -240,7 +240,7 @@ const SupportGroupDetail = () => {
   const [showSymptoms, setShowSymptoms] = useState(false);
   const [showAddTestimonial, setShowAddTestimonial] = useState(false);
   const [showEditTestimonial, setShowEditTestimonial] = useState(false);
-  const [editingTestimonial, setEditingTestimonial] = useState<any>(null);
+  const [editingTestimonial, setEditingTestimonial] = useState<GroupTestimonial | null>(null);
   const [reportTarget, setReportTarget] = useState<GroupTestimonial | null>(null);
   const [reportReason, setReportReason] = useState<TestimonialReportReason>('ofensivo');
   const [reportDetails, setReportDetails] = useState('');
@@ -286,12 +286,12 @@ const SupportGroupDetail = () => {
     refetch(filter === 'mine');
   };
 
-  const handleEditTestimonial = (testimonial: any) => {
+  const handleEditTestimonial = (testimonial: GroupTestimonial) => {
     setEditingTestimonial(testimonial);
     setShowEditTestimonial(true);
   };
 
-  const handleUpdateTestimonial = async (testimonialId: string, updates: any) => {
+  const handleUpdateTestimonial = async (testimonialId: string, updates: Parameters<typeof updateTestimonial>[1]) => {
     const success = await updateTestimonial(testimonialId, updates);
     if (success) {
       setShowEditTestimonial(false);

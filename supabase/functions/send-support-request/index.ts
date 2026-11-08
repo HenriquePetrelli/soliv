@@ -160,7 +160,7 @@ const handler = async (req: Request): Promise<Response> => {
       },
     });
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Error in send-support-request function:", error);
     return new Response(
       JSON.stringify({ error: 'Não foi possível enviar agora. Tente de novo em instantes.' }),

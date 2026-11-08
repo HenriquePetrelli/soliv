@@ -30,6 +30,7 @@ export const GoalSelectionModal = ({
       // Pre-select goals that are already in the patient's weekly_goals array
       setTempSelectedGoals(selectedGoals);
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- roda só quando os valores listados mudam (as funções são recriadas a cada render)
   }, [open, selectedGoals]);
 
   const loadGoals = async () => {

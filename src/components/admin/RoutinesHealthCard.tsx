@@ -3,20 +3,8 @@ import { Timer } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
+import { routinesNeedingAttention, type RoutineHealth } from '@/components/admin/routinesHealth';
 
-export interface RoutineHealth {
-  jobname: string;
-  schedule: string;
-  active: boolean;
-  last_status: string | null;
-  last_start: string | null;
-  failures_24h: number;
-  last_error: string | null;
-}
-
-/** Rotinas que pedem atenção: desligadas ou com falha nas últimas 24 h. */
-export const routinesNeedingAttention = (rows: RoutineHealth[]) =>
-  rows.filter((r) => !r.active || r.failures_24h > 0 || r.last_status === 'failed');
 
 const formatWhen = (iso: string | null) =>
   iso ? new Date(iso).toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo', dateStyle: 'short', timeStyle: 'short' }) : 'sem registro';

@@ -83,52 +83,57 @@ export const PixModal: React.FC<PixModalProps> = ({ isOpen, onClose, userId, mod
     if (!key.trim()) return false;
 
     switch (type) {
-      case 'cpf':
+      case 'cpf': {
         const cpfNumbers = key.replace(/\D/g, '');
         if (cpfNumbers.length !== 11) return false;
-        
+
         // Validação básica de CPF
         let sum = 0;
         let remainder;
-        
+
         if (cpfNumbers === "00000000000") return false;
-        
+
         for (let i = 1; i <= 9; i++) {
           sum = sum + parseInt(cpfNumbers.substring(i-1, i)) * (11 - i);
         }
         remainder = (sum * 10) % 11;
-        
+
         if ((remainder === 10) || (remainder === 11)) remainder = 0;
         if (remainder !== parseInt(cpfNumbers.substring(9, 10))) return false;
-        
+
         sum = 0;
         for (let i = 1; i <= 10; i++) {
           sum = sum + parseInt(cpfNumbers.substring(i-1, i)) * (12 - i);
         }
         remainder = (sum * 10) % 11;
-        
+
         if ((remainder === 10) || (remainder === 11)) remainder = 0;
         if (remainder !== parseInt(cpfNumbers.substring(10, 11))) return false;
-        
+
         return true;
-        
-      case 'cnpj':
+      }
+
+      case 'cnpj': {
         const cnpjNumbers = key.replace(/\D/g, '');
         return cnpjNumbers.length === 14;
-        
-      case 'email':
+      }
+
+      case 'email': {
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         return emailRegex.test(key);
-        
-      case 'telefone':
+      }
+
+      case 'telefone': {
         const phoneNumbers = key.replace(/\D/g, '');
         return phoneNumbers.length >= 10 && phoneNumbers.length <= 11;
-        
-      case 'aleatoria':
+      }
+
+      case 'aleatoria': {
         // Chave aleatória deve ter pelo menos 10 caracteres e seguir padrão UUID
         const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
         return key.length >= 10 && (uuidRegex.test(key) || key.length >= 32);
-        
+      }
+
       default:
         return false;
     }
@@ -183,7 +188,7 @@ export const PixModal: React.FC<PixModalProps> = ({ isOpen, onClose, userId, mod
       toast({ title: editing ? "Chave PIX atualizada" : "Chave PIX cadastrada" });
 
       onClose();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Erro ao salvar PIX:', error);
       toast({
         title: "Erro ao salvar",
