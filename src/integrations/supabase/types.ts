@@ -3298,6 +3298,7 @@ export type Database = {
         Returns: Json
       }
       leave_organization: { Args: never; Returns: undefined }
+      list_open_emergency_requests: { Args: never; Returns: Json }
       listar_conversas: {
         Args: never
         Returns: {

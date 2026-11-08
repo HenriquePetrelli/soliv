@@ -1,10 +1,11 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { getSessionUser } from '@/lib/currentUser';
 import { useToast } from '@/hooks/use-toast';
 import { getFunctionErrorMessage } from '@/utils/errorMessage';
 import { findPsychologistOngoingCall } from '@/lib/emergencyCallGuard';
 import { notifySosQueueChanged, subscribeSosQueue } from '@/lib/sosQueueChannel';
+import { isPriorityTriage } from '@/lib/sosTriage';
 
 
 interface EmergencyRequest {
@@ -32,13 +33,22 @@ export const usePsychologistEmergency = () => {
   const fetchEmergencyRequests = async (silent = false) => {
     try {
       if (!silent) setLoading(true);
-      const { data, error } = await supabase.functions.invoke('psychologist-emergency', {
-        method: 'GET'
-      });
-      
+      // Uma consulta no banco (list_open_emergency_requests). Antes era a edge
+      // function psychologist-emergency a cada 10 s por psicólogo: com muitos
+      // psicólogos online, a cota mensal de funções acabava em horas.
+      const { data, error } = await supabase.rpc('list_open_emergency_requests');
+
       if (error) throw error;
-      
-      setEmergencyRequests(data || []);
+
+      const list = ((data as unknown as EmergencyRequest[] | null) ?? []).slice();
+      // Risco marcado na triagem (suicídio, perigo) vai para a frente da fila;
+      // dentro de cada grupo, o pedido mais antigo primeiro.
+      list.sort((a, b) => {
+        const pa = isPriorityTriage(a.triage) ? 0 : 1;
+        const pb = isPriorityTriage(b.triage) ? 0 : 1;
+        return pa - pb || new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+      });
+      setEmergencyRequests(list);
     } catch (error: any) {
       console.error('Error fetching emergency requests:', error);
       if (!silent) {
@@ -207,6 +217,17 @@ export const usePsychologistEmergency = () => {
     }
   };
 
+  // Vários eventos seguidos (um SOS muda de estado algumas vezes em segundos)
+  // viram uma consulta só.
+  const refreshTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const scheduleRefresh = () => {
+    if (refreshTimer.current) return;
+    refreshTimer.current = setTimeout(() => {
+      refreshTimer.current = null;
+      void fetchEmergencyRequests(true);
+    }, 800);
+  };
+
   // Set up real-time subscription for emergency requests
   useEffect(() => {
     // Initial fetch
@@ -222,24 +243,24 @@ export const usePsychologistEmergency = () => {
           schema: 'public',
           table: 'emergency_requests'
         },
-        (payload) => {
-          console.log('Emergency request change:', payload);
-          // Refresh data when there are changes
-          fetchEmergencyRequests(true);
-        }
+        () => scheduleRefresh()
       )
       .subscribe();
 
     // RLS hides cancelled/accepted rows from this psychologist, so the postgres
     // event never arrives. The broadcast bus + a short poll keep the list honest.
-    const unsubscribeQueue = subscribeSosQueue(() => fetchEmergencyRequests(true));
-    const poll = window.setInterval(() => fetchEmergencyRequests(true), 10_000);
+    const unsubscribeQueue = subscribeSosQueue(scheduleRefresh);
+    // Rede de segurança caso o tempo real caia; com a aba escondida, não consulta.
+    const poll = window.setInterval(() => {
+      if (typeof document === 'undefined' || document.visibilityState === 'visible') scheduleRefresh();
+    }, 20_000);
 
 
     return () => {
       supabase.removeChannel(channel);
       unsubscribeQueue();
       window.clearInterval(poll);
+      if (refreshTimer.current) clearTimeout(refreshTimer.current);
     };
   }, []);
 

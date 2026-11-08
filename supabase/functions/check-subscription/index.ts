@@ -1,6 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
-import { EXTRA_PRICES, PLAN_LIMITS, parseTier, stripeState, tierRank, type Tier } from "../_shared/billing.ts";
+import { EXTRA_PRICES, PLAN_LIMITS, parseTier, stripeState, tierRank, type StripeState, type Tier } from "../_shared/billing.ts";
 import { PLAN_PRICES, findCustomerId, listSubscriptions, newStripe, syncCustomerEmail } from "../_shared/stripe.ts";
 
 const corsHeaders = {
@@ -49,9 +49,6 @@ serve(async (req) => {
   try {
     logStep("Function started");
 
-    const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
-    if (!stripeKey) throw new Error("STRIPE_SECRET_KEY is not set");
-    logStep("Stripe key verified");
 
     // Use the service role key to perform writes (upsert) in Supabase
     const supabaseClient = createClient(
@@ -73,22 +70,49 @@ serve(async (req) => {
     if (!user?.email) throw new Error("User not authenticated or email not available");
     logStep("User authenticated", { userId: user.id, email: user.email });
 
-    const stripe = newStripe();
-    const customerId = await findCustomerId(stripe, supabaseClient, user);
-    logStep(customerId ? "Found Stripe customer" : "No Stripe customer", { customerId });
-
-    // Todas as assinaturas: em dia, em teste ou com pagamento atrasado (que
-    // mantém o acesso enquanto o Stripe tenta cobrar de novo).
-    const stripeSub = customerId
-      ? stripeState(PLAN_PRICES, await listSubscriptions(stripe, customerId), Math.floor(Date.now() / 1000))
-      : stripeState(PLAN_PRICES, [], 0);
+    // Estado no Stripe: vem do cache (stripe_customer_state), que o webhook
+    // mantém em dia. Só consulta o Stripe quando o cache não existe, passou
+    // de 6 h ou o app pede (`force`, ex.: volta do checkout). Antes o Stripe
+    // era consultado toda vez que o app abria: num pico de acesso, o limite de
+    // requisições do Stripe derrubava a checagem de todo mundo.
+    const body = await req.json().catch(() => ({}));
+    const force = body?.force === true;
+    const CACHE_MS = 6 * 60 * 60 * 1000;
+    const { data: cached } = await supabaseClient
+      .from("stripe_customer_state")
+      .select("stripe_customer_id, state, synced_at")
+      .eq("user_id", user.id)
+      .maybeSingle();
+    let customerId: string | null;
+    let stripeSub: StripeState;
+    if (!force && cached && Date.now() - new Date(cached.synced_at).getTime() < CACHE_MS) {
+      customerId = cached.stripe_customer_id;
+      stripeSub = cached.state as StripeState;
+      logStep("Stripe state from cache", { syncedAt: cached.synced_at });
+    } else {
+      const stripe = newStripe();
+      customerId = await findCustomerId(stripe, supabaseClient, user);
+      logStep(customerId ? "Found Stripe customer" : "No Stripe customer", { customerId });
+      // Todas as assinaturas: em dia, em teste ou com pagamento atrasado (que
+      // mantém o acesso enquanto o Stripe tenta cobrar de novo).
+      stripeSub = customerId
+        ? stripeState(PLAN_PRICES, await listSubscriptions(stripe, customerId), Math.floor(Date.now() / 1000))
+        : stripeState(PLAN_PRICES, [], 0);
+      if (customerId) {
+        // Quem trocou o e-mail da conta passa a receber recibos no e-mail novo.
+        await syncCustomerEmail(stripe, customerId, user).catch((e) => logStep("Could not sync customer email", { message: String(e) }));
+      }
+      const { error: cacheError } = await supabaseClient.from("stripe_customer_state").upsert({
+        user_id: user.id,
+        stripe_customer_id: customerId,
+        state: stripeSub,
+        synced_at: new Date().toISOString(),
+      });
+      if (cacheError) logStep("Could not cache Stripe state", { message: cacheError.message });
+    }
     const stripeTier = stripeSub.tier;
     const stripeEnd = stripeSub.periodEnd;
     if (stripeSub.extraSubscriptions > 0) logStep("More than one live subscription (double charge)", { customerId, extra: stripeSub.extraSubscriptions });
-    if (customerId) {
-      // Quem trocou o e-mail da conta passa a receber recibos no e-mail novo.
-      await syncCustomerEmail(stripe, customerId, user).catch((e) => logStep("Could not sync customer email", { message: String(e) }));
-    }
     logStep("Stripe state", stripeSub);
 
     // B2B: plano oferecido pela empresa (organization_members). Vale o maior

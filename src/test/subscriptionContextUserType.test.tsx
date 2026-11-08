@@ -42,7 +42,7 @@ describe('conferência de assinatura', () => {
     auth.userType = 'patient';
     invoke.mockResolvedValue({ data: { subscribed: true }, error: null });
     mount();
-    await waitFor(() => expect(invoke).toHaveBeenCalledWith('check-subscription'), { timeout: 4000 });
+    await waitFor(() => expect(invoke).toHaveBeenCalledWith('check-subscription', { body: { force: false } }), { timeout: 4000 });
   });
 
   it('falha depois de sair da conta não mostra "Erro ao verificar assinatura"', async () => {

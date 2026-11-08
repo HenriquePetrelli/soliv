@@ -300,13 +300,10 @@ const SOS = () => {
     };
     fetchOnline();
 
-    const channel = supabase
-      .channel(`presence_watch_${Math.random().toString(36).slice(2)}`)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'psychologist_presence' }, () => {
-        fetchOnline();
-      })
-      .subscribe();
-
+    // Sem tempo real da presença: cada psicólogo online confirma presença a
+    // cada minuto, e cada paciente na espera recontava a cada confirmação de
+    // qualquer um (com muitos online, uma avalanche de consultas). A contagem
+    // vem da consulta periódica abaixo e dos avisos da fila.
     // A psychologist accepting/declining also changes availability.
     const unsubscribeQueue = subscribeSosQueue(fetchOnline);
 
@@ -317,7 +314,6 @@ const SOS = () => {
       active = false;
       window.clearInterval(interval);
       unsubscribeQueue();
-      supabase.removeChannel(channel);
     };
   }, []);
 

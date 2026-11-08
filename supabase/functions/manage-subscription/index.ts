@@ -67,17 +67,21 @@ Deno.serve(async (req) => {
     // plano de quem continua pagando caso o webhook do Stripe não chegue.
     const clearCancelFlag = () =>
       supabase.from("subscribers").update({ cancel_at_period_end: false }).eq("user_id", user.id);
+    // A assinatura mudou: o próximo check-subscription consulta o Stripe de novo.
+    const invalidateStripeCache = () => supabase.from("stripe_customer_state").delete().eq("user_id", user.id);
 
     if (action === "resume") {
       await stripe.subscriptions.update(subscription.id, { cancel_at_period_end: false });
       await clearCancelFlag();
       log("Cancellation undone", { subscription: subscription.id });
+      await invalidateStripeCache();
       return json({ ok: true });
     }
 
     if (action === "keep_current") {
       await releaseSchedule(stripe, subscription);
       log("Scheduled change undone", { subscription: subscription.id });
+      await invalidateStripeCache();
       return json({ ok: true });
     }
 
@@ -127,6 +131,7 @@ Deno.serve(async (req) => {
       }
       await clearCancelFlag();
       log("Upgraded", { subscription: subscription.id, from: currentTier, to: target });
+      await invalidateStripeCache();
       return json({ ok: true, direction });
     }
 
@@ -164,6 +169,7 @@ Deno.serve(async (req) => {
       ],
     });
     log("Downgrade scheduled", { subscription: subscription.id, to: target, on: iso(subscription.current_period_end) });
+    await invalidateStripeCache();
     return json({ ok: true, direction, effective_on: iso(subscription.current_period_end) });
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);

@@ -61,22 +61,31 @@ export const useActiveEmergencyCall = () => {
   }, []);
 
   useEffect(() => {
+    let cancelled = false;
+    let channel: ReturnType<typeof supabase.channel> | null = null;
     check();
 
-    const channel = supabase
-      .channel(`active_emergency_call_${Math.random().toString(36).slice(2)}`)
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'emergency_requests' },
-        () => check()
-      )
-      .subscribe();
+    // Só os pedidos da própria pessoa (como paciente ou como psicólogo que
+    // aceitou). Antes escutava todos os pedidos de SOS do app: cada SOS de
+    // qualquer pessoa fazia todo mundo na tela inicial consultar o banco.
+    void getSessionUserId().then((userId) => {
+      if (cancelled || !userId) return;
+      channel = supabase
+        .channel(`active_emergency_call_${userId}_${Math.random().toString(36).slice(2)}`)
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'emergency_requests', filter: `patient_id=eq.${userId}` }, () => check())
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'emergency_requests', filter: `accepted_by=eq.${userId}` }, () => check())
+        .subscribe();
+    });
 
-    const interval = window.setInterval(check, 20000);
+    // Rede de segurança caso o tempo real caia (só com a tela visível).
+    const interval = window.setInterval(() => {
+      if (typeof document === 'undefined' || document.visibilityState === 'visible') void check();
+    }, 60000);
 
     return () => {
+      cancelled = true;
       window.clearInterval(interval);
-      supabase.removeChannel(channel);
+      if (channel) supabase.removeChannel(channel);
     };
   }, [check]);
 

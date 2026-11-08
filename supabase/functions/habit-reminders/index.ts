@@ -1,6 +1,7 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { isTrustedCaller } from "../_shared/guards.ts";
 import { firebaseServiceAccount, getAccessToken, sendToTokens } from "../_shared/fcm.ts";
+import { ROUND_BUDGET_MS, mapLimit } from "../_shared/batch.ts";
 
 // Lembretes de "Meus hábitos", chamados pelo pg_cron a cada 15 minutos.
 //
@@ -138,52 +139,61 @@ Deno.serve(async (req: Request): Promise<Response> => {
   });
 
   try {
-    const { data: due, error } = await supabase.rpc("claim_due_habit_reminders");
-    if (error) throw error;
-    const reminders = (due ?? []) as DueReminder[];
-    if (reminders.length === 0) return json({ sent: 0 });
-
-    const userIds = [...new Set(reminders.map((r) => r.user_id))];
-    const { data: tokens, error: tokensError } = await supabase
-      .from("fcm_tokens")
-      .select("user_id, token")
-      .in("user_id", userIds)
-      .neq("is_active", false);
-    if (tokensError) throw tokensError;
-
-    const tokensByUser = new Map<string, string[]>();
-    for (const t of tokens ?? []) {
-      const list = tokensByUser.get(t.user_id) ?? [];
-      list.push(t.token);
-      tokensByUser.set(t.user_id, list);
-    }
-
-    // Um acesso ao Google para a rodada inteira (antes era um por lembrete).
+    // Lotes de até 500 (claim_due_habit_reminders) enquanto houver lembrete
+    // devido e tempo. Antes pegava todos de uma vez: com milhares no mesmo
+    // horário, a função estourava o tempo e os já marcados não eram enviados.
+    const started = Date.now();
     const serviceAccount = firebaseServiceAccount();
-    if (!serviceAccount) {
-      console.error("habit-reminders: Firebase não configurado");
-      await supabase.rpc("release_habit_reminders", { p_habit_ids: reminders.map((r) => r.habit_id) });
-      return json({ due: reminders.length, sent: 0, retry: reminders.length });
-    }
-    let accessToken: string;
-    try {
-      accessToken = await getAccessToken(serviceAccount);
-    } catch (err) {
-      console.error("habit-reminders: sem acesso ao Firebase", err);
-      await supabase.rpc("release_habit_reminders", { p_habit_ids: reminders.map((r) => r.habit_id) });
-      return json({ due: reminders.length, sent: 0, retry: reminders.length });
-    }
-
+    let accessToken: string | null = null;
+    let totalDue = 0;
     let sent = 0;
-    const retry: string[] = [];
-    const deadTokens = new Set<string>();
-    await Promise.all(
-      reminders.map(async (reminder) => {
+    let totalRetry = 0;
+
+    while (Date.now() - started < ROUND_BUDGET_MS) {
+      const { data: due, error } = await supabase.rpc("claim_due_habit_reminders");
+      if (error) throw error;
+      const reminders = (due ?? []) as DueReminder[];
+      if (reminders.length === 0) break;
+      totalDue += reminders.length;
+
+      // Um acesso ao Google para a rodada inteira (antes era um por lembrete).
+      if (serviceAccount && !accessToken) {
+        try {
+          accessToken = await getAccessToken(serviceAccount);
+        } catch (err) {
+          console.error("habit-reminders: sem acesso ao Firebase", err);
+        }
+      }
+      if (!serviceAccount || !accessToken) {
+        if (!serviceAccount) console.error("habit-reminders: Firebase não configurado");
+        await supabase.rpc("release_habit_reminders", { p_habit_ids: reminders.map((r) => r.habit_id) });
+        totalRetry += reminders.length;
+        break;
+      }
+
+      const userIds = [...new Set(reminders.map((r) => r.user_id))];
+      const { data: tokens, error: tokensError } = await supabase
+        .from("fcm_tokens")
+        .select("user_id, token")
+        .in("user_id", userIds)
+        .neq("is_active", false);
+      if (tokensError) throw tokensError;
+
+      const tokensByUser = new Map<string, string[]>();
+      for (const t of tokens ?? []) {
+        const list = tokensByUser.get(t.user_id) ?? [];
+        list.push(t.token);
+        tokensByUser.set(t.user_id, list);
+      }
+
+      const retry: string[] = [];
+      const deadTokens = new Set<string>();
+      await mapLimit(reminders, 50, async (reminder) => {
         const userTokens = tokensByUser.get(reminder.user_id);
         if (!userTokens?.length) return;
         const message = buildMessage(reminder);
         const url = `/habitos/${reminder.habit_id}`;
-        const results = await sendToTokens(serviceAccount, accessToken, userTokens, {
+        const results = await sendToTokens(serviceAccount, accessToken!, userTokens, {
           ...message,
           url,
           data: { type: "habit_reminder", habit_id: reminder.habit_id },
@@ -195,17 +205,21 @@ Deno.serve(async (req: Request): Promise<Response> => {
         results.filter((r) => r.dead).forEach((r) => deadTokens.add(r.token));
         if (results.some((r) => r.ok)) sent += 1;
         else if (results.some((r) => r.transient)) retry.push(reminder.habit_id);
-      }),
-    );
-    if (deadTokens.size > 0) {
-      await supabase.from("fcm_tokens").update({ is_active: false }).in("token", [...deadTokens]);
-    }
-    if (retry.length > 0) {
-      const { error: releaseError } = await supabase.rpc("release_habit_reminders", { p_habit_ids: retry });
-      if (releaseError) console.error("habit-reminders: não foi possível devolver", releaseError);
+      });
+      if (deadTokens.size > 0) {
+        await supabase.from("fcm_tokens").update({ is_active: false }).in("token", [...deadTokens]);
+      }
+      if (retry.length > 0) {
+        const { error: releaseError } = await supabase.rpc("release_habit_reminders", { p_habit_ids: retry });
+        if (releaseError) console.error("habit-reminders: não foi possível devolver", releaseError);
+        totalRetry += retry.length;
+        // Falha passageira devolvida à fila: não repete nesta rodada (evita laço).
+        break;
+      }
+      if (reminders.length < 500) break;
     }
 
-    return json({ due: reminders.length, sent, retry: retry.length });
+    return json({ due: totalDue, sent, retry: totalRetry });
   } catch (error) {
     console.error("habit-reminders error:", error);
     return json({ error: "Falha ao processar lembretes" }, 500);

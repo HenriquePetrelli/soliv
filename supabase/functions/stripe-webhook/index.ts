@@ -101,6 +101,16 @@ const syncCustomer = async (customerId: string, userIdHint?: string | null) => {
     log("No subscriber row and no user id, skipped", { customerId });
     return;
   }
+  // Cache que o check-subscription usa no lugar de consultar o Stripe.
+  if (userId) {
+    const { error: cacheError } = await supabase.from("stripe_customer_state").upsert({
+      user_id: userId,
+      stripe_customer_id: customerId,
+      state,
+      synced_at: new Date().toISOString(),
+    });
+    if (cacheError) log("Could not cache Stripe state", { message: cacheError.message });
+  }
   log("Subscriber synced", { customerId, status: state.status, tier: state.tier, cancelAtPeriodEnd: state.cancelAtPeriodEnd });
 };
 

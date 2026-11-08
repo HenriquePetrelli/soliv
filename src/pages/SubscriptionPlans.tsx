@@ -122,13 +122,13 @@ const SubscriptionPlans = () => {
 
       if (data?.error_code === 'covered_by_organization') {
         toast({ title: "Seu plano já vem da empresa", description: "Esse plano já está incluído no benefício da sua empresa. Não há o que pagar." });
-        await checkSubscription();
+        await checkSubscription({ force: true });
         return;
       }
 
       if (data?.error_code === 'already_subscribed') {
         toast({ title: "Você já tem uma assinatura", description: "Atualizamos a tela. Para mudar de plano, use o botão do plano." });
-        await checkSubscription();
+        await checkSubscription({ force: true });
         return;
       }
 
@@ -181,7 +181,7 @@ const SubscriptionPlans = () => {
         } else {
           toast({ title: "Assinatura cancelada" });
         }
-        await checkSubscription();
+        await checkSubscription({ force: true });
       }
     } catch (error) {
       console.error('Error cancelling subscription:', error);
@@ -215,7 +215,7 @@ const SubscriptionPlans = () => {
           description: data?.error_code === 'payment_issue' ? "A última cobrança não passou. Atualize o cartão em Gerenciar pagamento." : undefined,
           variant: "destructive",
         });
-        await checkSubscription();
+        await checkSubscription({ force: true });
       }
     } catch {
       setChangeTarget(null);
@@ -235,7 +235,7 @@ const SubscriptionPlans = () => {
             : { title: "Troca agendada", description: `Você passa para o ${changeTarget} em ${formatDay(data.effective_on ?? changePreview.effective_on ?? null)}.` },
         );
         setChangeTarget(null);
-        await checkSubscription();
+        await checkSubscription({ force: true });
       } else if (data?.error_code === 'payment_failed') {
         toast({
           title: "O cartão recusou a cobrança",
@@ -258,7 +258,7 @@ const SubscriptionPlans = () => {
       const data = await manage({ action });
       if (!data?.ok) throw new Error(data?.error_code ?? 'failed');
       toast({ title: success });
-      await checkSubscription();
+      await checkSubscription({ force: true });
     } catch {
       toast({ title: "Erro", description: "Não foi possível concluir agora. Tente de novo.", variant: "destructive" });
     } finally {
@@ -543,7 +543,7 @@ const SubscriptionPlans = () => {
             </p>
           )}
           <Button 
-            onClick={checkSubscription}
+            onClick={() => checkSubscription({ force: true })}
             variant="ghost"
             size="sm"
           >

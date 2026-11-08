@@ -25,7 +25,7 @@ const SubscriptionSuccess = () => {
   useEffect(() => {
     if (confirmed || attempt >= ATTEMPTS) return;
     const timer = setTimeout(async () => {
-      await checkSubscription();
+      await checkSubscription({ force: true });
       setAttempt((n) => n + 1);
     }, attempt === 0 ? 800 : INTERVAL_MS);
     return () => clearTimeout(timer);

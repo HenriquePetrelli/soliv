@@ -173,6 +173,8 @@ serve(async (req) => {
       }).eq("user_id", user.id).eq("entitlement_source", "stripe");
     }
 
+    // A assinatura mudou: o próximo check-subscription consulta o Stripe de novo.
+    await supabaseClient.from("stripe_customer_state").delete().eq("user_id", user.id);
     logStep("Updated database with cancellation", { cancelledSubscriptions });
 
     // Cancelou na hora (arrependimento com reembolso ou pagamento em atraso):

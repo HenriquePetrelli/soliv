@@ -101,7 +101,9 @@ const bootstrap = async () => {
     .channel(`psychologist_presence_shared_${userId}`)
     .on(
       'postgres_changes',
-      { event: '*', schema: 'public', table: 'psychologist_presence' },
+      // Só a própria linha: antes cada psicólogo recebia a presença de todos os
+      // outros (com muitos online, milhares de mensagens por segundo).
+      { event: '*', schema: 'public', table: 'psychologist_presence', filter: `psychologist_id=eq.${userId}` },
       (payload) => {
         const newRow: any = payload.new;
         const oldRow: any = payload.old;

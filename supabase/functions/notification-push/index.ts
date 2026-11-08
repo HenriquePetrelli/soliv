@@ -1,6 +1,7 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { isTrustedCaller } from "../_shared/guards.ts";
 import { firebaseServiceAccount, getAccessToken, sendToTokens } from "../_shared/fcm.ts";
+import { ROUND_BUDGET_MS, mapLimit } from "../_shared/batch.ts";
 
 // Envia para o celular as notificações do app marcadas com `push` (consultas:
 // nova solicitação, confirmação, recusa, remarcação, cancelamento e lembretes
@@ -43,51 +44,63 @@ Deno.serve(async (req: Request): Promise<Response> => {
   });
 
   try {
-    const { data, error } = await supabase.rpc("claim_pending_pushes");
-    if (error) throw error;
-    const pending = (data ?? []) as PendingPush[];
-    if (pending.length === 0) return json({ sent: 0 });
+    // Repete em lotes de até 500 (claim_pending_pushes) enquanto houver fila e
+    // tempo: antes era um lote por minuto, e num pico os avisos passavam de
+    // 1 hora na fila e eram descartados sem chegar ao celular.
+    const started = Date.now();
+    let accessToken: string | null = null;
+    let serviceAccount: ReturnType<typeof firebaseServiceAccount> | undefined;
+    let totalPending = 0;
+    let totalSent = 0;
+    let totalRetry = 0;
 
-    const userIds = [...new Set(pending.map((p) => p.user_id))];
-    const { data: tokens, error: tokensError } = await supabase
-      .from("fcm_tokens")
-      .select("user_id, token")
-      .in("user_id", userIds)
-      .neq("is_active", false);
-    if (tokensError) throw tokensError;
+    while (Date.now() - started < ROUND_BUDGET_MS) {
+      const { data, error } = await supabase.rpc("claim_pending_pushes");
+      if (error) throw error;
+      const pending = (data ?? []) as PendingPush[];
+      if (pending.length === 0) break;
+      totalPending += pending.length;
 
-    const tokensByUser = new Map<string, string[]>();
-    for (const t of tokens ?? []) {
-      const list = tokensByUser.get(t.user_id) ?? [];
-      list.push(t.token);
-      tokensByUser.set(t.user_id, list);
-    }
+      const userIds = [...new Set(pending.map((p) => p.user_id))];
+      const { data: tokens, error: tokensError } = await supabase
+        .from("fcm_tokens")
+        .select("user_id, token")
+        .in("user_id", userIds)
+        .neq("is_active", false);
+      if (tokensError) throw tokensError;
 
-    const sentIds: string[] = [];
-    const failedIds: string[] = [];
-    const deadTokens = new Set<string>();
-    const needsSending = pending.filter((p) => tokensByUser.get(p.user_id)?.length);
-    // Sem aparelho com push ativo: nada a enviar (fica só no app).
-    for (const p of pending) if (!tokensByUser.get(p.user_id)?.length) sentIds.push(p.id);
-
-    const serviceAccount = needsSending.length ? firebaseServiceAccount() : null;
-    if (needsSending.length && !serviceAccount) {
-      console.error("notification-push: Firebase não configurado");
-      for (const p of needsSending) failedIds.push(p.id);
-    } else if (serviceAccount) {
-      // Um token do Google para a rodada inteira (antes era um por aviso).
-      let accessToken: string | null = null;
-      try {
-        accessToken = await getAccessToken(serviceAccount);
-      } catch (err) {
-        console.error("notification-push: sem acesso ao Firebase", err);
+      const tokensByUser = new Map<string, string[]>();
+      for (const t of tokens ?? []) {
+        const list = tokensByUser.get(t.user_id) ?? [];
+        list.push(t.token);
+        tokensByUser.set(t.user_id, list);
       }
-      if (!accessToken) {
+
+      const sentIds: string[] = [];
+      const failedIds: string[] = [];
+      const deadTokens = new Set<string>();
+      const needsSending = pending.filter((p) => tokensByUser.get(p.user_id)?.length);
+      // Sem aparelho com push ativo: nada a enviar (fica só no app).
+      for (const p of pending) if (!tokensByUser.get(p.user_id)?.length) sentIds.push(p.id);
+
+      if (needsSending.length && serviceAccount === undefined) serviceAccount = firebaseServiceAccount();
+      if (needsSending.length && !serviceAccount) {
+        console.error("notification-push: Firebase não configurado");
         for (const p of needsSending) failedIds.push(p.id);
-      } else {
-        await Promise.all(
-          needsSending.map(async (notification) => {
-            const results = await sendToTokens(serviceAccount, accessToken!, tokensByUser.get(notification.user_id)!, {
+      } else if (needsSending.length && serviceAccount) {
+        // Um token do Google para a rodada inteira (antes era um por aviso).
+        if (!accessToken) {
+          try {
+            accessToken = await getAccessToken(serviceAccount);
+          } catch (err) {
+            console.error("notification-push: sem acesso ao Firebase", err);
+          }
+        }
+        if (!accessToken) {
+          for (const p of needsSending) failedIds.push(p.id);
+        } else {
+          await mapLimit(needsSending, 50, async (notification) => {
+            const results = await sendToTokens(serviceAccount!, accessToken!, tokensByUser.get(notification.user_id)!, {
               title: notification.title,
               body: notification.message,
               url: notification.link ?? "/notifications",
@@ -104,19 +117,23 @@ Deno.serve(async (req: Request): Promise<Response> => {
             const delivered = results.some((r) => r.ok);
             const retry = !delivered && results.some((r) => r.transient);
             (retry ? failedIds : sentIds).push(notification.id);
-          }),
-        );
+          });
+        }
       }
+
+      if (deadTokens.size > 0) {
+        await supabase.from("fcm_tokens").update({ is_active: false }).in("token", [...deadTokens]);
+      }
+      const { error: finishError } = await supabase.rpc("finish_pushes", { p_sent: sentIds, p_failed: failedIds });
+      if (finishError) console.error("notification-push: falha ao registrar o resultado", finishError);
+
+      totalSent += sentIds.length;
+      totalRetry += failedIds.length;
+      // Lote incompleto: a fila acabou. Falha geral do Firebase: tenta no próximo minuto.
+      if (pending.length < 500 || (needsSending.length > 0 && !accessToken)) break;
     }
 
-    if (deadTokens.size > 0) {
-      await supabase.from("fcm_tokens").update({ is_active: false }).in("token", [...deadTokens]);
-    }
-    const { error: finishError } = await supabase.rpc("finish_pushes", { p_sent: sentIds, p_failed: failedIds });
-    if (finishError) console.error("notification-push: falha ao registrar o resultado", finishError);
-
-    const sent = sentIds.length;
-    return json({ pending: pending.length, sent, retry: failedIds.length });
+    return json({ pending: totalPending, sent: totalSent, retry: totalRetry });
   } catch (error) {
     console.error("notification-push error:", error);
     return json({ error: "Falha ao enviar notificações" }, 500);

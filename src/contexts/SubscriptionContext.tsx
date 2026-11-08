@@ -38,7 +38,8 @@ interface SubscriptionContextType {
   /** Assinaturas a mais pagas ao mesmo tempo (cobrança em dobro). */
   extraSubscriptions: number;
   loading: boolean;
-  checkSubscription: () => Promise<void>;
+  /** `force`: consulta o Stripe agora, sem usar o cache do servidor (ex.: volta do checkout). */
+  checkSubscription: (options?: { force?: boolean }) => Promise<void>;
 }
 
 const SubscriptionContext = createContext<SubscriptionContextType | undefined>(undefined);
@@ -138,7 +139,7 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
     setExtraSubscriptions(data.extra_subscriptions ?? 0);
   };
 
-  const checkSubscription = async () => {
+  const checkSubscription = async (options?: { force?: boolean }) => {
     try {
       const userId = activeUserId.current;
       if (!user || !userId) {
@@ -146,7 +147,9 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
         return;
       }
 
-      const { data, error } = await supabase.functions.invoke('check-subscription');
+      const { data, error } = await supabase.functions.invoke('check-subscription', {
+        body: { force: options?.force === true },
+      });
 
       // Saiu da conta (ou trocou de conta) enquanto a conferência rodava: a
       // resposta não vale mais e a falha esperada não é mostrada como erro.
@@ -225,7 +228,7 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
     if (!isPatient || !cancelAtPeriodEnd || !subscriptionEnd) return;
     const ms = new Date(subscriptionEnd).getTime() - Date.now();
     if (ms < 0 || ms > 24 * 60 * 60 * 1000) return;
-    const timeout = globalThis.setTimeout(() => checkSubscription(), ms + 1000);
+    const timeout = globalThis.setTimeout(() => checkSubscription({ force: true }), ms + 1000);
     return () => globalThis.clearTimeout(timeout);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [patientId, cancelAtPeriodEnd, subscriptionEnd]);
