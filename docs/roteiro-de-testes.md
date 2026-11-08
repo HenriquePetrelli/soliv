@@ -465,7 +465,7 @@ _Cartão de teste `4242 4242 4242 4242`; para pedir autenticação, `4000 0025 0
 - [ ] `s18-06` Consulta → psicólogo entra na sala sozinho e encerra ⇒ a consulta não vira "realizada"; com o paciente na chamada, vira
 - [ ] `s18-07` Psicólogo aprovado → pela API, trocar document_url ou sobrescrever/apagar o arquivo do documento ⇒ Nada muda; o admin continua vendo o documento aprovado
 - [ ] `s18-08` Conta antiga (ou com consultas) → chamar cleanup-user ⇒ 403 "Para excluir sua conta, use Perfil > Excluir conta."
-- [ ] `s18-09` Copiar o link de um documento de psicólogo ou de uma foto do chat → abrir numa janela anônima (sem login) ⇒ não abre (depois da migration `20261108230000_documentos_privados.sql`)
+- [ ] `s18-09` Copiar o link de um documento de psicólogo ou de uma foto do chat → abrir numa janela anônima (sem login) ⇒ não abre (migration `20261108230000_documentos_privados.sql`, aplicada em 2026-11-08)
 - [ ] `s18-11` Supabase → Edge Functions ⇒ a lista é igual às pastas de `supabase/functions/` (nenhuma função a mais); as com "Verify JWT" desligado são as listadas sem `verify_jwt = true` no `supabase/config.toml`
 - [ ] `s18-12` Supabase → Advisors → Security ⇒ só os avisos conhecidos (`pg_net` no schema `public`; funções do app com SECURITY DEFINER, que conferem o usuário por dentro); nenhum "RLS disabled" ou "bucket público"
 - [ ] `s18-13` Supabase → Storage ⇒ `documents`, `psychologist-documents`, `payment-receipts` e `therapeutic_sounds` todos privados

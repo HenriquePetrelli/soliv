@@ -6,16 +6,6 @@ O que precisa ser resolvido antes de o app ficar pronto. Ao resolver um item, mo
 
 ## Críticas
 
-### 21. Documentos dos psicólogos e fotos do chat em bucket público
-
-- **Achado em 2026-11-08:** os buckets `documents` (documentos de cadastro dos psicólogos e fotos do chat) e `psychologist-documents` estão como **públicos** no Storage. As regras do banco impedem listar os arquivos, mas quem tem o link (`.../object/public/documents/...`) abre sem login, para sempre, inclusive depois de a conversa expirar ou de o documento ser trocado. São dados sensíveis (identidade, CRP, fotos trocadas em atendimento de saúde mental).
-- **Já pronto no código (2026-11-08):** os botões "Visualizar" e "Baixar" do admin e o modal de edição do psicólogo passaram a abrir o documento com link assinado de 5 minutos (`src/lib/storageDocument.ts`); as fotos do chat já usavam link assinado. Funciona com o bucket público ou privado.
-- **O que fazer, nesta ordem:**
-  1. Publicar o front (merge na `main`, a Lovable publica).
-  2. Aplicar a migration `supabase/migrations/20261108230000_documentos_privados.sql` (cria a leitura do documento para o próprio psicólogo e o admin e deixa os dois buckets privados). Testada no banco com ROLLBACK em 2026-11-08. Aplicar só ela (não usar `supabase db push`).
-- **Como conferir:** testes `s17-33`, `s17-34`, `s01-34`, `s04-09`, `s18-09` e `s18-13`.
-- **Registrado em:** 2026-11-08.
-
 ### 2. Domínio do Soliv e envio de e-mails
 
 - **Situação:** o Soliv ainda não tem domínio próprio. Sem ele, não dá para enviar e-mail com remetente do Soliv para os usuários.
@@ -122,10 +112,15 @@ O que precisa ser resolvido antes de o app ficar pronto. Ao resolver um item, mo
 
 - **Conferido e sem problema:** 24 rotinas do `pg_cron` ativas e sem falha nos últimos 3 dias; webhook do Stripe sem entrega pendente; preços e secrets do Stripe batendo; todas as tabelas expostas com RLS; funções do banco que recebem um id de usuário conferem quem chama (`assert_caller_is` ou `auth.uid()`); funções de admin conferem `is_super_admin` com 2 etapas; as 22 edge functions sem "Verify JWT" conferem o acesso no código (login, admin, `x-cron-secret` ou assinatura do Stripe); última migration (`20261108120000`) aplicada; nenhum SOS, consulta ou chamada presa; tipos (`tsc`), 687 testes e build sem erro.
 - **Corrigido no repositório:** `supabase/config.toml` (pendência 19), lint (23), documentos com link assinado e migration pronta (21).
-- **Feito em produção depois de aprovado:** funções antigas apagadas (20); modelos de e-mail em português colados (2). **Ainda precisa de aprovação:** aplicar a migration dos buckets (21).
+- **Feito em produção depois de aprovado:** funções antigas apagadas (20); modelos de e-mail em português colados (2); migration dos buckets aplicada (21).
 - **Avisos do Supabase que continuam, por decisão:** `pg_net` no schema `public`, 75 índices ainda sem uso e 10 tabelas com duas regras de leitura (dono e público/admin), que só custam desempenho com muito tráfego.
 
 ## Resolvidas
+
+### 21. Documentos dos psicólogos e fotos do chat em bucket público (registrada e resolvida em 2026-11-08)
+
+- Os buckets `documents` (documentos de cadastro e fotos do chat) e `psychologist-documents` estavam públicos: quem tinha o link abria sem login. O admin passou a abrir os documentos com link assinado de 5 minutos (`src/lib/storageDocument.ts`) e a migration `20261108230000_documentos_privados.sql` foi aplicada: os 4 buckets agora são privados. Conferido: o link público responde 400; pelo banco, o admin (com 2 etapas) e o dono leem o documento, e outra conta ou o admin sem 2 etapas não.
+- Se a Lovable ainda não tiver publicado o front de 2026-11-08, os botões "Visualizar" e "Baixar" do painel de aprovação só voltam a abrir depois da publicação (o visualizador embaixo deles já funciona).
 
 ### 20. Edge functions antigas publicadas fora do repositório (registrada e resolvida em 2026-11-08)
 
