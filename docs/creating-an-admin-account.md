@@ -38,4 +38,4 @@ update public.admin_users set is_active = false where user_id = '<UUID_DO_USUARI
 
 Existiu — uma edge function (`create-admin-account`) e uma tela (`AdminCreateForm`) que criavam admin direto pelo app. Foram removidas porque a edge function não verificava absolutamente nada: qualquer requisição HTTP, de qualquer pessoa (mesmo sem estar logada, usando só a chave pública `anon`), conseguia criar uma conta de admin completa. A tela nunca chegou a ser ligada a nenhuma rota do app, então o buraco não aparecia navegando — mas a função continuava publicada e chamável direto pela URL, então o risco era real. Passar esse fluxo para o painel do Supabase elimina esse risco por completo: não existe mais nenhum endpoint no app capaz de conceder acesso de admin.
 
-> **Atenção (2026-11-08):** a função saiu do repositório, mas a cópia publicada no Supabase não tinha sido apagada. Ver pendência 20 em `docs/pendencias-antes-do-lancamento.md`.
+> **Atenção (2026-11-08):** a função saiu do repositório, mas a cópia publicada no Supabase só foi apagada em 2026-11-08 (pendência 20, resolvida).
