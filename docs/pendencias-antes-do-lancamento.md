@@ -6,6 +6,23 @@ O que precisa ser resolvido antes de o app ficar pronto. Ao resolver um item, mo
 
 ## Críticas
 
+### 20. Edge functions antigas publicadas fora do repositório
+
+- **Achado em 2026-11-08 (varredura):** o Supabase tem 6 edge functions que não existem mais em `supabase/functions/` e que o app não chama (sobras das versões antigas da Lovable). Algumas não exigem login e não fazem as checagens de acesso que as funções atuais fazem; uma delas mexe em contas de administrador. Detalhes passados direto ao responsável, fora do repositório.
+- **O que fazer:** apagar as 6 funções que não aparecem em `supabase/functions/` (Supabase → Edge Functions → cada uma → Delete, ou pedir ao Claude e aprovar a exclusão). No banco só existe um admin, com 2 etapas; nada indica uso indevido.
+- **Como conferir:** teste `s18-11` do roteiro (a lista do Supabase fica igual às pastas do repositório).
+- **Registrado em:** 2026-11-08.
+
+### 21. Documentos dos psicólogos e fotos do chat em bucket público
+
+- **Achado em 2026-11-08:** os buckets `documents` (documentos de cadastro dos psicólogos e fotos do chat) e `psychologist-documents` estão como **públicos** no Storage. As regras do banco impedem listar os arquivos, mas quem tem o link (`.../object/public/documents/...`) abre sem login, para sempre, inclusive depois de a conversa expirar ou de o documento ser trocado. São dados sensíveis (identidade, CRP, fotos trocadas em atendimento de saúde mental).
+- **Já pronto no código (2026-11-08):** os botões "Visualizar" e "Baixar" do admin e o modal de edição do psicólogo passaram a abrir o documento com link assinado de 5 minutos (`src/lib/storageDocument.ts`); as fotos do chat já usavam link assinado. Funciona com o bucket público ou privado.
+- **O que fazer, nesta ordem:**
+  1. Publicar o front (merge na `main`, a Lovable publica).
+  2. Aplicar a migration `supabase/migrations/20261108230000_documentos_privados.sql` (cria a leitura do documento para o próprio psicólogo e o admin e deixa os dois buckets privados). Testada no banco com ROLLBACK em 2026-11-08. Aplicar só ela (não usar `supabase db push`).
+- **Como conferir:** testes `s17-33`, `s17-34`, `s01-34`, `s04-09`, `s18-09` e `s18-13`.
+- **Registrado em:** 2026-11-08.
+
 ### 2. Domínio do Soliv e envio de e-mails
 
 - **Situação:** o Soliv ainda não tem domínio próprio. Sem ele, não dá para enviar e-mail com remetente do Soliv para os usuários.
@@ -26,7 +43,8 @@ O que precisa ser resolvido antes de o app ficar pronto. Ao resolver um item, mo
   3. Supabase → Authentication → SMTP Settings: SMTP do Resend com remetente do domínio (passo a passo em `docs/emails-de-autenticacao.md`).
   4. Trocar os remetentes das 5 edge functions da tabela pelo domínio novo (pedir ao Claude; é uma troca de texto) e publicar as funções.
   5. Ligar o domínio ao app publicado na Lovable e usar esse endereço como Site URL no Supabase (a logo do e-mail e os links vêm dele).
-- **Enquanto isso:** dá para colar os modelos em português no Supabase (Authentication → Email Templates) para testar com os e-mails da equipe; para usuários de fora, nenhum e-mail chega.
+- **Enquanto isso:** dá para colar os modelos em português no Supabase (Authentication → Email Templates) para testar com os e-mails da equipe; para usuários de fora, nenhum e-mail chega. **Conferido em 2026-11-08:** os modelos ainda não foram colados (assuntos e textos padrão em inglês, "Reset Your Password"); o Claude aplica os 6 pela API se você aprovar (teste `s01-32`).
+- **Limite atual:** sem SMTP próprio o Supabase manda no máximo **2 e-mails de login por hora** para o projeto inteiro (`rate_limit_email_sent = 2`). Depois do SMTP do Resend, subir esse limite em Authentication → Rate Limits.
 - **Como conferir:** pedir "Esqueci minha senha" com um e-mail que não é da equipe; o e-mail chega em português, com a logo e remetente "Soliv". Enviar um pedido de suporte e conferir que ele chega na caixa da equipe.
 - **Registrado em:** 2026-10-05.
 
@@ -39,7 +57,9 @@ O que precisa ser resolvido antes de o app ficar pronto. Ao resolver um item, mo
   2. Supabase → Edge Functions → Secrets: trocar `STRIPE_SECRET_KEY` pela chave real e `STRIPE_PRICE_ESSENCIAL`, `STRIPE_PRICE_FLEX` e `STRIPE_PRICE_COMPLETO` pelos IDs dos preços reais (`price_...`).
   3. Criar o webhook no modo real (mesmo destino e eventos do teste) e trocar `STRIPE_WEBHOOK_SECRET` (ficha 08).
   4. Avulsos no modo real: criar os 4 produtos de cobrança única em BRL (SOS avulso R$ 79,90 e R$ 54,90; consulta avulsa R$ 149,90 e R$ 109,90) e cadastrar `STRIPE_PRICE_GRATIS_SOS_AVULSO`, `STRIPE_PRICE_GRATIS_AGENDADA_AVULSO`, `STRIPE_PRICE_ASSINATURA_SOS_AVULSO` e `STRIPE_PRICE_ASSINATURA_AGENDADA_AVULSO`. Sem eles o app cobra o valor de tabela com um nome genérico.
-  5. Portal do cliente (Configurações → Billing → Customer portal) no modo real: se a troca de plano estiver ligada, listar só os 3 planos novos, ou deixar desligada (o app já faz a troca).
+  5. Portal do cliente (Configurações → Billing → Customer portal) no modo real: se a troca de plano estiver ligada, listar só os 3 planos novos, ou deixar desligada (o app já faz a troca). No modo de teste está desligada e o cancelamento é no fim do período (conferido em 2026-11-08).
+  6. Métodos de pagamento: hoje só cartão e Apple Pay. Se ligar **Pix ou boleto** no modo real, antes inscrever `checkout.session.async_payment_succeeded` e `checkout.session.async_payment_failed` no webhook e pedir ao Claude para tratar esses eventos (o pagamento confirma depois; hoje o avulso só é liberado com o pagamento já aprovado).
+- **Conferido em 2026-11-08 (modo de teste):** os 7 preços ativos (3 planos e 4 avulsos, em BRL) batem um a um com os secrets `STRIPE_PRICE_*` do Supabase; o webhook "soliv" está ativo com os 8 eventos e nenhuma entrega falhando.
 - **Como conferir:** assinar um plano com cartão real de baixo valor (ou cupom de 100%), ver o plano no Perfil e cancelar dentro dos 7 dias (o reembolso sai automático).
 - **Registrado em:** 2026-11-07.
 
@@ -88,9 +108,31 @@ O que precisa ser resolvido antes de o app ficar pronto. Ao resolver um item, mo
   3. Subir para o **Completo** → aparece a prévia da diferença proporcional → SOS e consulta liberados no mesmo mês.
   4. Conta sem plano: diário só leitura, 4º hábito recusado, 2º plano de segurança recusado, chat sem envio, grupos sem publicar.
   5. Admin → Repasses → Sincronizar depois de um SOS e uma consulta → R$ 125,00 pendentes.
-- **Roteiro completo:** `docs/roteiro-de-testes.md` (seções s03, s06 e s07).
-- **Observação para deploys:** o `supabase/config.toml` tem chaves que a CLI atual recusa (`port`, `refresh_token_rotation_enabled`, `security_refresh_token_reuse_interval`), e várias funções (`stripe-webhook`, `cancel-subscription`, `mark-sos-used`, `auto-decline-appointments`, `admin-delete-patient`) estão com `verify_jwt = false` no Supabase sem constar no arquivo. Ao publicar funções pela CLI, conferir o `verify_jwt` de cada uma antes, senão o deploy liga a exigência de login e quebra o webhook e as rotinas. O histórico de migrations do Supabase também não bate com os nomes dos arquivos (o Lovable registra com outros números): não usar `supabase db push`; aplicar só a migration nova.
+- **Roteiro completo:** `docs/roteiro-de-testes.md` (seções s03, s06 e s07; Flex, Plano Grátis e avulsos em `s06-21` a `s06-40`, conferências no Stripe em `s06-41` a `s06-44`).
+- **Observação para deploys:** desde 2026-11-08 o `supabase/config.toml` é aceito pela CLI (v3) e lista o `verify_jwt` de **todas** as 45 funções igual ao Supabase (14 que faltavam foram incluídas; chaves antigas trocadas e `[inbucket]` virou `[local_smtp]`). Mesmo assim, depois de publicar pela CLI, conferir em Edge Functions que nenhuma mudou (teste `s19-08`). O histórico de migrations do Supabase também não bate com os nomes dos arquivos (o Lovable registra com outros números): não usar `supabase db push`; aplicar só a migration nova.
 - **Registrado em:** 2026-11-07.
+
+## Menores
+
+### 22. Limpezas no Stripe de teste e nos secrets
+
+- **Stripe (modo de teste):** 2 assinaturas ativas de US$ 15 ("myproduct", sem e-mail) criadas pelo `stripe trigger` em 28/09 e 13/10 continuam renovando e mandando eventos ao webhook; e o `paciente01@gmail.com` ainda está no preço antigo do Premium (R$ 120, lido como Completo). Cancelar as duas "myproduct" e, quando for testar de novo, trocar a do paciente01 para um plano novo. Não afeta o modo real.
+- **Secrets do Supabase sem uso no código:** `DAILY_API_KEY` e `FIREBASE_SERVER_KEY` (API antiga do Firebase, substituída pela conta de serviço). Podem ser apagados. `LOVABLE_API_KEY` é da própria Lovable: deixar.
+- **Registrado em:** 2026-11-08.
+
+### 23. Avisos do lint
+
+- **Situação:** o `npx eslint .` não rodava (erro ao carregar uma regra: `typescript-eslint` 8.11 com ESLint 9.39). Corrigido em 2026-11-08 subindo o `typescript-eslint` para 8.46. Agora roda e mostra 397 avisos já existentes: 324 de `any`, 31 de dependências de hooks, 24 de "fast refresh" e alguns de estilo (`prefer-const`, `case` sem chaves, blocos vazios). Nenhum é defeito visível; vale limpar aos poucos ao mexer em cada arquivo, e só depois pôr o lint no CI.
+- **Registrado em:** 2026-11-08.
+
+### Varredura do app, Stripe e Supabase (2026-11-08)
+
+- **Conferido e sem problema:** 24 rotinas do `pg_cron` ativas e sem falha nos últimos 3 dias; webhook do Stripe sem entrega pendente; preços e secrets do Stripe batendo; todas as tabelas expostas com RLS; funções do banco que recebem um id de usuário conferem quem chama (`assert_caller_is` ou `auth.uid()`); funções de admin conferem `is_super_admin` com 2 etapas; as 22 edge functions sem "Verify JWT" conferem o acesso no código (login, admin, `x-cron-secret` ou assinatura do Stripe); última migration (`20261108120000`) aplicada; nenhum SOS, consulta ou chamada presa; tipos (`tsc`), 687 testes e build sem erro.
+- **Corrigido no repositório:** `supabase/config.toml` (pendência 19), lint (23), documentos com link assinado e migration pronta (21).
+- **Precisa de aprovação para mexer em produção:** apagar as funções antigas (20), aplicar a migration dos buckets (21), colar os modelos de e-mail (2).
+- **Avisos do Supabase que continuam, por decisão:** `pg_net` no schema `public`, 75 índices ainda sem uso e 10 tabelas com duas regras de leitura (dono e público/admin), que só custam desempenho com muito tráfego.
+
+## Resolvidas
 
 ### Varredura do Supabase (resolvida em 2026-11-07)
 
@@ -131,7 +173,7 @@ O que precisa ser resolvido antes de o app ficar pronto. Ao resolver um item, mo
 ### 1. Senha do admin exposta no repositório (registrada em 2026-10-03, resolvida em 2026-10-13)
 
 - A senha da conta de admin, que estava em texto puro na migração `20250729171947-8c6e37ba-06ef-4ba2-96e4-260ba4e8a0f3.sql`, foi trocada. A senha antiga continua no histórico do Git, mas não abre mais a conta.
-- Em 2026-10-30, a verificação em duas etapas passou a ser obrigatória para o admin (app autenticador; ficha 19). Fica para depois: trocar o e-mail `admin@calmconnect.com` quando houver domínio.
+- Em 2026-10-30, a verificação em duas etapas passou a ser obrigatória para o admin (app autenticador; ficha 19). Fica para depois: trocar o e-mail do admin quando houver domínio (em 2026-11-08 a única conta admin no banco é `admin@admin.com`, com 2 etapas; o `admin@calmconnect.com` citado antes não existe mais).
 
 ### Decisões de produto (registradas de 2026-10-04 a 2026-10-19, decididas em 2026-10-28)
 

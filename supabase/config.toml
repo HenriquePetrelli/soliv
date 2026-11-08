@@ -13,13 +13,13 @@ max_rows = 1000
 [db]
 port = 54322
 shadow_port = 54320
-major_version = 15
+major_version = 17
 
 [studio]
 enabled = true
 port = 54323
 
-[inbucket]
+[local_smtp]
 enabled = true
 port = 54324
 smtp_port = 54325
@@ -32,12 +32,11 @@ file_size_limit = "50MiB"
 
 [auth]
 enabled = true
-port = 54328
 site_url = "http://localhost:3000"
 additional_redirect_urls = ["https://ihrrgmmsfuvlasmzdmwf.supabase.co/auth/v1/callback"]
 jwt_expiry = 3600
-refresh_token_rotation_enabled = true
-security_refresh_token_reuse_interval = 10
+enable_refresh_token_rotation = true
+refresh_token_reuse_interval = 10
 enable_signup = true
 
 # E-mails de login em português com o visual do Soliv (ver docs/emails-de-autenticacao.md).
@@ -120,6 +119,7 @@ verify_jwt = false
 
 [analytics]
 enabled = false
+
 [functions.admin-update-psychologist]
 verify_jwt = true
 
@@ -142,4 +142,51 @@ verify_jwt = false
 verify_jwt = true
 
 [functions.chat-cleanup]
+verify_jwt = false
+
+# Funções sem verify_jwt no gateway: cada uma confere o acesso no próprio código
+# (login do usuário, admin com 2 etapas, x-cron-secret das rotinas ou assinatura do Stripe).
+# Manter igual ao Supabase: publicar pela CLI sem estas linhas liga a exigência de login
+# e quebra o webhook, as rotinas e as telas de admin.
+
+[functions.admin-block-patient]
+verify_jwt = false
+
+[functions.admin-delete-patient]
+verify_jwt = false
+
+[functions.admin-delete-psychologist]
+verify_jwt = false
+
+[functions.admin-update-patient]
+verify_jwt = false
+
+[functions.auto-decline-appointments]
+verify_jwt = false
+
+[functions.buy-extra]
+verify_jwt = false
+
+[functions.cancel-subscription]
+verify_jwt = false
+
+[functions.cleanup-user]
+verify_jwt = false
+
+[functions.gerenciar-conversas]
+verify_jwt = false
+
+[functions.ice-servers]
+verify_jwt = false
+
+[functions.initiate-webrtc]
+verify_jwt = false
+
+[functions.mark-sos-used]
+verify_jwt = false
+
+[functions.notification-push]
+verify_jwt = false
+
+[functions.send-appointment-notification]
 verify_jwt = false

@@ -42,6 +42,9 @@ O mesmo roteiro está no checklist interativo (mesmos itens e códigos `sNN-MM`)
 - [ ] `s01-30` Admin desbloqueia ⇒ a pessoa entra normalmente
 - [ ] `s01-31` Login com e-mail com espaço ou maiúscula ⇒ entra normalmente
 - [ ] `s01-14` Psicólogo → Perfil → editar especialização e biografia → salvar ⇒ paciente vê os dados novos ao agendar
+- [ ] `s01-32` Supabase → Authentication → Email Templates ⇒ os 6 modelos em português do repositório (`supabase/templates/`) colados, com os assuntos "Redefina sua senha do Soliv", "Confirme seu e-mail no Soliv" etc. (em 2026-11-08 ainda estavam os padrões em inglês)
+- [ ] `s01-33` Visitante → Esqueci a senha 3 vezes seguidas ⇒ aviso claro de que é preciso esperar (sem SMTP próprio o Supabase manda só 2 e-mails por hora), sem tela de erro
+- [ ] `s01-34` Psicólogo em análise → Perfil → abrir o próprio documento enviado ⇒ abre (link assinado, também com o bucket privado)
 - [ ] `s01-15` Qualquer → abrir endereço inexistente (`/xyz`) ⇒ "Não encontramos esta página"; "Voltar para o início" leva à Home, ao painel ou ao login
 
 ## 2. SOS (fichas 02 e 03)
@@ -62,7 +65,7 @@ O mesmo roteiro está no checklist interativo (mesmos itens e códigos `sNN-MM`)
 - [ ] `s02-12` Paciente B → SOS aceito → psicólogo fecha o app → 90 s ⇒ "Chamar outro psicólogo" (cota não é gasta)
 - [ ] `s02-13` Paciente B → SOS → psicólogo aceita e encerra sem o paciente entrar ⇒ SOS do mês volta
 - [ ] `s02-14` Paciente B → SOS na fila → abrir Respirar / Meu plano ⇒ pedido continua na fila
-- [ ] `s02-15` Paciente C (sem plano) → SOS ⇒ não consegue pedir; convite para assinar
+- [ ] `s02-15` Paciente C (sem plano e sem crédito avulso) → SOS ⇒ não pede direto; mostra "Comprar por R$ 79,90" e "Assinar um plano" (compra avulsa: seção 6)
 - [ ] `s02-17` Psicólogo → Início → desligar o status do SOS (Offline) ⇒ paciente vê "Nenhum psicólogo online agora"
 - [ ] `s02-18` Psicólogo online → Sair da conta ⇒ fica Offline automaticamente
 - [ ] `s02-19` Psicólogo → SOS aceito → Contexto do paciente ⇒ identificação, sintomas relatados e histórico de pedidos
@@ -225,6 +228,41 @@ O mesmo roteiro está no checklist interativo (mesmos itens e códigos `sNN-MM`)
 - [ ] `s06-17` Mesmo caso, 3 dias antes do fim ⇒ Aviso "Consulta depois do fim do plano" (uma vez)
 - [ ] `s06-18` Mesmo caso, quando o plano termina ⇒ Consulta cancelada; paciente recebe "Consultas canceladas" e o psicólogo "o plano do paciente terminou"
 - [ ] `s06-12` Conta A com assinatura troca de e-mail → conta B se cadastra com o e-mail antigo ⇒ B fica sem plano (não herda o de A)
+
+### Plano Flex e Plano Grátis
+
+- [ ] `s06-21` Paciente C → Planos → Flex → pagar ⇒ o checkout mostra R$ 120,00; Perfil mostra "Plano Flex"
+- [ ] `s06-22` Paciente Flex → usar o SOS ⇒ Consultas → Agendar bloqueado ("Atendimento do mês já usado"), com a opção de compra avulsa (R$ 109,90)
+- [ ] `s06-23` Outra conta Flex → pedir consulta (ainda pendente) ⇒ SOS indisponível; o psicólogo recusa ⇒ o SOS volta a ficar disponível
+- [ ] `s06-24` Paciente Flex que já usou o mês → subir para Completo ⇒ prévia da diferença proporcional; SOS e consulta liberados no mesmo mês
+- [ ] `s06-25` Plano Grátis → Diário ⇒ vê as anotações antigas, mas não escreve novas (convite para assinar)
+- [ ] `s06-26` Plano Grátis → criar o 4º hábito ⇒ recusado (até 3); criar o 2º plano de segurança ⇒ recusado (até 1)
+- [ ] `s06-27` Plano Grátis → Chat ⇒ lê as conversas, não envia; Grupos de apoio ⇒ lê, não publica nem curte
+- [ ] `s06-28` Paciente que perdeu o plano com 5 hábitos e 2 planos de segurança ⇒ mantém todos, mas não cria novos
+
+### Atendimentos avulsos (SOS e consulta)
+
+_Cartão de teste `4242 4242 4242 4242`; para pedir autenticação, `4000 0025 0000 3155`._
+
+- [ ] `s06-29` Paciente C (sem plano, sem cartão salvo) → SOS → "Comprar por R$ 79,90" ⇒ abre o Checkout do Stripe; pagar ⇒ `/avulso/sucesso` mostra "SOS liberado!" e "Pedir ajuda agora" funciona
+- [ ] `s06-30` Mesmo caso → fechar o Checkout sem pagar e voltar ⇒ "Pagamento em processamento" / nada liberado; nenhuma cobrança no Stripe
+- [ ] `s06-31` Paciente C com cartão salvo (segunda compra) → Consultas → Agendar → "Comprar por R$ 149,90" ⇒ cobra na hora, sem abrir o Checkout; agendar funciona
+- [ ] `s06-32` Paciente Essencial sem consulta no plano → Agendar ⇒ "Comprar por R$ 109,90"; Paciente Flex que já usou o mês → SOS ⇒ "Comprar por R$ 54,90"
+- [ ] `s06-33` Paciente com plano pela empresa (sem cota) ⇒ vê o preço de assinante (R$ 54,90 / R$ 109,90)
+- [ ] `s06-34` Pagar no Checkout e fechar a aba antes de voltar ao app ⇒ o crédito aparece liberado assim mesmo (webhook); no banco, uma linha em `extra_credits`
+- [ ] `s06-35` Toque duplo rápido em "Comprar" ⇒ uma cobrança só no Stripe e um crédito só
+- [ ] `s06-36` Cartão salvo que pede autenticação (`4000 0025 0000 3155`) ⇒ abre o Checkout para autenticar; depois de autenticar, o crédito é liberado
+- [ ] `s06-37` Crédito avulso de SOS → a chamada falha antes de conectar ⇒ o crédito volta (pode pedir de novo sem pagar)
+- [ ] `s06-38` Consulta avulsa → psicólogo recusa (ou o pedido expira em 24 h) ⇒ o crédito volta; com o plano terminando, a consulta avulsa **não** é cancelada
+- [ ] `s06-39` Paciente com cota do plano **e** crédito avulso → SOS ⇒ usa a cota do plano primeiro; o crédito continua disponível
+- [ ] `s06-40` Admin → Repasses → Sincronizar depois de um SOS avulso e uma consulta avulsa ⇒ entram no repasse com os mesmos valores (R$ 40 e R$ 85)
+
+### Stripe por dentro (conferir no painel)
+
+- [ ] `s06-41` Stripe → Developers → Webhooks → destino "soliv" ⇒ entregas dos últimos dias com 200, nenhuma falhando; 8 eventos marcados
+- [ ] `s06-42` Stripe → Produtos ⇒ só Essencial, Flex, Completo e os 4 avulsos ativos, todos em BRL; os IDs batem com os secrets `STRIPE_PRICE_*` do Supabase
+- [ ] `s06-43` Stripe → Configurações → Métodos de pagamento ⇒ só cartão (e carteiras). Se ligar Pix ou boleto, antes inscrever `checkout.session.async_payment_succeeded` e `async_payment_failed` no webhook (o app ainda não trata pagamento que confirma depois)
+- [ ] `s06-44` Stripe → Customer portal ⇒ cancelamento no fim do período; troca de plano desligada (o app faz a troca)
 
 ## 7. Repasses (ficha 09)
 
@@ -412,6 +450,8 @@ O mesmo roteiro está no checklist interativo (mesmos itens e códigos `sNN-MM`)
 - [ ] `s17-28` Janela com rolagem (ex.: Agenda semanal) → rolar ⇒ título e X de fechar fixos em cima; botão de confirmar fixo embaixo
 - [ ] `s17-29` Admin → aprovar/recusar psicólogo, confirmar repasse, editar/excluir depoimento, alterar empresa ⇒ cada ação aparece em Auditoria, com os detalhes (ex.: vagas 5 → 10, valor e E2E)
 - [ ] `s17-30` Admin aprova psicólogo com o envio de e-mail falhando ⇒ aprovação vale e aparece como concluída (sem erro para o admin)
+- [ ] `s17-33` Admin → Psicólogos → pendente → "Visualizar" e o ícone de baixar ⇒ abrem o documento numa aba nova (link assinado, que expira em 5 min); o navegador não bloqueia como pop-up
+- [ ] `s17-34` Admin → Pacientes/Psicólogos → Editar psicólogo → documento → Visualizar e Substituir ⇒ abre e troca o arquivo
 - [ ] `s17-25` Admin no computador ⇒ menu lateral fixo; cada seção com título e descrição no topo, sem título repetido
 
 ## 18. Segurança (ficha 20)
@@ -425,6 +465,10 @@ O mesmo roteiro está no checklist interativo (mesmos itens e códigos `sNN-MM`)
 - [ ] `s18-06` Consulta → psicólogo entra na sala sozinho e encerra ⇒ a consulta não vira "realizada"; com o paciente na chamada, vira
 - [ ] `s18-07` Psicólogo aprovado → pela API, trocar document_url ou sobrescrever/apagar o arquivo do documento ⇒ Nada muda; o admin continua vendo o documento aprovado
 - [ ] `s18-08` Conta antiga (ou com consultas) → chamar cleanup-user ⇒ 403 "Para excluir sua conta, use Perfil > Excluir conta."
+- [ ] `s18-09` Copiar o link de um documento de psicólogo ou de uma foto do chat → abrir numa janela anônima (sem login) ⇒ não abre (depois da migration `20261108230000_documentos_privados.sql`)
+- [ ] `s18-11` Supabase → Edge Functions ⇒ a lista é igual às pastas de `supabase/functions/` (nenhuma função a mais); as com "Verify JWT" desligado são as listadas sem `verify_jwt = true` no `supabase/config.toml`
+- [ ] `s18-12` Supabase → Advisors → Security ⇒ só os avisos conhecidos (`pg_net` no schema `public`; funções do app com SECURITY DEFINER, que conferem o usuário por dentro); nenhum "RLS disabled" ou "bucket público"
+- [ ] `s18-13` Supabase → Storage ⇒ `documents`, `psychologist-documents`, `payment-receipts` e `therapeutic_sounds` todos privados
 
 ## 19. Rotinas automáticas (ficha 21)
 
@@ -434,6 +478,16 @@ O mesmo roteiro está no checklist interativo (mesmos itens e códigos `sNN-MM`)
 - [ ] `s19-03` SOS concluído ⇒ ~24 h depois chega "Como você está hoje?"
 - [ ] `s19-04` Admin → Visão geral → cartão "Rotinas automáticas" ⇒ "Todas as N rotinas estão ativas"; se alguma falhou nas últimas 24 h, aparece o nome e o erro
 - [ ] `s19-05` Supabase → SQL → select count(*) from cron.job_run_details where end_time < now() - interval '15 days' ⇒ 0 depois da rotina purge-cron-history rodar
+
+## 19b. Antes de cada publicação
+
+_Para quem publica edge functions ou migrations (detalhes na pendência 19 de `docs/pendencias-antes-do-lancamento.md`)._
+
+- [ ] `s19-06` `npx tsc -p tsconfig.app.json --noEmit`, `npx vitest run` e `npm run build` ⇒ sem erro
+- [ ] `s19-07` `npx eslint .` ⇒ roda até o fim (os avisos de `any` são conhecidos; nenhum erro novo nos arquivos mexidos)
+- [ ] `s19-08` Publicar função pela CLI ⇒ `verify_jwt` de cada função igual ao do `supabase/config.toml` (conferir em Edge Functions depois)
+- [ ] `s19-09` Migration nova ⇒ aplicar só ela (sem `supabase db push`) e conferir em `supabase_migrations.schema_migrations`
+- [ ] `s19-10` Depois de publicar ⇒ repetir s06-41 (webhook com 200) e s19-01 (rotinas sem erro)
 
 ## 20. Sem internet (offline)
 

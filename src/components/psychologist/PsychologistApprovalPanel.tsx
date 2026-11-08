@@ -21,39 +21,10 @@ import { BlockPsychologistModal } from './BlockPsychologistModal';
 import { isCurrentlyBlocked, formatBlockPeriod } from '@/utils/psychologistBlock';
 import { SkeletonCardGrid } from '@/components/skeletons/Skeletons';
 import { ContentTransition } from '@/components/skeletons/ContentTransition';
-import { openSafeUrl } from '@/lib/safeUrl';
+import { extractDocumentRef, openStorageDocument } from '@/lib/storageDocument';
 
 import { EmptyState } from '@/components/EmptyState';
 import { ErrorState } from '@/components/ErrorState';
-
-
-const extractDocumentRef = (
-  url?: string
-): { bucket: string; path: string } | undefined => {
-  if (!url) return undefined;
-
-  // Remove query parameters if any
-  const cleanUrl = url.split('?')[0];
-
-  // Supabase storage pattern (public or sign), any bucket
-  const supabaseMatch = cleanUrl.match(
-    /\/storage\/v1\/object\/(?:public|sign)\/([^/]+)\/(.+)$/
-  );
-
-  if (supabaseMatch) {
-    return {
-      bucket: decodeURIComponent(supabaseMatch[1]),
-      path: decodeURIComponent(supabaseMatch[2]),
-    };
-  }
-
-  // If it's already a simple path (without http)
-  if (!cleanUrl.startsWith('http')) {
-    return { bucket: 'psychologist-documents', path: cleanUrl };
-  }
-
-  return undefined;
-};
 
 
 interface PsychologistApprovalPanelProps {
@@ -596,7 +567,7 @@ export const PsychologistApprovalPanel = ({ adminUserId, onDataChange }: Psychol
                                   <Button
                                     variant="outline"
                                     size="sm"
-                                    onClick={() => openSafeUrl(selectedPsychologist.document_url)}
+                                    onClick={() => void openStorageDocument(selectedPsychologist.document_url)}
                                   >
                                     <Eye className="h-4 w-4 mr-1" />
                                     Visualizar
@@ -604,7 +575,7 @@ export const PsychologistApprovalPanel = ({ adminUserId, onDataChange }: Psychol
                                   <Button
                                     variant="ghost"
                                     size="sm"
-                                    onClick={() => openSafeUrl(selectedPsychologist.document_url)}
+                                    onClick={() => void openStorageDocument(selectedPsychologist.document_url)}
                                   >
                                     <Download className="h-4 w-4" />
                                   </Button>
