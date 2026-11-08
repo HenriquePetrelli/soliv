@@ -42,7 +42,7 @@ O mesmo roteiro está no checklist interativo (mesmos itens e códigos `sNN-MM`)
 - [ ] `s01-30` Admin desbloqueia ⇒ a pessoa entra normalmente
 - [ ] `s01-31` Login com e-mail com espaço ou maiúscula ⇒ entra normalmente
 - [ ] `s01-14` Psicólogo → Perfil → editar especialização e biografia → salvar ⇒ paciente vê os dados novos ao agendar
-- [ ] `s01-32` Supabase → Authentication → Email Templates ⇒ os 6 modelos em português do repositório (`supabase/templates/`) colados, com os assuntos "Redefina sua senha do Soliv", "Confirme seu e-mail no Soliv" etc. (em 2026-11-08 ainda estavam os padrões em inglês)
+- [ ] `s01-32` Supabase → Authentication → Email Templates ⇒ os 6 modelos em português do repositório (`supabase/templates/`) colados, com os assuntos "Redefina sua senha do Soliv", "Confirme seu e-mail no Soliv" etc. (colados em 2026-11-08)
 - [ ] `s01-33` Visitante → Esqueci a senha 3 vezes seguidas ⇒ aviso claro de que é preciso esperar (sem SMTP próprio o Supabase manda só 2 e-mails por hora), sem tela de erro
 - [ ] `s01-34` Psicólogo em análise → Perfil → abrir o próprio documento enviado ⇒ abre (link assinado, também com o bucket privado)
 - [ ] `s01-15` Qualquer → abrir endereço inexistente (`/xyz`) ⇒ "Não encontramos esta página"; "Voltar para o início" leva à Home, ao painel ou ao login

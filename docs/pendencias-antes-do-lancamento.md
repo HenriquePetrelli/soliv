@@ -36,7 +36,7 @@ O que precisa ser resolvido antes de o app ficar pronto. Ao resolver um item, mo
   3. Supabase → Authentication → SMTP Settings: SMTP do Resend com remetente do domínio (passo a passo em `docs/emails-de-autenticacao.md`).
   4. Trocar os remetentes das 5 edge functions da tabela pelo domínio novo (pedir ao Claude; é uma troca de texto) e publicar as funções.
   5. Ligar o domínio ao app publicado na Lovable e usar esse endereço como Site URL no Supabase (a logo do e-mail e os links vêm dele).
-- **Enquanto isso:** dá para colar os modelos em português no Supabase (Authentication → Email Templates) para testar com os e-mails da equipe; para usuários de fora, nenhum e-mail chega. **Conferido em 2026-11-08:** os modelos ainda não foram colados (assuntos e textos padrão em inglês, "Reset Your Password"); o Claude aplica os 6 pela API se você aprovar (teste `s01-32`).
+- **Enquanto isso:** dá para colar os modelos em português no Supabase (Authentication → Email Templates) para testar com os e-mails da equipe; para usuários de fora, nenhum e-mail chega. **Feito em 2026-11-08:** os 6 modelos em português (`supabase/templates/`) e os assuntos foram colados no Supabase pela API e conferidos iguais ao repositório (teste `s01-32`). Já valem para os e-mails da equipe; a logo vem do Site URL atual (`calmconnect-auth-flow.lovable.app/email/soliv-logo.png`).
 - **Limite atual:** sem SMTP próprio o Supabase manda no máximo **2 e-mails de login por hora** para o projeto inteiro (`rate_limit_email_sent = 2`). Depois do SMTP do Resend, subir esse limite em Authentication → Rate Limits.
 - **Como conferir:** pedir "Esqueci minha senha" com um e-mail que não é da equipe; o e-mail chega em português, com a logo e remetente "Soliv". Enviar um pedido de suporte e conferir que ele chega na caixa da equipe.
 - **Registrado em:** 2026-10-05.
@@ -122,7 +122,7 @@ O que precisa ser resolvido antes de o app ficar pronto. Ao resolver um item, mo
 
 - **Conferido e sem problema:** 24 rotinas do `pg_cron` ativas e sem falha nos últimos 3 dias; webhook do Stripe sem entrega pendente; preços e secrets do Stripe batendo; todas as tabelas expostas com RLS; funções do banco que recebem um id de usuário conferem quem chama (`assert_caller_is` ou `auth.uid()`); funções de admin conferem `is_super_admin` com 2 etapas; as 22 edge functions sem "Verify JWT" conferem o acesso no código (login, admin, `x-cron-secret` ou assinatura do Stripe); última migration (`20261108120000`) aplicada; nenhum SOS, consulta ou chamada presa; tipos (`tsc`), 687 testes e build sem erro.
 - **Corrigido no repositório:** `supabase/config.toml` (pendência 19), lint (23), documentos com link assinado e migration pronta (21).
-- **Feito em produção depois de aprovado:** funções antigas apagadas (20). **Ainda precisa de aprovação:** aplicar a migration dos buckets (21), colar os modelos de e-mail (2).
+- **Feito em produção depois de aprovado:** funções antigas apagadas (20). modelos de e-mail em português colados (2). **Ainda precisa de aprovação:** aplicar a migration dos buckets (21).
 - **Avisos do Supabase que continuam, por decisão:** `pg_net` no schema `public`, 75 índices ainda sem uso e 10 tabelas com duas regras de leitura (dono e público/admin), que só custam desempenho com muito tráfego.
 
 ## Resolvidas
