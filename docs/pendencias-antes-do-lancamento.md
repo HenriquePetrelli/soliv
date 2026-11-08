@@ -97,12 +97,6 @@ O que precisa ser resolvido antes de o app ficar pronto. Ao resolver um item, mo
 
 ## Menores
 
-### 22. Limpezas no Stripe de teste e nos secrets
-
-- **Stripe (modo de teste):** 2 assinaturas ativas de US$ 15 ("myproduct", sem e-mail) criadas pelo `stripe trigger` em 28/09 e 13/10 continuam renovando e mandando eventos ao webhook; e o `paciente01@gmail.com` ainda está no preço antigo do Premium (R$ 120, lido como Completo). Cancelar as duas "myproduct" e, quando for testar de novo, trocar a do paciente01 para um plano novo. Não afeta o modo real.
-- **Secrets do Supabase sem uso no código:** `DAILY_API_KEY` e `FIREBASE_SERVER_KEY` (API antiga do Firebase, substituída pela conta de serviço). Podem ser apagados. `LOVABLE_API_KEY` é da própria Lovable: deixar.
-- **Registrado em:** 2026-11-08.
-
 ### 23. Avisos do lint
 
 - **Situação:** o `npx eslint .` não rodava (erro ao carregar uma regra: `typescript-eslint` 8.11 com ESLint 9.39). Corrigido em 2026-11-08 subindo o `typescript-eslint` para 8.46. Agora roda e mostra 397 avisos já existentes: 324 de `any`, 31 de dependências de hooks, 24 de "fast refresh" e alguns de estilo (`prefer-const`, `case` sem chaves, blocos vazios). Nenhum é defeito visível; vale limpar aos poucos ao mexer em cada arquivo, e só depois pôr o lint no CI.
@@ -116,6 +110,11 @@ O que precisa ser resolvido antes de o app ficar pronto. Ao resolver um item, mo
 - **Avisos do Supabase que continuam, por decisão:** `pg_net` no schema `public`, 75 índices ainda sem uso e 10 tabelas com duas regras de leitura (dono e público/admin), que só custam desempenho com muito tráfego.
 
 ## Resolvidas
+
+### 22. Limpezas no Stripe de teste e nos secrets (registrada e resolvida em 2026-11-08)
+
+- Canceladas no Stripe (modo de teste) as 2 assinaturas de US$ 15 ("myproduct", sem e-mail) criadas pelo `stripe trigger` em 28/09 e 13/10, que renovavam sozinhas. Apagados dos secrets do Supabase `DAILY_API_KEY` e `FIREBASE_SERVER_KEY`, sem uso no código (o push usa a conta de serviço: `FIREBASE_PROJECT_ID`, `FIREBASE_CLIENT_EMAIL`, `FIREBASE_PRIVATE_KEY`).
+- Ficou de propósito: a assinatura de teste do `paciente01@gmail.com` no preço antigo do Premium (R$ 120, lida como Completo), a única ativa. Trocar para um plano novo no próximo teste de assinatura.
 
 ### 21. Documentos dos psicólogos e fotos do chat em bucket público (registrada e resolvida em 2026-11-08)
 
