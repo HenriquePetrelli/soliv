@@ -23,6 +23,7 @@ import { useSubscription } from '@/contexts/SubscriptionContext';
 import { getJournalMood } from '@/components/journal/journalMoods';
 import { cn } from '@/lib/utils';
 import { hasPaidPlan } from '@/lib/plans';
+import { fetchMyTestimonialBlock, testimonialBlockMessage, type TestimonialBlock } from '@/lib/testimonialBlock';
 
 interface TestimonialCardProps {
   testimonial: GroupTestimonial;
@@ -247,6 +248,8 @@ const SupportGroupDetail = () => {
   const [reportSending, setReportSending] = useState(false);
   const [filter, setFilter] = useState<'all' | 'mine'>('all');
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+  /** Bloqueio de depoimentos posto pelo admin: aviso ao tentar criar ou editar. */
+  const [testimonialBlock, setTestimonialBlock] = useState<TestimonialBlock | null>(null);
   const [upgradeModalFeature, setUpgradeModalFeature] = useState('');
   
   const { subscribed, subscriptionTier } = useSubscription();
@@ -286,7 +289,16 @@ const SupportGroupDetail = () => {
     refetch(filter === 'mine');
   };
 
-  const handleEditTestimonial = (testimonial: GroupTestimonial) => {
+  /** True (e mostra o aviso) se o admin bloqueou os depoimentos desta conta. */
+  const isTestimonialBlocked = async () => {
+    const block = await fetchMyTestimonialBlock();
+    if (!block.blocked) return false;
+    setTestimonialBlock(block);
+    return true;
+  };
+
+  const handleEditTestimonial = async (testimonial: GroupTestimonial) => {
+    if (await isTestimonialBlocked()) return;
     setEditingTestimonial(testimonial);
     setShowEditTestimonial(true);
   };
@@ -309,12 +321,13 @@ const SupportGroupDetail = () => {
     refetch(newFilter === 'mine');
   };
 
-  const handleAddTestimonialClick = () => {
+  const handleAddTestimonialClick = async () => {
     if (!hasPaidPlan(subscribed, subscriptionTier)) {
       setUpgradeModalFeature('Criar Depoimento');
       setShowUpgradeModal(true);
       return;
     }
+    if (await isTestimonialBlocked()) return;
     setShowAddTestimonial(true);
   };
 
@@ -404,6 +417,21 @@ const SupportGroupDetail = () => {
                 <SelectItem value="mine">Meus depoimentos</SelectItem>
               </SelectContent>
             </Select>
+
+            {/* Depoimentos bloqueados pelo admin */}
+            <AlertDialog open={!!testimonialBlock} onOpenChange={(open) => !open && setTestimonialBlock(null)}>
+              <AlertDialogContent className="max-w-md">
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Não é possível criar depoimentos agora</AlertDialogTitle>
+                  <AlertDialogDescription data-testid="testimonial-block-message">
+                    {testimonialBlock ? testimonialBlockMessage(testimonialBlock) : ''}
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogAction>Entendi</AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
 
             {/* Add Testimonial Dialog (triggered from header button) */}
             <Dialog open={showAddTestimonial} onOpenChange={setShowAddTestimonial}>

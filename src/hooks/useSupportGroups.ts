@@ -5,6 +5,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useSubscription } from '@/contexts/SubscriptionContext';
 import { getFriendlyErrorMessage } from '@/utils/errorMessage';
 import { hasPaidPlan } from '@/lib/plans';
+import { testimonialBlockFromError, testimonialBlockMessage } from '@/lib/testimonialBlock';
 
 export interface SupportGroup {
   id: string;
@@ -247,9 +248,11 @@ export const useGroupTestimonials = (groupId: string, filterByUser: boolean = fa
       return true;
     } catch (error) {
       console.error('Error adding testimonial:', error);
+      // Bloqueado pelo admin: o aviso genérico, com a data do fim.
+      const block = testimonialBlockFromError(error);
       toast({
-        title: "Erro",
-        description: getFriendlyErrorMessage(error, 'Não foi possível adicionar o depoimento.'),
+        title: block ? 'Depoimentos bloqueados' : "Erro",
+        description: block ? testimonialBlockMessage(block) : getFriendlyErrorMessage(error, 'Não foi possível adicionar o depoimento.'),
         variant: "destructive"
       });
       return false;
@@ -277,9 +280,11 @@ export const useGroupTestimonials = (groupId: string, filterByUser: boolean = fa
       return true;
     } catch (error) {
       console.error('Error updating testimonial:', error);
+      // Bloqueado pelo admin: o aviso genérico, com a data do fim.
+      const block = testimonialBlockFromError(error);
       toast({
-        title: "Erro",
-        description: getFriendlyErrorMessage(error, 'Não foi possível atualizar o depoimento.'),
+        title: block ? 'Depoimentos bloqueados' : "Erro",
+        description: block ? testimonialBlockMessage(block) : getFriendlyErrorMessage(error, 'Não foi possível atualizar o depoimento.'),
         variant: "destructive"
       });
       return false;

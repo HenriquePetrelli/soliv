@@ -2842,6 +2842,19 @@ export type Database = {
         Args: { p_user_id: string }
         Returns: undefined
       }
+      admin_block_testimonials: {
+        Args: {
+          p_amount?: number
+          p_reason?: string
+          p_unit: string
+          p_user_id: string
+        }
+        Returns: Json
+      }
+      admin_unblock_testimonials: {
+        Args: { p_user_id: string }
+        Returns: undefined
+      }
       admin_add_organization_manager: {
         Args: { p_email: string; p_org: string }
         Returns: Json
@@ -3111,7 +3124,11 @@ export type Database = {
         Args: never
         Returns: {
           anonimo: boolean
+          autor_bloqueado: boolean
+          autor_bloqueado_ate: string
+          autor_email: string
           autor_nome: string
+          autor_user_id: string
           criado_em: string
           flagged: boolean
           group_id: string
@@ -3158,6 +3175,7 @@ export type Database = {
         }[]
       }
       get_login_state: { Args: never; Returns: Json }
+      get_my_testimonial_block: { Args: never; Returns: Json }
       get_my_psychologist_private: {
         Args: never
         Returns: {

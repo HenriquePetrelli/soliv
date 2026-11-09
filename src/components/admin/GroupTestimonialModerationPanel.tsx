@@ -22,7 +22,19 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { AlertTriangle, Flag, FlagOff, MessageSquareWarning, Pencil, ThumbsDown, ThumbsUp, Trash2 } from 'lucide-react';
+import {
+  AlertTriangle,
+  Flag,
+  FlagOff,
+  MessageSquareOff,
+  MessageSquareWarning,
+  MessageSquareText,
+  Pencil,
+  ThumbsDown,
+  ThumbsUp,
+  Trash2,
+} from 'lucide-react';
+import BlockTestimonialsModal from '@/components/admin/BlockTestimonialsModal';
 import { EmptyState } from '@/components/EmptyState';
 import { SkeletonTable } from '@/components/skeletons/Skeletons';
 import { ContentTransition } from '@/components/skeletons/ContentTransition';
@@ -48,11 +60,39 @@ const REPORT_REASON_LABELS: Record<string, string> = {
 
 const formatDate = (value: string) => new Date(value).toLocaleDateString('pt-BR', { dateStyle: 'short' });
 
+const authorLabel = (t: { autor_nome: string | null; autor_email: string | null }) =>
+  t.autor_nome || t.autor_email || 'Paciente';
+
+/** Quem escreveu: o admin vê o autor real, também dos depoimentos anônimos. */
+const AuthorCell = ({ t }: { t: AdminGroupTestimonial }) => (
+  <div className="min-w-0 space-y-0.5">
+    <p className="font-medium text-foreground truncate">{t.autor_nome || '—'}</p>
+    {t.autor_email && <p className="text-xs text-muted-foreground truncate">{t.autor_email}</p>}
+    <div className="flex flex-wrap gap-1 pt-0.5">
+      {t.anonimo && (
+        <Badge variant="outline" className="text-[10px] font-normal" title="Os outros pacientes veem como anônimo">
+          Anônimo para os outros
+        </Badge>
+      )}
+      {t.autor_bloqueado && (
+        <Badge variant="destructive" className="text-[10px] font-normal">
+          {t.autor_bloqueado_ate
+            ? `Bloqueado até ${new Date(t.autor_bloqueado_ate).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' })}`
+            : 'Bloqueado por tempo indeterminado'}
+        </Badge>
+      )}
+    </div>
+  </div>
+);
+
 /** Admin moderation of support-group testimonials. Testimonials reported by
  * users sort first, then those with 10+ "não gostei" — nothing gets deleted
  * automatically, an admin reviews and decides. */
 export const GroupTestimonialModerationPanel = () => {
-  const { testimonials, loading, savingId, updateTestimonial, deleteTestimonial, dismissReports } = useGroupTestimonialModeration();
+  const { testimonials, loading, savingId, updateTestimonial, deleteTestimonial, dismissReports, blockAuthor, unblockAuthor } =
+    useGroupTestimonialModeration();
+  /** Autor a bloquear: aberto logo depois de excluir um depoimento, ou pelo botão da linha. */
+  const [blockTarget, setBlockTarget] = useState<{ userId: string; name: string; afterDelete: boolean } | null>(null);
   const [editTarget, setEditTarget] = useState<AdminGroupTestimonial | null>(null);
   const [editText, setEditText] = useState('');
   const [deleteTarget, setDeleteTarget] = useState<AdminGroupTestimonial | null>(null);
@@ -73,8 +113,14 @@ export const GroupTestimonialModerationPanel = () => {
 
   const handleDelete = async () => {
     if (!deleteTarget) return;
-    const ok = await deleteTestimonial(deleteTarget.testimonial_id);
-    if (ok) setDeleteTarget(null);
+    const target = deleteTarget;
+    const ok = await deleteTestimonial(target.testimonial_id);
+    if (!ok) return;
+    setDeleteTarget(null);
+    // Depois de excluir, oferece bloquear novos depoimentos do autor.
+    if (target.autor_user_id) {
+      setBlockTarget({ userId: target.autor_user_id, name: authorLabel(target), afterDelete: true });
+    }
   };
 
   return (
@@ -108,7 +154,7 @@ export const GroupTestimonialModerationPanel = () => {
                     <TableHead className="hidden md:table-cell">Depoimento</TableHead>
                     <TableHead className="hidden sm:table-cell">Reações</TableHead>
                     <TableHead className="hidden lg:table-cell">Data</TableHead>
-                    <TableHead className="w-20 text-right">Ações</TableHead>
+                    <TableHead className="w-28 text-right">Ações</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -120,7 +166,9 @@ export const GroupTestimonialModerationPanel = () => {
                           {t.group_nome}
                         </div>
                       </TableCell>
-                      <TableCell>{t.anonimo ? 'Anônimo' : t.autor_nome || '—'}</TableCell>
+                      <TableCell className="max-w-[14rem]">
+                        <AuthorCell t={t} />
+                      </TableCell>
                       <TableCell className="hidden md:table-cell max-w-xs">
                         <p className="text-sm text-muted-foreground truncate">{t.texto}</p>
                       </TableCell>
@@ -166,6 +214,31 @@ export const GroupTestimonialModerationPanel = () => {
                               <FlagOff className="h-4 w-4" />
                             </Button>
                           )}
+                          {t.autor_bloqueado ? (
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8 text-destructive hover:text-foreground"
+                              onClick={() => unblockAuthor(t.autor_user_id)}
+                              disabled={savingId === t.autor_user_id}
+                              aria-label="Desbloquear depoimentos do autor"
+                              title="Desbloquear depoimentos do autor"
+                            >
+                              <MessageSquareText className="h-4 w-4" />
+                            </Button>
+                          ) : (
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                              onClick={() => setBlockTarget({ userId: t.autor_user_id, name: authorLabel(t), afterDelete: false })}
+                              disabled={!t.autor_user_id}
+                              aria-label="Bloquear novos depoimentos do autor"
+                              title="Bloquear novos depoimentos do autor"
+                            >
+                              <MessageSquareOff className="h-4 w-4" />
+                            </Button>
+                          )}
                           <Button
                             variant="ghost"
                             size="icon"
@@ -203,7 +276,8 @@ export const GroupTestimonialModerationPanel = () => {
           <DialogHeader>
             <DialogTitle>Editar depoimento</DialogTitle>
             <DialogDescription>
-              {editTarget?.group_nome} — {editTarget?.anonimo ? 'Anônimo' : editTarget?.autor_nome || '—'}
+              {editTarget?.group_nome} — {editTarget ? authorLabel(editTarget) : '—'}
+              {editTarget?.anonimo ? ' (anônimo para os outros)' : ''}
             </DialogDescription>
           </DialogHeader>
           <Textarea
@@ -235,8 +309,10 @@ export const GroupTestimonialModerationPanel = () => {
               Excluir este depoimento?
             </AlertDialogTitle>
             <AlertDialogDescription>
-              O depoimento de {deleteTarget?.anonimo ? 'um usuário anônimo' : deleteTarget?.autor_nome || 'usuário'}{' '}
-              em "{deleteTarget?.group_nome}" será excluído permanentemente. Essa ação não pode ser desfeita.
+              O depoimento de {deleteTarget ? authorLabel(deleteTarget) : 'usuário'}
+              {deleteTarget?.anonimo ? ' (publicado como anônimo)' : ''} em "{deleteTarget?.group_nome}" será excluído
+              permanentemente. Essa ação não pode ser desfeita. Em seguida, você pode bloquear novos depoimentos dessa
+              pessoa.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -254,6 +330,15 @@ export const GroupTestimonialModerationPanel = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <BlockTestimonialsModal
+        open={!!blockTarget}
+        onOpenChange={(open) => !open && setBlockTarget(null)}
+        authorName={blockTarget?.name ?? 'o paciente'}
+        afterDelete={blockTarget?.afterDelete}
+        saving={!!blockTarget && savingId === blockTarget.userId}
+        onConfirm={(choice, reason) => (blockTarget ? blockAuthor(blockTarget.userId, choice, reason) : Promise.resolve(false))}
+      />
     </div>
   );
 };

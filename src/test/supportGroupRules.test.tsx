@@ -166,3 +166,44 @@ describe('Grupos de apoio — apoio de crise ao escrever', () => {
     expect(screen.getByRole('button', { name: /salvar depoimento/i })).not.toBeDisabled();
   });
 });
+
+describe('Grupos de apoio — depoimentos bloqueados pelo admin', () => {
+  it('paciente bloqueado lê os depoimentos, mas ao criar vê o aviso com a data', async () => {
+    const { default: SupportGroupDetail } = await import('@/pages/SupportGroupDetail');
+    const { Routes, Route } = await import('react-router-dom');
+    fakeDb.rpcHandlers.get_my_testimonial_block = () => ({
+      data: { blocked: true, blocked_until: '2030-03-10T15:00:00Z' },
+      error: null,
+    });
+    render(
+      <MemoryRouter initialEntries={[{ pathname: '/support-groups/g1', state: { groupName: 'Ansiedade' } }]}>
+        <Routes>
+          <Route path="/support-groups/:groupId" element={<SupportGroupDetail />} />
+        </Routes>
+      </MemoryRouter>,
+    );
+    expect(await screen.findByText('Relato')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Adicionar depoimento' }));
+    const msg = await screen.findByTestId('testimonial-block-message');
+    expect(msg).toHaveTextContent(/fugiu dos padrões do Soliv/);
+    expect(msg).toHaveTextContent(/até 10 de março de 2030/);
+    expect(screen.queryByText('Adicionar Depoimento')).not.toBeInTheDocument();
+  });
+
+  it('sem bloqueio, abre o formulário normalmente', async () => {
+    const { default: SupportGroupDetail } = await import('@/pages/SupportGroupDetail');
+    const { Routes, Route } = await import('react-router-dom');
+    fakeDb.rpcHandlers.get_my_testimonial_block = () => ({ data: { blocked: false, blocked_until: null }, error: null });
+    render(
+      <MemoryRouter initialEntries={[{ pathname: '/support-groups/g1', state: { groupName: 'Ansiedade' } }]}>
+        <Routes>
+          <Route path="/support-groups/:groupId" element={<SupportGroupDetail />} />
+        </Routes>
+      </MemoryRouter>,
+    );
+    await screen.findByText('Relato');
+    fireEvent.click(screen.getByRole('button', { name: 'Adicionar depoimento' }));
+    expect(await screen.findByText('Adicionar Depoimento')).toBeInTheDocument();
+    expect(screen.queryByTestId('testimonial-block-message')).not.toBeInTheDocument();
+  });
+});
