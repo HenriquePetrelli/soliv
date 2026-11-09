@@ -53,6 +53,7 @@ O que precisa ser resolvido antes de o app ficar pronto. Ao resolver um item, mo
 - **Situação:** com o app em teste, o admin entra só com a senha; o código do app autenticador (verificação em duas etapas) é pedido apenas quando o ambiente está em produção. O ambiente fica na tabela `public.app_settings` (migration `20261109120000_bloqueio_flexivel_e_mfa_por_ambiente.sql`), começando em `test`. O banco (`is_super_admin`), as edge functions de admin (`adminMfaSatisfied`) e o painel leem o mesmo valor.
 - **O que fazer no lançamento:** no SQL Editor do Supabase, rodar `UPDATE public.app_settings SET environment = 'production', updated_at = now();`. Na hora, o painel e as funções voltam a exigir o código.
 - **Como conferir:** entrar com a conta de admin; depois da senha, a tela do código precisa aparecer e o painel não abre sem ele.
+- **Aplicado em 2026-11-09:** migration no Supabase (registrada no histórico) e 11 edge functions publicadas pela CLI com `--use-api`, mesmo `verify_jwt` de antes: `account-block-status` (nova), `admin-block-*`, `admin-update-*`, `admin-delete-*`, `admin-psychologist-management`, `psychologist-management`, `confirm-payment` e `payment-sync`. Conferido no banco, numa transação desfeita: aviso de bloqueio só com a senha certa (com prazo e por tempo indeterminado), sessões encerradas ao bloquear, admin com token aal1 aceito em `test` e recusado em `production`.
 - **Registrado em:** 2026-11-09.
 
 ### 5. Configurar o TURN das chamadas de vídeo
