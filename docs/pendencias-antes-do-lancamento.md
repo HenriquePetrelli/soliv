@@ -49,6 +49,7 @@ O que precisa ser resolvido antes de o app ficar pronto. Ao resolver um item, mo
 ### 25. Publicar o app Android e iOS nas lojas
 
 - **Situação (2026-11-09):** o projeto está pronto para gerar os dois apps pelo GitHub Actions, sem Android Studio nem Mac. **Android:** assinatura de release lida de fora do repositório, `versionCode` automático, `targetSdkVersion 36` (exigido pelo Play desde 31/08/2026), workflow `Android (AAB)`. **iOS:** plataforma adicionada ao Capacitor (`ios/`, Swift Package Manager, iOS 15+, só iPhone), textos de câmera, microfone e fotos, push pelo Firebase (o `AppDelegate` troca o token da Apple pelo do FCM), workflow `iOS (TestFlight)`.
+- **Sons fora do app (2026-11-09):** o primeiro AAB saiu com 432 MB por causa dos sons (limite do Play: 200 MB). Os 16 sons foram enviados ao bucket público `sounds` do Supabase Storage e os apps tocam de lá; o build dos apps caiu para ~4,5 MB. Cada vez que alguém ouve um som no app conta no tráfego mensal do Supabase (o player baixa aos poucos, só o que toca).
 - **O que falta (só o dono da conta faz):** passo a passo em `docs/publicacao-lojas.md`.
   1. Android: gerar a chave de upload, cadastrar os 4 secrets `ANDROID_*`, criar o app no Play Console (Play App Signing), enviar o primeiro AAB para o teste interno.
   2. iOS: conta Apple Developer (com D-U-N-S, pode levar semanas: começar já), App ID com push, chave APNs enviada ao Firebase, app iOS no Firebase (`GoogleService-Info.plist`), app e chave de API na App Store Connect, 5 secrets, enviar ao TestFlight.
