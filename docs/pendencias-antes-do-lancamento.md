@@ -59,7 +59,7 @@ O que precisa ser resolvido antes de o app ficar pronto. Ao resolver um item, mo
 ### 26. Pagamento dentro dos apps das lojas
 
 - **Situação:** a assinatura é vendida pelo checkout do Stripe também dentro do app instalado. Apple e Google exigem o sistema de pagamento deles para bens e serviços digitais. A exceção da Apple (diretriz 3.1.3(d)) cobre serviço ao vivo entre duas pessoas, como consulta; grupos e recursos do app não entram. No Brasil, desde junho de 2026 (acordo com o CADE), a Apple aceita pagamento alternativo ou link para o site ao lado da compra pela Apple, com comissão menor.
-- **Decidir (com o advogado):** o modelo de cobrança nos apps. Opções no fim da conversa de 2026-11-09 e em `docs/publicacao-lojas.md`, seção 3.
+- **Decidir (com o advogado):** o modelo de cobrança nos apps (opções em `docs/publicacao-lojas.md`, seção 3).
 - **Registrado em:** 2026-11-09.
 
 ## Importantes
