@@ -1,0 +1,132 @@
+name: iOS (TestFlight)
+
+# - Mudança em ios/ na main: compila para o simulador, sem assinatura
+#   (confere que o projeto continua compilando).
+# - "Run workflow" na aba Actions ou tag v*: build assinado enviado ao
+#   TestFlight (App Store Connect).
+# Secrets: APPLE_TEAM_ID, ASC_KEY_ID, ASC_ISSUER_ID, ASC_KEY_P8_BASE64 e
+# IOS_GOOGLE_SERVICE_INFO_PLIST_BASE64 (passo a passo em docs/publicacao-lojas.md).
+on:
+  workflow_dispatch:
+    inputs:
+      version_name:
+        description: "Versão mostrada na loja (ex.: 1.0.0)"
+        required: false
+        default: "1.0.0"
+  push:
+    tags: ["v*"]
+    branches: [main]
+    paths:
+      - "ios/**"
+      - "capacitor.config.ts"
+      - "package.json"
+      - ".github/workflows/ios-release.yml"
+
+concurrency:
+  group: ios-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  ios:
+    name: Build iOS
+    runs-on: macos-15
+    timeout-minutes: 45
+    env:
+      # Cada execução tem um número novo: a Apple recusa build repetido.
+      BUILD_NUMBER: ${{ github.run_number }}
+      RELEASE: ${{ github.event_name == 'workflow_dispatch' || startsWith(github.ref, 'refs/tags/v') }}
+      VITE_FIREBASE_API_KEY: ${{ vars.VITE_FIREBASE_API_KEY }}
+      VITE_FIREBASE_AUTH_DOMAIN: ${{ vars.VITE_FIREBASE_AUTH_DOMAIN }}
+      VITE_FIREBASE_PROJECT_ID: ${{ vars.VITE_FIREBASE_PROJECT_ID }}
+      VITE_FIREBASE_STORAGE_BUCKET: ${{ vars.VITE_FIREBASE_STORAGE_BUCKET }}
+      VITE_FIREBASE_MESSAGING_SENDER_ID: ${{ vars.VITE_FIREBASE_MESSAGING_SENDER_ID }}
+      VITE_FIREBASE_APP_ID: ${{ vars.VITE_FIREBASE_APP_ID }}
+      VITE_FIREBASE_VAPID_KEY: ${{ vars.VITE_FIREBASE_VAPID_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - name: Versão
+        env:
+          INPUT_VERSION: ${{ github.event.inputs.version_name }}
+        run: |
+          if [ -n "$INPUT_VERSION" ]; then V="$INPUT_VERSION";
+          elif [[ "$GITHUB_REF" == refs/tags/v* ]]; then V="${GITHUB_REF_NAME#v}";
+          else V="1.0.0"; fi
+          echo "VERSION_NAME=$V" >> "$GITHUB_ENV"
+          echo "Versão $V (build $BUILD_NUMBER)"
+      - run: npm ci --no-audit --no-fund
+      - name: Build do app web
+        run: npm run build
+      - name: Copiar o build para o iOS
+        run: npx cap sync ios
+
+      - name: Configuração do Firebase (push)
+        env:
+          PLIST_BASE64: ${{ secrets.IOS_GOOGLE_SERVICE_INFO_PLIST_BASE64 }}
+        run: |
+          PLIST=ios/App/App/GoogleService-Info.plist
+          if [ -f "$PLIST" ]; then echo "GoogleService-Info.plist do repositório";
+          elif [ -n "$PLIST_BASE64" ]; then echo "$PLIST_BASE64" | base64 -D > "$PLIST";
+          elif [ "$RELEASE" = "true" ]; then echo "::error::Falta o GoogleService-Info.plist: sem ele o push não funciona no iPhone."; exit 1;
+          else echo "::warning::Sem GoogleService-Info.plist: build de conferência com push desligado."; fi
+
+      - name: Compilar para o simulador (conferência)
+        if: env.RELEASE != 'true'
+        working-directory: ios/App
+        run: |
+          set -o pipefail
+          xcodebuild -project App.xcodeproj -scheme App -configuration Debug \
+            -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' \
+            CODE_SIGNING_ALLOWED=NO build | tail -60
+
+      - name: Chave da App Store Connect
+        if: env.RELEASE == 'true'
+        env:
+          ASC_KEY_P8_BASE64: ${{ secrets.ASC_KEY_P8_BASE64 }}
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+        run: |
+          if [ -z "$ASC_KEY_P8_BASE64" ]; then echo "::error::Secrets da App Store Connect não configurados."; exit 1; fi
+          echo "$ASC_KEY_P8_BASE64" | base64 -D > "$RUNNER_TEMP/AuthKey_$ASC_KEY_ID.p8"
+
+      - name: Gerar e enviar ao TestFlight
+        if: env.RELEASE == 'true'
+        working-directory: ios/App
+        env:
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+        run: |
+          set -o pipefail
+          AUTH=(-allowProvisioningUpdates
+                -authenticationKeyPath "$RUNNER_TEMP/AuthKey_$ASC_KEY_ID.p8"
+                -authenticationKeyID "$ASC_KEY_ID"
+                -authenticationKeyIssuerID "$ASC_ISSUER_ID")
+          xcodebuild -project App.xcodeproj -scheme App -configuration Release \
+            -destination 'generic/platform=iOS' -archivePath "$RUNNER_TEMP/App.xcarchive" \
+            DEVELOPMENT_TEAM="$APPLE_TEAM_ID" CODE_SIGN_STYLE=Automatic \
+            MARKETING_VERSION="$VERSION_NAME" CURRENT_PROJECT_VERSION="$BUILD_NUMBER" \
+            "${AUTH[@]}" archive | tail -60
+          cat > "$RUNNER_TEMP/ExportOptions.plist" <<EOF
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+            <key>method</key><string>app-store-connect</string>
+            <key>destination</key><string>upload</string>
+            <key>teamID</key><string>$APPLE_TEAM_ID</string>
+            <key>signingStyle</key><string>automatic</string>
+            <key>manageAppVersionAndBuildNumber</key><false/>
+          </dict>
+          </plist>
+          EOF
+          xcodebuild -exportArchive -archivePath "$RUNNER_TEMP/App.xcarchive" \
+            -exportOptionsPlist "$RUNNER_TEMP/ExportOptions.plist" \
+            -exportPath "$RUNNER_TEMP/export" "${AUTH[@]}" | tail -40
+          echo "Build $VERSION_NAME ($BUILD_NUMBER) enviado. Aparece no TestFlight depois do processamento da Apple (10 a 30 min)."
+
+      - name: Apagar a chave
+        if: always()
+        run: rm -f "$RUNNER_TEMP"/AuthKey_*.p8
