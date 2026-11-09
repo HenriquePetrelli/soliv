@@ -46,6 +46,22 @@ O que precisa ser resolvido antes de o app ficar pronto. Ao resolver um item, mo
 - **Como conferir:** assinar um plano com cartão real de baixo valor (ou cupom de 100%), ver o plano no Perfil e cancelar dentro dos 7 dias (o reembolso sai automático).
 - **Registrado em:** 2026-11-07.
 
+### 25. Publicar o app Android e iOS nas lojas
+
+- **Situação (2026-11-09):** o projeto está pronto para gerar os dois apps pelo GitHub Actions, sem Android Studio nem Mac. **Android:** assinatura de release lida de fora do repositório, `versionCode` automático, `targetSdkVersion 36` (exigido pelo Play desde 31/08/2026), workflow `Android (AAB)`. **iOS:** plataforma adicionada ao Capacitor (`ios/`, Swift Package Manager, iOS 15+, só iPhone), textos de câmera, microfone e fotos, push pelo Firebase (o `AppDelegate` troca o token da Apple pelo do FCM), workflow `iOS (TestFlight)`.
+- **O que falta (só o dono da conta faz):** passo a passo em `docs/publicacao-lojas.md`.
+  1. Android: gerar a chave de upload, cadastrar os 4 secrets `ANDROID_*`, criar o app no Play Console (Play App Signing), enviar o primeiro AAB para o teste interno.
+  2. iOS: conta Apple Developer (com D-U-N-S, pode levar semanas: começar já), App ID com push, chave APNs enviada ao Firebase, app iOS no Firebase (`GoogleService-Info.plist`), app e chave de API na App Store Connect, 5 secrets, enviar ao TestFlight.
+  3. Fazer o roteiro de testes no aparelho (seção 4 do guia) nos dois.
+- **Bloqueado pela pendência 26** (pagamento dentro dos apps) para a revisão das lojas.
+- **Registrado em:** 2026-11-09.
+
+### 26. Pagamento dentro dos apps das lojas
+
+- **Situação:** a assinatura é vendida pelo checkout do Stripe também dentro do app instalado. Apple e Google exigem o sistema de pagamento deles para bens e serviços digitais. A exceção da Apple (diretriz 3.1.3(d)) cobre serviço ao vivo entre duas pessoas, como consulta; grupos e recursos do app não entram. No Brasil, desde junho de 2026 (acordo com o CADE), a Apple aceita pagamento alternativo ou link para o site ao lado da compra pela Apple, com comissão menor.
+- **Decidir (com o advogado):** o modelo de cobrança nos apps. Opções no fim da conversa de 2026-11-09 e em `docs/publicacao-lojas.md`, seção 3.
+- **Registrado em:** 2026-11-09.
+
 ## Importantes
 
 ### 24. Voltar a exigir o código de verificação do admin
