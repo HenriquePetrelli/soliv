@@ -49,4 +49,36 @@ describe('bloqueio com o app aberto', () => {
     await waitFor(() => expect(handler).toHaveBeenCalled());
     expect(signOutMock).not.toHaveBeenCalled();
   });
+
+  it('sai na hora em que o servidor avisa do bloqueio', async () => {
+    let blocked = false;
+    const handler = vi.fn(() =>
+      stateWith(blocked ? { is_blocked: true, blocked_until: null, blocked_reason: 'Fraude' } : { is_blocked: false, blocked_until: null, blocked_reason: null })(),
+    );
+    fakeDb.rpcHandlers.get_login_state = handler;
+    const channels: Array<{ topic: string; handlers: Array<{ event: string; cb: () => void }> }> = [];
+    const original = fakeSupabase.channel;
+    (fakeSupabase as { channel: unknown }).channel = (topic: string) => {
+      const ch = {
+        topic,
+        handlers: [] as Array<{ event: string; cb: () => void }>,
+        on(_t: string, f: { event: string }, cb: () => void) { ch.handlers.push({ event: f.event, cb }); return ch; },
+        subscribe() { return ch; },
+      };
+      channels.push(ch);
+      return ch;
+    };
+    try {
+      render(<AccountStatusWatcher />);
+      await waitFor(() => expect(handler).toHaveBeenCalledTimes(1));
+      expect(signOutMock).not.toHaveBeenCalled();
+      const ch = channels.find((c) => c.topic === 'account-status:p1');
+      expect(ch).toBeTruthy();
+      blocked = true;
+      ch!.handlers.find((h) => h.event === 'check')!.cb();
+      await waitFor(() => expect(signOutMock).toHaveBeenCalled());
+    } finally {
+      (fakeSupabase as { channel: unknown }).channel = original;
+    }
+  });
 });

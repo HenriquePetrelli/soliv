@@ -1,6 +1,6 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { findCustomerId, liveSubscriptions, newStripe } from "../_shared/stripe.ts";
-import { adminMfaOk } from "../_shared/adminMfa.ts";
+import { adminMfaSatisfied } from "../_shared/adminMfa.ts";
 import { errorMessage } from '../_shared/errors.ts';
 
 const corsHeaders = {
@@ -37,7 +37,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
       user_id_param: user.id,
     });
     // Também exige a verificação em duas etapas (token aal2).
-    if (adminError || isAdmin !== true || !adminMfaOk(authHeader)) {
+    if (adminError || isAdmin !== true || !(await adminMfaSatisfied(authHeader))) {
       return json({ error: "Acesso negado. Apenas administradores." }, 403);
     }
 

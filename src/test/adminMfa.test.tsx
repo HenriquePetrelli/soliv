@@ -9,8 +9,9 @@ const mfa = vi.hoisted(() => ({
   unenroll: vi.fn(),
   challengeAndVerify: vi.fn(),
 }));
+const rpc = vi.hoisted(() => vi.fn());
 vi.mock('@/integrations/supabase/client', () => ({
-  supabase: { auth: { mfa, signOut: vi.fn(async () => ({ error: null })) } },
+  supabase: { auth: { mfa, signOut: vi.fn(async () => ({ error: null })) }, rpc },
 }));
 vi.mock('sonner', () => ({ toast: { success: vi.fn(), error: vi.fn() } }));
 vi.mock('@/components/Logo', () => ({ default: () => null }));
@@ -32,9 +33,33 @@ beforeEach(() => {
   Object.values(mfa).forEach((fn) => fn.mockReset());
   mfa.getAuthenticatorAssuranceLevel.mockResolvedValue({ data: { currentLevel: 'aal1', nextLevel: 'aal1' }, error: null });
   mfa.unenroll.mockResolvedValue({ error: null });
+  // Produção: o código é exigido.
+  rpc.mockReset();
+  rpc.mockResolvedValue({ data: true, error: null });
 });
 
 describe('verificação em duas etapas do admin', () => {
+  it('app em teste: o painel abre só com a senha, sem pedir o código', async () => {
+    rpc.mockResolvedValue({ data: false, error: null });
+    renderAt('/admin-dashboard');
+    expect(await screen.findByText('Painel admin')).toBeInTheDocument();
+    expect(rpc).toHaveBeenCalledWith('admin_mfa_required');
+    expect(mfa.listFactors).not.toHaveBeenCalled();
+  });
+
+  it('app em teste: a tela do código leva direto ao painel', async () => {
+    rpc.mockResolvedValue({ data: false, error: null });
+    renderAt('/admin/verificacao');
+    expect(await screen.findByText('Painel admin')).toBeInTheDocument();
+  });
+
+  it('sem conseguir ler o ambiente, o código continua sendo exigido', async () => {
+    rpc.mockResolvedValue({ data: null, error: { message: 'falhou' } });
+    mfa.listFactors.mockResolvedValue({ data: { all: [{ id: 'f1', factor_type: 'totp', status: 'verified' }] }, error: null });
+    renderAt('/admin-dashboard');
+    expect(await screen.findByText('Digite o código de 6 dígitos do seu app autenticador.')).toBeInTheDocument();
+  });
+
   it('painel sem o código leva para a tela de verificação', async () => {
     mfa.listFactors.mockResolvedValue({ data: { all: [{ id: 'f1', factor_type: 'totp', status: 'verified' }] }, error: null });
     renderAt('/admin-dashboard');

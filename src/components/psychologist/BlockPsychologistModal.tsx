@@ -3,12 +3,20 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Ban, Unlock } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { getFriendlyErrorMessage } from '@/utils/errorMessage';
-import { BLOCK_DURATIONS, formatRemainingTime, type BlockInfo } from '@/utils/psychologistBlock';
+import {
+  blockDurationBody,
+  describeBlockDuration,
+  EMPTY_BLOCK_DURATION,
+  formatBlockPeriod,
+  formatRemainingTime,
+  toBlockChoice,
+  type BlockInfo,
+} from '@/utils/psychologistBlock';
+import BlockDurationPicker from '@/components/admin/BlockDurationPicker';
 import type { PsychologistData } from '@/hooks/usePsychologistManagement';
 
 interface BlockPsychologistModalProps {
@@ -30,13 +38,15 @@ export const BlockPsychologistModal = ({
   blockInfo,
   onDone,
 }: BlockPsychologistModalProps) => {
-  const [duration, setDuration] = useState('');
+  const [duration, setDuration] = useState(EMPTY_BLOCK_DURATION);
   const [reason, setReason] = useState('');
   const [saving, setSaving] = useState(false);
 
+  const choice = toBlockChoice(duration);
+
   const submit = async () => {
     if (mode === 'block') {
-      if (!duration) return toast.error('Selecione o período de bloqueio');
+      if (!choice) return toast.error('Escolha um período de bloqueio válido');
       if (reason.trim().length < 3) return toast.error('Descreva o motivo do bloqueio');
     }
     setSaving(true);
@@ -45,14 +55,14 @@ export const BlockPsychologistModal = ({
         body: {
           psychologist_id: psychologistId,
           action: mode,
-          duration: mode === 'block' ? duration : undefined,
+          ...(mode === 'block' && choice ? blockDurationBody(choice) : {}),
           reason: mode === 'block' ? reason.trim() : undefined,
         },
       });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
       toast.success(data?.message || 'Operação concluída');
-      setDuration('');
+      setDuration(EMPTY_BLOCK_DURATION);
       setReason('');
       onOpenChange(false);
       onDone(data?.data);
@@ -73,32 +83,20 @@ export const BlockPsychologistModal = ({
           </DialogTitle>
           <DialogDescription>
             {mode === 'block'
-              ? `Defina o período e o motivo do bloqueio de ${psychologistName}.`
+              ? `A pessoa sai da conta na hora e não consegue entrar até o fim do bloqueio. Defina o período e o motivo para ${psychologistName}.`
               : `Confirme o desbloqueio de ${psychologistName}.`}
           </DialogDescription>
         </DialogHeader>
 
         {mode === 'block' ? (
           <div className="space-y-4">
-            <div className="space-y-2">
-              <Label>Período de bloqueio</Label>
-              <Select value={duration} onValueChange={setDuration}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecione o período" />
-                </SelectTrigger>
-                <SelectContent>
-                  {BLOCK_DURATIONS.map((d) => (
-                    <SelectItem key={d.value} value={d.value}>{d.label}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+            <BlockDurationPicker value={duration} onChange={setDuration} />
             <div className="space-y-2">
               <Label>Motivo do bloqueio</Label>
               <Textarea
                 value={reason}
                 onChange={(e) => setReason(e.target.value)}
-                placeholder="Descreva o motivo do bloqueio"
+                placeholder="Descreva o motivo do bloqueio (a pessoa verá este texto)"
                 maxLength={2000}
                 rows={4}
               />
@@ -112,7 +110,11 @@ export const BlockPsychologistModal = ({
             </div>
             <div className="rounded-lg border p-3 bg-muted/30">
               <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Tempo restante</p>
-              <p className="mt-1">{formatRemainingTime(blockInfo?.blocked_until)}</p>
+              <p className="mt-1">
+                {blockInfo?.blocked_until
+                  ? `${formatBlockPeriod(blockInfo)} (${formatRemainingTime(blockInfo.blocked_until)})`
+                  : 'Tempo indeterminado'}
+              </p>
             </div>
           </div>
         )}
@@ -122,7 +124,11 @@ export const BlockPsychologistModal = ({
             Cancelar
           </Button>
           <Button onClick={submit} disabled={saving} variant={mode === 'block' ? 'destructive' : 'default'}>
-            {saving ? 'Processando...' : mode === 'block' ? 'Confirmar bloqueio' : 'Confirmar desbloqueio'}
+            {saving
+              ? 'Processando...'
+              : mode === 'block'
+                ? `Bloquear${choice ? ` (${describeBlockDuration(choice)?.toLowerCase()})` : ''}`
+                : 'Confirmar desbloqueio'}
           </Button>
         </DialogFooter>
       </DialogContent>
