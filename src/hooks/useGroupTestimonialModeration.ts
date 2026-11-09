@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { getFriendlyErrorMessage } from '@/utils/errorMessage';
+import type { BlockDurationChoice } from '@/utils/psychologistBlock';
 
 export interface AdminGroupTestimonial {
   testimonial_id: string;
@@ -18,6 +19,12 @@ export interface AdminGroupTestimonial {
   /** Pending reports from other users (see report_group_testimonial). */
   pending_reports: number;
   report_reasons: string[];
+  /** Autor real (também quando o depoimento aparece como anônimo para os outros). */
+  autor_user_id: string;
+  autor_email: string | null;
+  /** Autor impedido de criar depoimentos (admin_block_testimonials). */
+  autor_bloqueado: boolean;
+  autor_bloqueado_ate: string | null;
 }
 
 /** Admin moderation of support-group testimonials: replaces the old
@@ -121,5 +128,63 @@ export const useGroupTestimonialModeration = () => {
     }
   };
 
-  return { testimonials, loading, savingId, updateTestimonial, deleteTestimonial, dismissReports, reload: load };
+  /** Impede o autor de criar (e editar) depoimentos pelo período escolhido. */
+  const blockAuthor = async (userId: string, choice: BlockDurationChoice, reason?: string): Promise<boolean> => {
+    setSavingId(userId);
+    try {
+      const { error } = await supabase.rpc('admin_block_testimonials', {
+        p_user_id: userId,
+        p_unit: choice.kind === 'indefinite' ? 'indefinite' : choice.unit,
+        p_amount: choice.kind === 'indefinite' ? null : choice.amount,
+        p_reason: reason?.trim() || null,
+      });
+      if (error) throw error;
+      toast({ title: 'Depoimentos bloqueados', description: 'O paciente continua lendo, mas não cria novos depoimentos.' });
+      await load();
+      return true;
+    } catch (error: unknown) {
+      console.error('Erro ao bloquear depoimentos:', error);
+      toast({
+        title: 'Erro',
+        description: getFriendlyErrorMessage(error, 'Não foi possível bloquear os depoimentos do paciente.'),
+        variant: 'destructive',
+      });
+      return false;
+    } finally {
+      setSavingId(null);
+    }
+  };
+
+  const unblockAuthor = async (userId: string): Promise<boolean> => {
+    setSavingId(userId);
+    try {
+      const { error } = await supabase.rpc('admin_unblock_testimonials', { p_user_id: userId });
+      if (error) throw error;
+      toast({ title: 'Depoimentos desbloqueados' });
+      await load();
+      return true;
+    } catch (error: unknown) {
+      console.error('Erro ao desbloquear depoimentos:', error);
+      toast({
+        title: 'Erro',
+        description: getFriendlyErrorMessage(error, 'Não foi possível desbloquear os depoimentos do paciente.'),
+        variant: 'destructive',
+      });
+      return false;
+    } finally {
+      setSavingId(null);
+    }
+  };
+
+  return {
+    testimonials,
+    loading,
+    savingId,
+    updateTestimonial,
+    deleteTestimonial,
+    dismissReports,
+    blockAuthor,
+    unblockAuthor,
+    reload: load,
+  };
 };

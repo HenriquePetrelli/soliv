@@ -18,6 +18,8 @@ const EXIT_ANIMATION_MS = 350;
 export const releaseStuckPointerLock = () => {
   if (typeof document === 'undefined') return;
   globalThis.setTimeout(() => {
+    // A página (ou, nos testes, o ambiente) pode ter sumido nesse meio-tempo.
+    if (typeof document === 'undefined' || !document.body) return;
     const { body } = document;
     if (body.style.pointerEvents !== 'none') return;
     if (document.querySelector(OPEN_LAYER)) return;
