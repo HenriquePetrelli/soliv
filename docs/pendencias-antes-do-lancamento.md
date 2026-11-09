@@ -10,6 +10,14 @@ O que precisa ser resolvido antes de o app ficar pronto. Ao resolver um item, mo
 
 - **Situação:** o Soliv ainda não tem domínio próprio. Sem ele, não dá para enviar e-mail com remetente do Soliv para os usuários.
 - **Em espera (2026-10-13):** `soliv.com.br` está registrado por uma pessoa física, sem site, e vence em **03/12/2026** (foi renovado em 12/2025). `soliv.com` e `soliv.app` também estão ocupados. Decisão: aguardar o vencimento antes de escolher outro domínio. Lembretes agendados para 26/11/2026 (uma semana antes) e 10/12/2026 (para ver se foi renovado ou entrou no processo de liberação do Registro.br).
+- **Acompanhamento (2026-11-09):**
+  - **Whois:** ainda não renovado. A expiração continua 03/12/2026 e a última alteração foi em 29/12/2025 (status "Publicado"). A renovação só se confirma no [whois do Registro.br](https://registro.br/tecnologia/ferramentas/whois/): se a "Expiração" passar para 2027, foi renovado. O Registro.br bloqueia consultas automáticas (whois/RDAP), então essa conferência é manual.
+  - **Listas do processo de liberação** (o Registro.br publica cerca de 2 dias antes de cada processo mensal; detalhes em [processo de liberação](https://registro.br/dominio/processo-de-liberacao/)):
+    - em liberação: https://registro.br/dominio/lista-processo-liberacao.txt
+    - que vão para processo competitivo: https://registro.br/dominio/lista-processo-competitivo.txt
+    - em processo competitivo: https://registro.br/dominio/lista-competicao.txt
+  - **Última lista publicada:** a do processo de 14 a 21/10/2026 (157.550 domínios em liberação, 152 para processo competitivo e 2 em competição). O `soliv.com.br` não está em nenhuma delas, o que é esperado antes do vencimento.
+  - **Aviso automático:** a tarefa agendada "Lista de liberação de novembro do Registro.br" confere todo dia às 15:23 (Brasília) se saiu a lista nova. Quando sair, ela avisa no celular, diz se o `soliv.com.br` aparece e se desativa sozinha.
 - **O que depende do domínio:**
 
   | E-mail | Onde é enviado | Remetente hoje | O que acontece sem domínio |
