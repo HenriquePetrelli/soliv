@@ -99,7 +99,7 @@ Também podemos compartilhar dados quando a lei ou uma ordem judicial exigir.
 | Mensagens do chat | arquivadas após 1 mês e apagadas após 3 meses |
 | Dados fiscais e de pagamento | pelo prazo exigido pela legislação fiscal (em regra, 5 anos) |
 | Documentos de psicólogos com cadastro reprovado | apagados 3 dias após a reprovação |
-| Registros de acesso ao aplicativo | 6 meses, conforme o Marco Civil da Internet (Lei nº 12.965/2014, art. 15) |
+| Registros de acesso ao aplicativo (data, hora e endereço IP de cada acesso, com o navegador ou aparelho e o e-mail da conta) | 7 meses (os 6 exigidos pelo Marco Civil da Internet, Lei nº 12.965/2014, art. 15, mais 1 de margem), **mesmo que a conta seja excluída**. Só são consultados para atender pedido de autoridade ou investigar incidente de segurança. Depois, são eliminados. |
 
 ## 8. Seus direitos
 

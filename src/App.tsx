@@ -51,6 +51,7 @@ const LegalAcceptanceGate = lazy(() => import("@/components/legal/LegalAcceptanc
 // (DeferredMount), para não disputar a rede com ela.
 const PushBridge = lazy(() => import("./components/PushBridge"));
 const AccountStatusWatcher = lazy(() => import("./components/AccountStatusWatcher"));
+const AccessLogger = lazy(() => import("./components/AccessLogger"));
 
 // Lazy load all pages for better performance
 const Index = lazy(() => import("./pages/Index"));
@@ -480,6 +481,7 @@ const App = () => {
                     <Suspense fallback={null}>
                       <PushBridge />
                       <AccountStatusWatcher />
+                      <AccessLogger />
                     </Suspense>
                   </DeferredMount>
                   <LoggedInOnly>

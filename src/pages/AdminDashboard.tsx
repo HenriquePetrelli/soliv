@@ -28,6 +28,7 @@ import { SosHistoryPanel } from '@/components/sos/SosHistoryPanel';
 import { ChatModerationPanel } from '@/components/admin/ChatModerationPanel';
 import { GroupTestimonialModerationPanel } from '@/components/admin/GroupTestimonialModerationPanel';
 import { AuditLogPanel } from '@/components/admin/AuditLogPanel';
+import { AccessLogsPanel } from '@/components/admin/AccessLogsPanel';
 import { OrganizationsPanel } from '@/components/admin/OrganizationsPanel';
 import AdminLayout from '@/components/admin/AdminLayout';
 import PageTitle from '@/components/PageTitle';
@@ -420,6 +421,10 @@ const AdminDashboard = () => {
 
           <TabsContent value="audit" className="mt-0">
             <AuditLogPanel />
+          </TabsContent>
+
+          <TabsContent value="access_logs" className="mt-0">
+            <AccessLogsPanel />
           </TabsContent>
 
           <TabsContent value="profile" className="mt-0">
