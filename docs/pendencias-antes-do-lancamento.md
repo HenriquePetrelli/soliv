@@ -76,12 +76,6 @@ O que precisa ser resolvido antes de o app ficar pronto. Ao resolver um item, mo
 - **O que fazer:** revisão por um advogado de proteção de dados antes do lançamento; depois, pedir ao Claude para atualizar os textos e a versão dos documentos (o app pede o aceite de novo quando a versão muda).
 - **Registrado em:** 2026-10-13 (estava só na ficha 18).
 
-### 18. Avisar os psicólogos do novo valor do repasse
-
-- **Situação:** desde 2026-11-07 o repasse é R$ 85,00 por consulta agendada e R$ 40,00 por SOS (antes R$ 90,00 e R$ 50,00), já valendo no banco para os atendimentos registrados a partir dessa data. Os Termos do psicólogo (item 7) prometem **aviso de pelo menos 30 dias** antes de mudar os valores.
-- **O que fazer:** avisar os psicólogos já cadastrados (e-mail ou aviso no app) com 30 dias de antecedência e a data em que o novo valor passa a valer. Se a mudança precisar respeitar esse prazo para quem já atende, decidir se os atendimentos até a data do aviso + 30 dias ficam com o valor antigo (pedir ao Claude para ajustar o cálculo).
-- **Registrado em:** 2026-11-07.
-
 ### 19. Teste de ponta a ponta dos planos novos
 
 - **Situação:** banco, edge functions, produtos do Stripe (modo de teste) e secrets foram publicados e conferidos em 2026-11-07, mas nenhuma assinatura foi feita pelo app depois da mudança.
@@ -100,6 +94,10 @@ O que precisa ser resolvido antes de o app ficar pronto. Ao resolver um item, mo
 Nenhuma no momento.
 
 ## Resolvidas
+
+### 18. Avisar os psicólogos do novo valor do repasse (registrada em 2026-11-07, encerrada em 2026-11-09)
+
+- O repasse mudou para R$ 85,00 (consulta) e R$ 40,00 (SOS) em 2026-11-07. Não há o que avisar: o app ainda não está em produção e não há psicólogos atendendo de verdade (só contas de teste). Os psicólogos que se cadastrarem já entram com os Termos e os valores novos.
 
 ### 23. Avisos do lint (registrada e resolvida em 2026-11-08)
 
