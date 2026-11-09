@@ -4,23 +4,57 @@ Levantamento de 2026-11-09. Os preços são em dólar (cobrados no cartão inter
 
 Conversão usada como referência: **US$ 1 ≈ R$ 5,50** (ajuste para a cotação do dia).
 
-## 1. Resumo
+## 1. Antes do lançamento (desenvolvimento e testes)
+
+Sem usuários reais: o volume de e-mails e de monitoramento cabe nos planos grátis do Resend e do Grafana. A conta da Apple já entra aqui porque é preciso para testar no iPhone (TestFlight) e para a revisão da App Store, que leva dias.
+
+| Serviço | Para que serve no Soliv | Plano | US$/mês | R$/mês (aprox.) |
+|---|---|---|---|---|
+| Supabase | Banco, login, edge functions, storage, rotinas | Pro | 25,00 | 137,50 |
+| Grafana Cloud | Monitoramento e alertas | Free | 0,00 | 0,00 |
+| Lovable | Editor e publicação do app web | Pro | 25,00 | 137,50 |
+| Claude | Desenvolvimento (Claude Code) | Pro | 20,00 | 110,00 |
+| Resend | E-mails (suporte, avisos de consulta, login via SMTP) | Free (3 mil/mês, 100/dia) | 0,00 | 0,00 |
+| Apple Developer | Testes no iPhone e publicação na App Store | US$ 99/ano | 8,25 | 45,40 |
+| Domínio | `soliv.com.br` (Registro.br) | R$ 40/ano | — | 3,35 |
+| **Total fixo** | | | **≈ 78,25** | **≈ R$ 434** |
+| **Total + IOF 3,5%** | | | | **≈ R$ 449** |
+
+**Gastos únicos antes de lançar:** Google Play Console, US$ 25 (≈ R$ 142 com IOF), pago uma vez só.
+
+**Para economizar:** o Supabase pode ficar no plano **Free** até o lançamento (−US$ 25, total **≈ R$ 306** com IOF). O Free pausa o projeto depois de 7 dias sem uso e não tem backup diário, então assine o Pro **antes** de abrir para os primeiros usuários.
+
+## 2. Depois do lançamento (com usuários reais)
+
+Com usuários reais, o Resend e o Grafana passam para o Pro: o limite de 100 e-mails por dia do Resend Free trava o "Esqueci minha senha" num dia de pico, e o monitoramento precisa de mais retenção e alertas.
 
 | Serviço | Para que serve no Soliv | Plano | US$/mês | R$/mês (aprox.) |
 |---|---|---|---|---|
 | Supabase | Banco, login, edge functions, storage, rotinas | Pro | 25,00 | 137,50 |
 | Grafana Cloud | Monitoramento e alertas | Pro (taxa da plataforma) | 19,00 | 104,50 |
 | Lovable | Editor e publicação do app web | Pro | 25,00 | 137,50 |
-| Claude | Desenvolvimento (Claude Code) | Pro | 20,00 | 110,00 |
-| Resend | E-mails (suporte, avisos de consulta, login via SMTP) | Pro | 20,00 | 110,00 |
-| Apple Developer | Publicar na App Store | US$ 99/ano | 8,25 | 45,40 |
+| Claude | Desenvolvimento e correções (Claude Code) | Pro | 20,00 | 110,00 |
+| Resend | E-mails (suporte, avisos de consulta, login via SMTP) | Pro (50 mil/mês) | 20,00 | 110,00 |
+| Apple Developer | Manter o app na App Store | US$ 99/ano | 8,25 | 45,40 |
 | Domínio | `soliv.com.br` (Registro.br) | R$ 40/ano | — | 3,35 |
 | **Total fixo** | | | **≈ 117,25** | **≈ R$ 648** |
-| **Total + IOF 3,5%** | | | | **≈ R$ 670** |
+| **Total + IOF 3,5%** | | | | **≈ R$ 671** |
 
-Se o Claude for o plano **Max** em vez do Pro, some **US$ 80** (Max 5x, US$ 100) ou **US$ 180** (Max 20x, US$ 200): total de **≈ R$ 1.110** ou **≈ R$ 1.680** com IOF.
+**Fora do total fixo, depois do lançamento:**
+- custos por uso: taxa do Stripe em cada cobrança e excedentes de Supabase, Grafana, Resend e TURN (seções 5 e 6);
+- repasses aos psicólogos, por atendimento realizado (seção 6);
+- quando o app crescer, subir o Supabase da instância Micro para a Small (+US$ 15/mês, ≈ R$ 85 com IOF).
 
-## 2. Detalhes de cada serviço
+## 3. Comparação
+
+| | Antes do lançamento | Depois do lançamento | Diferença |
+|---|---|---|---|
+| US$/mês | ≈ 78,25 | ≈ 117,25 | +39,00 (Grafana Pro + Resend Pro) |
+| R$/mês com IOF | ≈ R$ 449 | ≈ R$ 671 | +R$ 222 |
+
+**Plano do Claude:** as tabelas consideram o Pro. Com o **Max**, some US$ 80 (Max 5x, US$ 100) ou US$ 180 (Max 20x, US$ 200) nas duas fases: cerca de **+R$ 455** ou **+R$ 1.025** por mês com IOF.
+
+## 4. Detalhes de cada serviço
 
 ### Supabase Pro — US$ 25/mês
 - Inclui US$ 10 de crédito de computação, que cobre a instância **Micro** do projeto `ihrrgmmsfuvlasmzdmwf`. Subir para Small custa cerca de US$ 15 a mais por mês.
@@ -51,7 +85,7 @@ Se o Claude for o plano **Max** em vez do Pro, some **US$ 80** (Max 5x, US$ 100)
 ### Domínio — cerca de R$ 40/ano
 - Valor do `.com.br` no Registro.br. Um `.app` em registrador estrangeiro fica em torno de US$ 15 a 20/ano.
 
-## 3. Serviços sem custo fixo (pagos só por uso, ou grátis)
+## 5. Serviços sem custo fixo (pagos só por uso, ou grátis)
 
 | Serviço | Uso no Soliv | Custo |
 |---|---|---|
@@ -61,15 +95,15 @@ Se o Claude for o plano **Max** em vez do Pro, some **US$ 80** (Max 5x, US$ 100)
 | GitHub Actions | Testes e builds Android/iOS | Grátis em repositório público. Em privado: 2.000 min/mês grátis, mas o build iOS roda em macOS, que consome 10x (cada build de ~15 min gasta ~150 min da cota) |
 | Google Play Console | Publicar no Android | US$ 25 uma única vez (não é mensal) |
 
-## 4. Custos variáveis que crescem com o uso
+## 6. Custos variáveis que crescem com o uso
 
 Não entram no total fixo, mas vale acompanhar:
 - **Repasses aos psicólogos**: R$ 85,00 por consulta agendada e R$ 40,00 por SOS realizado (`docs/fluxos/09-repasses.md`). É o maior custo variável.
 - **Taxa do Stripe** em cada cobrança (acima).
 - **Excedentes** de Supabase (banco, egress, edge functions), Grafana (séries e logs), Resend (e-mails) e Cloudflare TURN (tráfego de vídeo).
 
-## 5. Onde economizar
+## 7. Onde economizar
 
 - Pagar anual onde existe desconto (Lovable, Claude, Resend): cerca de 15% a 20% a menos.
-- Ficar no Grafana Cloud Free e no Resend Free enquanto o volume for baixo: −US$ 39/mês (≈ −R$ 215).
-- Cenário mínimo para lançar (Supabase Pro + Lovable Pro + Claude Pro + Apple + domínio, com Grafana e Resend no Free): **≈ US$ 78/mês ≈ R$ 445 com IOF**.
+- Antes do lançamento, deixar o Supabase no Free enquanto ninguém de fora usa o app (seção 1).
+- Depois do lançamento, manter o Grafana no Free enquanto o uso couber na cota grátis (−US$ 19/mês, ≈ −R$ 108 com IOF). O Resend Pro não vale cortar: sem ele, os e-mails de login param no limite de 100 por dia.
