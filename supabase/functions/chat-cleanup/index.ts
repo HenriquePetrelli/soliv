@@ -1,5 +1,6 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.52.1";
 import { isTrustedCaller } from "../_shared/guards.ts";
+import { monitored } from "../_shared/monitoring.ts";
 
 // Apaga do armazenamento as fotos de conversas que não existem mais e, nas
 // conversas que continuam, as fotos cuja mensagem já foi apagada.
@@ -24,7 +25,7 @@ const GRACE_MS = 24 * 60 * 60 * 1000;
 const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), { status, headers: { "Content-Type": "application/json" } });
 
-Deno.serve(async (req: Request): Promise<Response> => {
+Deno.serve(monitored("chat-cleanup", async (req: Request): Promise<Response> => {
   if (req.method === "OPTIONS") return new Response(null);
   // Só o pg_cron (x-cron-secret) ou outra função (service role).
   if (!(await isTrustedCaller(req))) return json({ error: "Unauthorized" }, 401);
@@ -112,4 +113,4 @@ Deno.serve(async (req: Request): Promise<Response> => {
     console.error("chat-cleanup failed:", error);
     return json({ error: error instanceof Error ? error.message : String(error) }, 500);
   }
-});
+}));

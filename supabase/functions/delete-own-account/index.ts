@@ -1,5 +1,6 @@
 import { createClient, type SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { findCustomerId, liveSubscriptions, newStripe } from "../_shared/stripe.ts";
+import { monitored } from "../_shared/monitoring.ts";
 
 // Account deletion requested by the patient themself — the data subject's
 // right under LGPD (art. 18, VI) and a requirement of both app stores.
@@ -48,7 +49,7 @@ const cancelStripeSubscriptions = async (supabase: SupabaseClient, user: { id: s
   }
 };
 
-Deno.serve(async (req: Request): Promise<Response> => {
+Deno.serve(monitored("delete-own-account", async (req: Request): Promise<Response> => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
@@ -177,4 +178,4 @@ Deno.serve(async (req: Request): Promise<Response> => {
     console.error("delete-own-account error:", error);
     return json({ error: "Não foi possível excluir a conta agora. Tente de novo em instantes." }, 500);
   }
-});
+}));

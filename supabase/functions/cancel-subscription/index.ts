@@ -3,6 +3,7 @@ import Stripe from "https://esm.sh/stripe@14.21.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { cancelMode } from "../_shared/billing.ts";
 import { findCustomerId, liveSubscriptions, newStripe, releaseSchedule } from "../_shared/stripe.ts";
+import { monitored } from "../_shared/monitoring.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -57,7 +58,7 @@ const logStep = (step: string, details?: unknown) => {
   console.log(`[CANCEL-SUBSCRIPTION] ${step}${detailsStr}`);
 };
 
-serve(async (req) => {
+serve(monitored("cancel-subscription", async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
@@ -255,4 +256,4 @@ serve(async (req) => {
       status: 500,
     });
   }
-});
+}));

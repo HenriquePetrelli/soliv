@@ -2,6 +2,7 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.52.1";
 import { Resend } from "https://esm.sh/resend@2.0.0";
 import { errorMessage } from '../_shared/errors.ts';
+import { monitored } from "../_shared/monitoring.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -22,7 +23,7 @@ const escapeHtml = (value: unknown): string =>
     { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]!
   ));
 
-serve(async (req) => {
+serve(monitored("send-appointment-notification", async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
@@ -274,4 +275,4 @@ serve(async (req) => {
       }
     );
   }
-});
+}));

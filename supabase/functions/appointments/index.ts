@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.52.1";
 import { errorMessage } from '../_shared/errors.ts';
+import { monitored } from "../_shared/monitoring.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -124,7 +125,7 @@ const psychologistOf = (appointment: {
   return appointment.psychologist_name ? { full_name: appointment.psychologist_name, specialization: null } : null;
 };
 
-serve(async (req) => {
+serve(monitored("appointments", async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -627,4 +628,4 @@ serve(async (req) => {
       }
     );
   }
-});
+}));

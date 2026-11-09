@@ -1,6 +1,7 @@
 /**
  * Política de segurança de conteúdo (CSP) do app publicado. O navegador só
- * executa scripts do próprio app e só conversa com o Supabase e o Firebase:
+ * executa scripts do próprio app e só conversa com o Supabase, o Firebase e
+ * o coletor de erros do Grafana Cloud:
  * se alguém conseguir injetar HTML (XSS), o script injetado não roda e não
  * consegue mandar o login da pessoa para fora.
  *
@@ -17,7 +18,7 @@ export const CONTENT_SECURITY_POLICY = [
   "font-src 'self' data:",
   "img-src 'self' data: blob: https:",
   "media-src 'self' data: blob: https:",
-  "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://*.googleapis.com",
+  "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://*.googleapis.com https://*.grafana.net",
   "frame-src 'self' blob: https://*.supabase.co",
   "worker-src 'self'",
   "manifest-src 'self'",

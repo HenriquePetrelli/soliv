@@ -2,6 +2,7 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { adminMfaSatisfied } from "../_shared/adminMfa.ts";
 import { errorMessage } from '../_shared/errors.ts';
+import { monitored } from "../_shared/monitoring.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -19,7 +20,7 @@ const json = (body: unknown, status = 200) =>
     headers: { "Content-Type": "application/json", ...corsHeaders },
   });
 
-serve(async (req: Request): Promise<Response> => {
+serve(monitored("admin-update-psychologist", async (req: Request): Promise<Response> => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
@@ -190,4 +191,4 @@ serve(async (req: Request): Promise<Response> => {
     console.error("admin-update-psychologist error:", error);
     return json({ error: errorMessage(error) || "Erro interno do servidor" }, 500);
   }
-});
+}));

@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.52.1";
+import { monitored } from "../_shared/monitoring.ts";
 
 const getCorsHeaders = (origin: string | null) => {
   // Check if origin is from Lovable domains or localhost
@@ -18,7 +19,7 @@ const getCorsHeaders = (origin: string | null) => {
   };
 };
 
-serve(async (req) => {
+serve(monitored("emergency-cleanup", async (req) => {
   const origin = req.headers.get('origin');
   const corsHeaders = getCorsHeaders(origin);
   
@@ -145,4 +146,4 @@ serve(async (req) => {
       }
     );
   }
-});
+}));

@@ -15,6 +15,7 @@
 // anônima do app é pública e passaria pelo verify_jwt, e o tráfego do TURN é pago.
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.52.1";
+import { monitored } from "../_shared/monitoring.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -77,7 +78,7 @@ const inRecentCall = async (req: Request): Promise<boolean> => {
   return (rooms ?? []).length > 0;
 };
 
-Deno.serve(async (req: Request): Promise<Response> => {
+Deno.serve(monitored("ice-servers", async (req: Request): Promise<Response> => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   let turn: IceServer[] | null = null;
@@ -94,4 +95,4 @@ Deno.serve(async (req: Request): Promise<Response> => {
     JSON.stringify({ iceServers: [...STUN, ...(turn ?? [])], turn: Boolean(turn), ttl: TTL_SECONDS }),
     { headers: { ...corsHeaders, "Content-Type": "application/json", "Cache-Control": "no-store" } },
   );
-});
+}));

@@ -6,6 +6,7 @@
 // src/hooks/useAvailableTimeSlots.ts. Este arquivo ficou órfão e o POST
 // abaixo nunca persistiu nada de verdade; mantido apenas por histórico.
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { monitored } from "../_shared/monitoring.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -18,7 +19,7 @@ interface AvailabilitySlot {
   is_available: boolean;
 }
 
-Deno.serve(async (req) => {
+Deno.serve(monitored("psychologist-availability", async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -148,4 +149,4 @@ Deno.serve(async (req) => {
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
-});
+}));
