@@ -141,7 +141,7 @@ Hoje a assinatura é vendida pelo checkout do Stripe, inclusive dentro do app in
 - **Apple no Brasil (acordo com o CADE, em vigor desde junho de 2026):** o app pode oferecer pagamento alternativo ou link para o site, sempre ao lado da compra pela Apple, com comissão menor que a padrão.
 - **Google Play:** bens físicos e serviços prestados fora do app não precisam do faturamento do Play; conteúdo digital precisa. No Brasil também há regras de pagamento alternativo em andamento.
 
-Os planos do Soliv misturam consulta e SOS com psicólogo (pessoa a pessoa, ao vivo) com recursos do app (diário, respiração, grupos, conteúdos). A decisão sobre o modelo de cobrança nos apps está registrada em `docs/pendencias-antes-do-lancamento.md`.
+Os planos do Soliv misturam consulta e SOS com psicólogo (pessoa a pessoa, ao vivo) com recursos do app (diário, respiração, grupos, conteúdos). **Decisão (2026-11-09):** nos apps a assinatura não é vendida nem trocada; quem assina pelo site usa o plano no app e pode cancelar por lá. O avulso (SOS ou consulta) continua à venda no app. Detalhes na pendência 26 de `docs/pendencias-antes-do-lancamento.md`. **Nas notas para o revisor:** "Os planos incluem principalmente atendimento ao vivo com psicólogos (consultas e SOS, pessoa a pessoa); o app não vende assinatura."
 
 ---
 

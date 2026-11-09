@@ -60,7 +60,8 @@ O que precisa ser resolvido antes de o app ficar pronto. Ao resolver um item, mo
 ### 26. Pagamento dentro dos apps das lojas
 
 - **Situação:** a assinatura é vendida pelo checkout do Stripe também dentro do app instalado. Apple e Google exigem o sistema de pagamento deles para bens e serviços digitais. A exceção da Apple (diretriz 3.1.3(d)) cobre serviço ao vivo entre duas pessoas, como consulta; grupos e recursos do app não entram. No Brasil, desde junho de 2026 (acordo com o CADE), a Apple aceita pagamento alternativo ou link para o site ao lado da compra pela Apple, com comissão menor.
-- **Decidir (com o advogado):** o modelo de cobrança nos apps (opções em `docs/publicacao-lojas.md`, seção 3).
+- **Decidido em 2026-11-09 (opção A):** nos apps Android e iOS a assinatura não é vendida nem trocada (`src/lib/storePolicy.ts`). A tela de planos mostra o que cada plano inclui, sem preço e sem botão de pagar, com o aviso "A contratação e a troca de planos não estão disponíveis neste app"; quem já assina (pelo site) usa normalmente e pode cancelar. Nenhum texto do app aponta para comprar fora (regra das lojas). O site continua vendendo como antes. O atendimento avulso (SOS ou consulta com psicólogo) segue à venda no app, pela exceção de serviço ao vivo entre duas pessoas (Apple 3.1.3(d)).
+- **Falta:** confirmar com o advogado a venda do avulso dentro do app. Risco que sobra: a Apple pode questionar um app de assinatura que libera recursos comprados fora (regra 3.1.3(b)); a resposta na revisão é que o plano é principalmente atendimento com psicólogo. Se as vendas pelo app fizerem falta, evoluir para a compra pela loja (opção B).
 - **Registrado em:** 2026-11-09.
 
 ## Importantes

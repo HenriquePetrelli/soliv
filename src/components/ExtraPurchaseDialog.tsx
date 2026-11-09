@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { canSellSubscriptionsHere } from '@/lib/storePolicy';
 import { useNavigate } from 'react-router-dom';
 import { CreditCard, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -114,7 +115,7 @@ const ExtraPurchaseDialog = ({ kind, open, onOpenChange, reason, onPurchased }: 
             }}
           >
             <Sparkles className="mr-2 h-4 w-4" />
-            {paid ? 'Ver planos' : 'Assinar um plano'}
+            {paid || !canSellSubscriptionsHere() ? 'Ver planos' : 'Assinar um plano'}
           </Button>
           <Button onClick={buy} disabled={buying}>
             <CreditCard className="mr-2 h-4 w-4" />
