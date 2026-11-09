@@ -1,6 +1,7 @@
 import {
   Building2,
   CreditCard,
+  Fingerprint,
   History,
   LayoutDashboard,
   MessageSquare,
@@ -21,6 +22,7 @@ export type AdminSection =
   | 'chat'
   | 'groups'
   | 'audit'
+  | 'access_logs'
   | 'payments'
   | 'profile';
 
@@ -55,6 +57,7 @@ export const ADMIN_NAV_GROUPS: { title: string; items: AdminNavItem[] }[] = [
     items: [
       { value: 'groups', label: 'Grupos de apoio', icon: MessageSquareWarning, description: 'Depoimentos denunciados e moderação' },
       { value: 'audit', label: 'Auditoria', icon: History, description: 'Registro das ações feitas no painel' },
+      { value: 'access_logs', label: 'Registros de acesso', icon: Fingerprint, description: 'Data, hora e IP de cada acesso, guardados por 7 meses (Marco Civil)' },
     ],
   },
   { title: 'Financeiro', items: [{ value: 'payments', label: 'Repasses', icon: CreditCard, description: 'Valores a pagar aos psicólogos e comprovantes' }] },

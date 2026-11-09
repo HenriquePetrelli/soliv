@@ -14,6 +14,36 @@ export type Database = {
   }
   public: {
     Tables: {
+      access_logs: {
+        Row: {
+          created_at: string
+          email: string | null
+          event: string
+          id: number
+          ip_address: unknown
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          email?: string | null
+          event: string
+          id?: never
+          ip_address?: unknown
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          email?: string | null
+          event?: string
+          id?: never
+          ip_address?: unknown
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       admin_audit_log: {
         Row: {
           action: string
@@ -2787,6 +2817,48 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_export_access_logs: {
+        Args: {
+          p_event?: string
+          p_from?: string
+          p_reason: string
+          p_search?: string
+          p_to?: string
+        }
+        Returns: {
+          created_at: string
+          email: string
+          event: string
+          id: number
+          ip_address: string
+          user_agent: string
+          user_id: string
+          user_name: string
+        }[]
+      }
+      admin_get_access_logs: {
+        Args: {
+          p_event?: string
+          p_from?: string
+          p_limit?: number
+          p_offset?: number
+          p_search?: string
+          p_to?: string
+        }
+        Returns: {
+          created_at: string
+          email: string
+          event: string
+          id: number
+          ip_address: string
+          user_agent: string
+          user_id: string
+          user_name: string
+          total_count: number
+        }[]
+      }
+      purge_access_logs: { Args: never; Returns: number }
+      register_access: { Args: never; Returns: boolean }
       abrir_conversa: { Args: { p_psicologo_id: string }; Returns: string }
       accept_safety_plan_suggestion: {
         Args: {

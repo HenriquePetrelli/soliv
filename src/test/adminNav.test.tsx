@@ -17,7 +17,7 @@ describe('menu do admin', () => {
   });
 
   it('cada seção tem um grupo, e só seções válidas são aceitas na URL', () => {
-    expect(ADMIN_NAV_ITEMS).toHaveLength(10);
+    expect(ADMIN_NAV_ITEMS).toHaveLength(11);
     expect(ADMIN_NAV_ITEMS.every((item) => adminNavGroupOf(item.value) !== '')).toBe(true);
     expect(isAdminSection('payments')).toBe(true);
     expect(isAdminSection('qualquer')).toBe(false);

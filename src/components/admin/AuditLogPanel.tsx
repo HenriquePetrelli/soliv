@@ -2,7 +2,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { History, Ban, Unlock, Pencil, Trash2, CheckCircle2, XCircle, CreditCard, Plus } from 'lucide-react';
+import { History, Ban, Eye, Download, Unlock, Pencil, Trash2, CheckCircle2, XCircle, CreditCard, Plus } from 'lucide-react';
 import { EmptyState } from '@/components/EmptyState';
 import { SkeletonTable } from '@/components/skeletons/Skeletons';
 import { ContentTransition } from '@/components/skeletons/ContentTransition';
@@ -29,6 +29,8 @@ const ACTION_LABELS: Record<string, string> = {
   insert_organization_member: 'Vinculou à empresa',
   update_organization_member: 'Alterou vínculo com empresa',
   delete_organization_member: 'Removeu vínculo com empresa',
+  view_access_logs: 'Consultou registros de acesso',
+  export_access_logs: 'Exportou registros de acesso',
 };
 
 const ACTION_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
@@ -52,6 +54,8 @@ const ACTION_ICONS: Record<string, React.ComponentType<{ className?: string }>> 
   insert_organization_member: Plus,
   update_organization_member: Pencil,
   delete_organization_member: Trash2,
+  view_access_logs: Eye,
+  export_access_logs: Download,
 };
 
 const ACTION_BADGE_CLASS: Record<string, string> = {
@@ -69,6 +73,7 @@ const ACTION_BADGE_CLASS: Record<string, string> = {
   delete_group_testimonial: 'bg-destructive/10 text-destructive border-destructive/20',
   delete_organization: 'bg-destructive/10 text-destructive border-destructive/20',
   delete_organization_member: 'bg-destructive/10 text-destructive border-destructive/20',
+  export_access_logs: 'bg-warning/10 text-warning border-warning/20',
 };
 
 const formatDate = (value: string) =>
@@ -87,6 +92,14 @@ const formatDetails = (entry: AuditLogEntry): string => {
   if (typeof d.amount === 'number') parts.push(`valor: ${d.amount.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}`);
   if (d.pix_e2e_id) parts.push(`E2E: ${d.pix_e2e_id}`);
   if (d.texto === 'editado') parts.push('texto editado');
+  if (entry.target_type === 'access_log') {
+    if (typeof d.row_count === 'number') parts.push(`${d.row_count} registro(s)`);
+    if (typeof d.event === 'string') parts.push(`evento: ${d.event === 'login' ? 'login' : 'uso do app'}`);
+    const day = (v: unknown) => new Date(String(v)).toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' });
+    if (d.from) parts.push(`de ${day(d.from)}`);
+    // "to" é o início do dia seguinte ao escolhido.
+    if (d.to) parts.push(`até ${day(new Date(new Date(String(d.to)).getTime() - 1).toISOString())}`);
+  }
   // Mudanças registradas pelo banco: { campo: { de, para } }.
   for (const [key, value] of Object.entries(d)) {
     if (value && typeof value === 'object' && 'de' in (value as object) && 'para' in (value as object)) {

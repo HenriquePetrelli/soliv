@@ -41,7 +41,8 @@ Quase tudo o que o paciente registra é **dado pessoal sensível referente à sa
 | Chave PIX, repasses, comprovantes | `psychologist_payments`, `payment_logs`, `payout_items`, bucket `payment-receipts` (privado) | psicólogo | pagamento do psicólogo | **5 anos** (obrigação fiscal). Ao excluir o psicólogo, vão para `archived_psychologist_payouts` (nome, CPF, CRP, Pix, valores, sem ligação com a conta, só o admin lê) e a rotina `purge-archived-payouts` apaga após 5 anos |
 | Tokens de push | `fcm_tokens` | todos | notificações | desativado no logout; apagado ao excluir a conta |
 | Avisos do app (sino) e registro de envio | `notifications`, `notification_logs` | todos | avisar de consultas, mensagens, SOS e conquistas; o push na tela bloqueada usa texto discreto (sem nome do psicólogo nem menção ao SOS) | lidos: 90 dias; qualquer aviso: 180 dias; registro de envio: 30 dias (sem o token do aparelho) |
-| Logs de segurança e auditoria | `security_audit_log`, `admin_audit_log`, `rate_limits` | todos | segurança, prestação de contas | registros de acesso: **mínimo de 6 meses** (Marco Civil, art. 15); demais: **[DECIDIR com o advogado]** |
+| Registros de acesso (data, hora, IP, navegador, e-mail e ID da conta) | `access_logs` | todos | cumprimento de obrigação legal (Marco Civil, art. 15; LGPD art. 7º, II e art. 16, I) | **7 meses** (6 da lei + 1 de folga), mesmo após a exclusão da conta; a rotina `purge-access-logs` apaga o que passar disso. Só o admin consulta e exporta (com MFA), e cada consulta e exportação fica em `admin_audit_log` com o motivo |
+| Logs de segurança e auditoria | `security_audit_log`, `admin_audit_log`, `rate_limits` | todos | segurança, prestação de contas | **[DECIDIR com o advogado]** |
 
 ## Compartilhamento (operadores)
 
