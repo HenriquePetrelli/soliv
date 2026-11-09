@@ -13,6 +13,7 @@ import RouteSkeleton from "@/components/skeletons/RouteSkeleton";
 import PendingFeedbackGate from "@/components/sos/PendingFeedbackGate";
 import AppErrorBoundary from "@/components/AppErrorBoundary";
 import DeferredMount from "@/components/DeferredMount";
+import BlockedAccountNoticeHost from "@/components/BlockedAccountNoticeHost";
 
 // Persistent layout: MainLayout stays mounted across nested routes,
 // so sidebar/bottom nav never re-render when switching between them.
@@ -474,6 +475,7 @@ const App = () => {
                   </Routes>
                   </Suspense>
                   <PendingFeedbackGate />
+                  <BlockedAccountNoticeHost />
                   <DeferredMount>
                     <Suspense fallback={null}>
                       <PushBridge />

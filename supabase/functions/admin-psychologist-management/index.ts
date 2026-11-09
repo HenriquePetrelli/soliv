@@ -1,7 +1,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { Resend } from "https://esm.sh/resend@2.0.0";
-import { adminMfaOk } from "../_shared/adminMfa.ts";
+import { adminMfaSatisfied } from "../_shared/adminMfa.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -167,7 +167,7 @@ const checkAdminPermission = async (req: Request): Promise<{ authorized: boolean
       .rpc('is_super_admin', { user_id_param: user.id });
 
     // Também exige a verificação em duas etapas (token aal2).
-    if (adminError || !isAdmin || !adminMfaOk(authHeader)) {
+    if (adminError || !isAdmin || !(await adminMfaSatisfied(authHeader))) {
       return { authorized: false };
     }
 

@@ -1,18 +1,20 @@
 import { useEffect, useRef } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 import { clearLoginState, fetchLoginState } from '@/lib/loginState';
 import { isCurrentlyBlocked, notifyBlockedAccess, type BlockInfo } from '@/utils/psychologistBlock';
 
-/** Intervalo mínimo entre duas conferências (ao voltar para o app ou a cada 5 min). */
-const CHECK_EVERY_MS = 5 * 60 * 1000;
-const MIN_GAP_MS = 60 * 1000;
+/** Conferência a cada 2 min (o aviso do servidor cobre o momento do bloqueio) e, no mínimo, 30 s entre duas ao voltar para o app. */
+const CHECK_EVERY_MS = 2 * 60 * 1000;
+const MIN_GAP_MS = 30 * 1000;
 
 /**
  * Bloqueio feito pelo admin vale também para quem já está com o app aberto.
  * Antes só a tela de login conferia: quem estava logado continuava usando o
- * app normalmente. Confere ao abrir, ao voltar para o app e a cada 5 minutos;
- * bloqueado, mostra o motivo e sai da conta. (O servidor também suspende o
- * login da conta pelo mesmo período.)
+ * app normalmente. Confere ao abrir, ao voltar para o app, a cada 2 minutos e na
+ * hora em que o admin bloqueia (aviso pelo canal account-status:<id>, enviado
+ * pela edge function de bloqueio); bloqueado, mostra o motivo e o tempo e sai
+ * da conta. (O servidor também suspende o login e encerra as sessões.)
  */
 const AccountStatusWatcher = () => {
   const { user, userType, signOut } = useAuth();
@@ -53,7 +55,21 @@ const AccountStatusWatcher = () => {
     const onWake = () => void check();
     window.addEventListener('focus', onWake);
     document.addEventListener('visibilitychange', onWake);
+    // O aviso do servidor só pede uma conferência: quem decide é o banco.
+    let channel: ReturnType<typeof supabase.channel> | null = null;
+    try {
+      channel = supabase
+        .channel(`account-status:${userId}`)
+        .on('broadcast', { event: 'check' }, () => {
+          lastCheckRef.current = 0;
+          void check(true);
+        })
+        .subscribe();
+    } catch {
+      /* sem tempo real: as conferências periódicas continuam */
+    }
     return () => {
+      if (channel) void supabase.removeChannel(channel);
       window.clearInterval(timer);
       window.removeEventListener('focus', onWake);
       document.removeEventListener('visibilitychange', onWake);

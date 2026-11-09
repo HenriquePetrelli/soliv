@@ -2801,6 +2801,10 @@ export type Database = {
         }
         Returns: string
       }
+      account_block_status: {
+        Args: { p_email: string; p_password: string }
+        Returns: Json
+      }
       add_patient_activity: {
         Args: {
           p_activity_date?: string
@@ -2831,6 +2835,11 @@ export type Database = {
           p_activity_name: string
           p_patient_id: string
         }
+        Returns: undefined
+      }
+      admin_mfa_required: { Args: never; Returns: boolean }
+      admin_revoke_user_sessions: {
+        Args: { p_user_id: string }
         Returns: undefined
       }
       admin_add_organization_manager: {

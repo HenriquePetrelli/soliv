@@ -190,3 +190,7 @@ verify_jwt = false
 
 [functions.send-appointment-notification]
 verify_jwt = false
+
+# Tela de login de conta bloqueada (ainda sem sessão): confere a senha por conta própria.
+[functions.account-block-status]
+verify_jwt = false

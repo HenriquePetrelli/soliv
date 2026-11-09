@@ -23,3 +23,28 @@ export const tokenAal = (authHeader: string | null | undefined): string | null =
 
 /** True se o admin confirmou o código de verificação nesta sessão. */
 export const adminMfaOk = (authHeader: string | null | undefined): boolean => tokenAal(authHeader) === "aal2";
+
+/**
+ * Pode seguir com a ação de admin: token com o código (aal2) ou app em teste,
+ * onde o código só é pedido em produção (public.admin_mfa_required, tabela
+ * app_settings). Na dúvida (erro ao ler o ambiente), exige o código.
+ */
+export const adminMfaSatisfied = async (authHeader: string | null | undefined): Promise<boolean> => {
+  if (adminMfaOk(authHeader)) return true;
+  try {
+    // Lido de globalThis: este arquivo também roda nos testes do app (sem Deno).
+    const env = (globalThis as { Deno?: { env: { get(name: string): string | undefined } } }).Deno?.env;
+    const url = env?.get("SUPABASE_URL");
+    const key = env?.get("SUPABASE_SERVICE_ROLE_KEY");
+    if (!url || !key) return false;
+    const res = await fetch(`${url}/rest/v1/rpc/admin_mfa_required`, {
+      method: "POST",
+      headers: { apikey: key, Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
+      body: "{}",
+    });
+    if (!res.ok) return false;
+    return (await res.json()) === false;
+  } catch {
+    return false;
+  }
+};

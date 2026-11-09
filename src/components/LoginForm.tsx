@@ -9,6 +9,19 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { isCurrentlyBlocked, notifyBlockedAccess } from "@/utils/psychologistBlock";
 import { fetchLoginState } from '@/lib/loginState';
+import type { BlockInfo } from "@/utils/psychologistBlock";
+
+/** Motivo e prazo do bloqueio de quem não consegue entrar (confere a senha no servidor). */
+const fetchBlockForLogin = async (email: string, password: string): Promise<BlockInfo | null> => {
+  try {
+    const { data, error } = await supabase.functions.invoke('account-block-status', { body: { email, password } });
+    if (error) return null;
+    const block = (data as { block?: BlockInfo | null } | null)?.block;
+    return block?.is_blocked ? block : null;
+  } catch {
+    return null;
+  }
+};
 
 
 interface LoginFormProps {
@@ -41,15 +54,22 @@ const LoginForm = ({ onForgotPassword, onSignUp }: LoginFormProps) => {
 
       // Autenticação com Supabase (e-mail sem espaços e em minúsculas: colado
       // ou com o teclado do celular pondo maiúscula, o login falhava).
+      const normalizedEmail = email.trim().toLowerCase();
       const { data, error } = await supabase.auth.signInWithPassword({
-        email: email.trim().toLowerCase(),
+        email: normalizedEmail,
         password,
       });
 
       if (error) {
-        if (/banned/i.test(error.message)) {
-          // Conta bloqueada pelo admin (o bloqueio também vale no login do Supabase).
-          toast.error("Sua conta está bloqueada no momento. Se achar que é um engano, fale com o suporte.");
+        if (/banned/i.test(error.message) || (error as { code?: string }).code === 'user_banned') {
+          // Conta bloqueada pelo admin (o bloqueio também vale no login do
+          // Supabase): busca o motivo e até quando, para mostrar no aviso.
+          const block = await fetchBlockForLogin(normalizedEmail, password);
+          if (block) {
+            await notifyBlockedAccess(block);
+          } else {
+            toast.error("Sua conta está bloqueada no momento. Se achar que é um engano, fale com o suporte.");
+          }
         } else if (error.message.includes("Invalid login credentials")) {
           toast.error("Email ou senha incorretos");
         } else if (error.message.includes("Email not confirmed")) {
@@ -73,8 +93,9 @@ const LoginForm = ({ onForgotPassword, onSignUp }: LoginFormProps) => {
       // Admin não tem linha em `profiles` (fica em admin_users): resolve antes.
       // Só pelo banco: user_metadata é editável pelo próprio usuário.
       if (state.is_admin) {
-        // Depois da senha, o código da verificação em duas etapas.
-        navigate('/admin/verificacao');
+        // Depois da senha, o código da verificação em duas etapas (só em
+        // produção: no app em teste, o banco já libera o admin com a senha).
+        navigate(state.admin_verified ? '/admin-dashboard' : '/admin/verificacao');
         setEmail("");
         setPassword("");
         return;

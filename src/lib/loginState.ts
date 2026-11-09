@@ -10,6 +10,7 @@ export interface BlockInfo {
   is_blocked: boolean | null;
   blocked_until: string | null;
   blocked_reason: string | null;
+  blocked_at?: string | null;
 }
 
 export interface LoginState {
@@ -17,6 +18,8 @@ export interface LoginState {
   is_admin: boolean;
   /** Admin que já passou pela verificação em duas etapas nesta sessão. */
   admin_verified?: boolean;
+  /** Código de verificação exigido do admin (só em produção). */
+  admin_mfa_required?: boolean;
   profile: { user_type: string | null; full_name: string | null } | null;
   patient: BlockInfo | null;
   psychologist: (BlockInfo & { approved: boolean | null; approval_status: string | null }) | null;
