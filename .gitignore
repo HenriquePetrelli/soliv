@@ -36,3 +36,11 @@ dist-ssr
 
 # Cache da CLI do Supabase
 supabase/.temp/
+
+# Chaves de assinatura dos apps (Android e iOS): nunca no repositório
+*.jks
+*.keystore
+*.p8
+*.p12
+*.mobileprovision
+keystore.properties

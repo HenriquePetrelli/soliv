@@ -1,0 +1,103 @@
+name: Android (AAB)
+
+# Gera o AAB do Play Store.
+# - Mudança em android/ na main: build de conferência (sem assinatura se os
+#   secrets ainda não existirem).
+# - "Run workflow" na aba Actions ou tag v*: build assinado para enviar ao Play.
+# Secrets: ANDROID_KEYSTORE_BASE64, ANDROID_KEYSTORE_PASSWORD, ANDROID_KEY_ALIAS,
+# ANDROID_KEY_PASSWORD (passo a passo em docs/publicacao-lojas.md).
+on:
+  workflow_dispatch:
+    inputs:
+      version_name:
+        description: "Versão mostrada na loja (ex.: 1.0.0)"
+        required: false
+        default: "1.0.0"
+  push:
+    tags: ["v*"]
+    branches: [main]
+    paths:
+      - "android/**"
+      - "capacitor.config.ts"
+      - "package.json"
+      - ".github/workflows/android-release.yml"
+
+concurrency:
+  group: android-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  bundle:
+    name: Gerar AAB
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      # Cada execução tem um número novo: o Play nunca recebe versionCode repetido.
+      SOLIV_VERSION_CODE: ${{ github.run_number }}
+      VITE_FIREBASE_API_KEY: ${{ vars.VITE_FIREBASE_API_KEY }}
+      VITE_FIREBASE_AUTH_DOMAIN: ${{ vars.VITE_FIREBASE_AUTH_DOMAIN }}
+      VITE_FIREBASE_PROJECT_ID: ${{ vars.VITE_FIREBASE_PROJECT_ID }}
+      VITE_FIREBASE_STORAGE_BUCKET: ${{ vars.VITE_FIREBASE_STORAGE_BUCKET }}
+      VITE_FIREBASE_MESSAGING_SENDER_ID: ${{ vars.VITE_FIREBASE_MESSAGING_SENDER_ID }}
+      VITE_FIREBASE_APP_ID: ${{ vars.VITE_FIREBASE_APP_ID }}
+      VITE_FIREBASE_VAPID_KEY: ${{ vars.VITE_FIREBASE_VAPID_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+      - name: Versão
+        env:
+          INPUT_VERSION: ${{ github.event.inputs.version_name }}
+        run: |
+          if [ -n "$INPUT_VERSION" ]; then V="$INPUT_VERSION";
+          elif [[ "$GITHUB_REF" == refs/tags/v* ]]; then V="${GITHUB_REF_NAME#v}";
+          else V="1.0.0"; fi
+          echo "SOLIV_VERSION_NAME=$V" >> "$GITHUB_ENV"
+          echo "Versão $V (versionCode $SOLIV_VERSION_CODE)"
+      - run: npm ci --no-audit --no-fund
+      - name: Build do app web
+        run: npm run build
+      - name: Copiar o build para o Android
+        run: npx cap sync android
+
+      - name: Preparar a chave de assinatura
+        env:
+          KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+        run: |
+          if [ -z "$KEYSTORE_BASE64" ]; then
+            echo "::warning::Secrets da chave não configurados: o AAB sai SEM assinatura (não serve para o Play)."
+            exit 0
+          fi
+          echo "$KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/upload.jks"
+          echo "SOLIV_KEYSTORE_FILE=$RUNNER_TEMP/upload.jks" >> "$GITHUB_ENV"
+
+      - name: Gerar o AAB
+        working-directory: android
+        env:
+          SOLIV_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          SOLIV_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          SOLIV_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: ./gradlew --no-daemon bundleRelease
+
+      - name: Conferir a assinatura
+        run: |
+          AAB=android/app/build/outputs/bundle/release/app-release.aab
+          if [ -n "${SOLIV_KEYSTORE_FILE:-}" ]; then
+            jarsigner -verify "$AAB" | tee /tmp/verify.txt
+            grep -q "jar verified" /tmp/verify.txt
+          else
+            echo "AAB sem assinatura (build de conferência)."
+          fi
+          rm -f "$RUNNER_TEMP/upload.jks"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: soliv-android-${{ env.SOLIV_VERSION_NAME }}-${{ env.SOLIV_VERSION_CODE }}
+          path: android/app/build/outputs/bundle/release/app-release.aab
+          retention-days: 30
