@@ -76,24 +76,25 @@ O que precisa ser resolvido antes de o app ficar pronto. Ao resolver um item, mo
 - **O que fazer:** revisão por um advogado de proteção de dados antes do lançamento; depois, pedir ao Claude para atualizar os textos e a versão dos documentos (o app pede o aceite de novo quando a versão muda).
 - **Registrado em:** 2026-10-13 (estava só na ficha 18).
 
-### 19. Teste de ponta a ponta dos planos novos
-
-- **Situação:** banco, edge functions, produtos do Stripe (modo de teste) e secrets foram publicados e conferidos em 2026-11-07, mas nenhuma assinatura foi feita pelo app depois da mudança.
-- **O que fazer** (modo de teste, cartão `4242 4242 4242 4242`, qualquer data futura e CVC):
-  1. Assinar o **Flex** → o checkout mostra R$ 120,00 e o Perfil mostra "Plano Flex".
-  2. No Flex, usar o SOS → Consultas → Agendar fica bloqueado ("Atendimento do mês já usado"). Em outra conta Flex, agendar uma consulta → o SOS fica indisponível.
-  3. Subir para o **Completo** → aparece a prévia da diferença proporcional → SOS e consulta liberados no mesmo mês.
-  4. Conta sem plano: diário só leitura, 4º hábito recusado, 2º plano de segurança recusado, chat sem envio, grupos sem publicar.
-  5. Admin → Repasses → Sincronizar depois de um SOS e uma consulta → R$ 125,00 pendentes.
-- **Roteiro completo:** `docs/roteiro-de-testes.md` (seções s03, s06 e s07; Flex, Plano Grátis e avulsos em `s06-21` a `s06-40`, conferências no Stripe em `s06-41` a `s06-44`).
-- **Observação para deploys:** desde 2026-11-08 o `supabase/config.toml` é aceito pela CLI (v3) e lista o `verify_jwt` de **todas** as 45 funções igual ao Supabase (14 que faltavam foram incluídas; chaves antigas trocadas e `[inbucket]` virou `[local_smtp]`). Mesmo assim, depois de publicar pela CLI, conferir em Edge Functions que nenhuma mudou (teste `s19-08`). O histórico de migrations do Supabase também não bate com os nomes dos arquivos (o Lovable registra com outros números): não usar `supabase db push`; aplicar só a migration nova.
-- **Registrado em:** 2026-11-07.
-
 ## Menores
 
 Nenhuma no momento.
 
 ## Resolvidas
+
+### 19. Teste de ponta a ponta dos planos novos (registrada em 2026-11-07, feito em 2026-11-09)
+
+- **Resultado: 51 checagens, 50 passaram;** a outra era critério errado do teste (o SOS recusado no Flex volta com 200 e `SOS_NOT_ALLOWED`, que o app trata como "SOS indisponível"; conferido no banco que nenhum pedido foi criado). Modo de teste do Stripe, cartão 4242, chamando as mesmas edge functions e regras do banco que o app, com o login de cada conta.
+  1. **Assinar o Flex:** o checkout que o app abre sai em R$ 120,00/mês; com o pagamento, o webhook grava "Flex" e o Perfil mostra o plano (2 contas).
+  2. **Flex divide o atendimento:** depois do SOS, Agendar fica bloqueado e o servidor recusa a consulta ("Limite mensal de atendimento já utilizado em um SOS"); na outra conta, com consulta pedida, o SOS fica indisponível; com a consulta recusada pela psicóloga, a cota volta e o SOS é liberado de novo.
+  3. **Subir para o Completo:** prévia de R$ 39,89 (diferença proporcional), troca na hora; quem usou o SOS pode agendar e quem pediu consulta pode usar o SOS no mesmo mês.
+  4. **Plano Grátis:** diário só leitura, 3 hábitos e o 4º recusado, 1 plano de segurança e o 2º recusado, chat só leitura, grupos sem publicar nem reagir (11 de 11, com as mensagens certas).
+  5. **Repasse:** SOS e consulta com chamada real de mais de 5 min com os dois conectados (311 s e 338 s); concluir a consulta com 1 min foi recusado; sincronizar deu **R$ 125,00** pendentes (R$ 85 + R$ 40) e sincronizar de novo não duplicou.
+  - **Telas** (app rodando localmente, mesmo Supabase): Perfil com "Plano Grátis" e "Plano Completo", SOS sem plano com "Comprar um SOS avulso (R$ 79,90)", Planos com "Plano Atual: Completo — Renova em 09/12/2026".
+- **O que foi simulado, e por quê:** a página de pagamento do Stripe não abre na sessão do Claude, então o pagamento foi feito pela API do Stripe com o mesmo cliente, preço e dados do checkout aberto pelo app; a consulta (marcada para o dia seguinte) foi trazida para a hora do teste; os dois atendimentos foram movidos para a semana anterior antes de sincronizar, porque o repasse só fecha semanas encerradas; a sincronização rodou direto no banco (o botão do admin pede a verificação em 2 etapas); a psicóloga de teste foi aprovada direto no banco.
+- **Falta testar pelo celular/navegador de verdade:** a página de pagamento do Stripe (cartão, 3-D Secure, volta ao app) e o vídeo das chamadas (o teste mediu a conexão pelos avisos de mídia que o app manda, sem câmera). Itens do roteiro: `s06-21` a `s06-24` e `s03-42`.
+- **Contas de teste** (senha passada na conversa de 2026-11-09; começam com `e2emw8j6r5f.` e terminam com `@example.com`): `flex1` e `flex2` (hoje no Completo, com assinatura de teste ativa no Stripe), `gratis` e `psico` (psicóloga aprovada, com R$ 125,00 de repasse pendente de teste). Apagar antes do lançamento (ou pedir ao Claude), junto com as assinaturas de teste.
+- **Observação para deploys:** desde 2026-11-08 o `supabase/config.toml` é aceito pela CLI (v3) e lista o `verify_jwt` de **todas** as 45 funções igual ao Supabase (14 que faltavam foram incluídas; chaves antigas trocadas e `[inbucket]` virou `[local_smtp]`). Mesmo assim, depois de publicar pela CLI, conferir em Edge Functions que nenhuma mudou (teste `s19-08`). O histórico de migrations do Supabase também não bate com os nomes dos arquivos (o Lovable registra com outros números): não usar `supabase db push`; aplicar só a migration nova.
 
 ### 18. Avisar os psicólogos do novo valor do repasse (registrada em 2026-11-07, encerrada em 2026-11-09)
 
