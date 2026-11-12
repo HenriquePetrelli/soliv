@@ -22,7 +22,7 @@ if (isUntrustedFrame(currentFrameContext())) {
   // Código da tela deste endereço já começa a baixar, junto com a conferência
   // da conta (antes esperava a conferência terminar).
   preloadRoute(window.location.pathname)
-  // Erros do app no Grafana Cloud (desligado sem VITE_FARO_URL).
+  // Erros do app no Grafana Cloud (só no build publicado).
   void startMonitoring(import.meta.env)
   createRoot(document.getElementById("root")!).render(<App />);
 }

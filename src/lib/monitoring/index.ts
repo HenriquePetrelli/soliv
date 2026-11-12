@@ -3,13 +3,22 @@ import type { Faro } from '@grafana/faro-web-sdk';
 /**
  * Monitoramento de erros do app (Grafana Cloud, Frontend Observability).
  *
- * Fica desligado enquanto VITE_FARO_URL estiver vazio, e só roda no build
- * publicado. O SDK é baixado à parte, depois que o app começa a carregar, para
+ * Só roda no build publicado (no `npm run dev` fica desligado). O SDK é
+ * baixado à parte, depois que o app começa a carregar, para
  * não pesar na primeira tela; erros que acontecerem antes disso ficam numa
  * fila e são enviados assim que ele chega.
  */
 
 type Pending = { error: unknown; context?: Record<string, string> };
+
+/**
+ * Coletor do app "Soliv" no Grafana Cloud (Frontend Observability, região
+ * sa-east-1). Não é segredo: fica visível no app, como as chaves do Firebase.
+ * Vai no código para valer também no build da Lovable, que não lê o .env;
+ * VITE_FARO_URL troca o endereço, e VITE_FARO_URL=off desliga.
+ */
+export const DEFAULT_FARO_URL =
+  'https://faro-collector-prod-sa-east-1.grafana.net/collect/38b1f1261815afe0b62bfd8743488208';
 
 let faro: Faro | null = null;
 const pending: Pending[] = [];
@@ -45,8 +54,14 @@ export function parseSampleRate(raw: string | undefined): number {
   return Math.min(1, Math.max(0, value));
 }
 
+export function collectorUrl(env: MonitoringEnv): string | null {
+  const configured = env.VITE_FARO_URL?.trim();
+  if (configured === 'off') return null;
+  return configured || DEFAULT_FARO_URL;
+}
+
 export function isMonitoringEnabled(env: MonitoringEnv): boolean {
-  return env.PROD && Boolean(env.VITE_FARO_URL?.trim());
+  return env.PROD && collectorUrl(env) !== null;
 }
 
 export async function startMonitoring(env: MonitoringEnv): Promise<boolean> {
@@ -59,7 +74,7 @@ export async function startMonitoring(env: MonitoringEnv): Promise<boolean> {
   try {
     const { startFaro } = await import('./faro');
     faro = startFaro({
-      url: env.VITE_FARO_URL!.trim(),
+      url: collectorUrl(env)!,
       environment: env.MODE,
       version: env.VITE_APP_VERSION || 'web',
       sampleRate: parseSampleRate(env.VITE_FARO_SAMPLE_RATE),

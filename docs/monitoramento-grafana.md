@@ -4,7 +4,7 @@ Como saber, sem depender de alguém reclamar, que o Soliv caiu ou está dando er
 
 | O que | Ferramenta do Grafana | Situação |
 |---|---|---|
-| Erros no app (site, Android e iOS) | Frontend Observability (SDK Faro) | **Pronto no código**, falta o endereço do coletor |
+| Erros no app (site, Android e iOS) | Frontend Observability (SDK Faro) | **Pronto e configurado** (app Soliv, São Paulo); liga na próxima publicação |
 | Erros nas edge functions | Loki (logs) | **Pronto no código**, faltam 3 secrets no Supabase |
 | O app está no ar? | Synthetic Monitoring | Função `health` **pronta**, falta criar as checagens |
 | Saúde do banco | Integração Supabase (Metrics API) | Só ligar no painel |
@@ -25,16 +25,15 @@ O que já está no código (`src/lib/monitoring/`):
 - antes de sair do aparelho apaga e-mail, telefone, CPF, ids, tokens e tudo depois de `?` e `#` nos endereços (o link de "redefinir senha" leva o token no `#`). Conferido no navegador: o erro chega como `teste para [email] id :id` e a página como `/reset-password`.
 
 Passo a passo:
-1. Grafana Cloud → **Frontend** (Observability → Frontend) → **Create new app**.
-2. Nome: `soliv`. Em **CORS allowed origins / Domains**, coloque:
+1. Grafana Cloud (sua stack, `….grafana.net`) → **Observability → Frontend** → **Create new**.
+2. Nome: `Soliv`. Em **CORS allowed origins / Domains**, coloque:
    - `https://calmconnect-auth-flow.lovable.app` (e o domínio próprio, quando houver)
    - `https://localhost` (app Android)
    - `capacitor://localhost` (app iOS)
-3. Copie o **endereço do coletor** (algo como `https://faro-collector-prod-XX.grafana.net/collect/abc123...`). Ele **não é segredo**: fica visível dentro do app, como as chaves do Firebase.
-4. Coloque o endereço em `VITE_FARO_URL`:
-   - **Site (Lovable):** mande o endereço para o Claude, que coloca no build.
-   - **Apps Android/iOS:** GitHub → Settings → Secrets and variables → Actions → aba **Variables** → `VITE_FARO_URL`. Os workflows já leem essa variável e marcam a versão como `android-N` / `ios-N`.
-5. Publique. Abra o app, force um erro (ou espere um real) e veja em Frontend → `soliv` → **Errors**.
+3. Escolha **Manual instrumentation** e **React**. **Não** cole o código que a tela mostra: o Soliv já tem o dele. O exemplo do Grafana liga o *tracing*, que acrescenta cabeçalhos em toda chamada ao Supabase (risco de quebrar o CORS) e manda as URLs com ids; também não limpa dados pessoais.
+4. **Feito em 2026-11-12:** app **Soliv** criado na região `sa-east-1` (São Paulo). O endereço do coletor está em `DEFAULT_FARO_URL` (`src/lib/monitoring/index.ts`) e vale para o site e para os apps Android/iOS sem configurar nada. Não é segredo: fica visível no app, como as chaves do Firebase.
+   - Para trocar de app/coletor: `VITE_FARO_URL=<novo endereço>` (no build ou na variável do GitHub). Para desligar: `VITE_FARO_URL=off`.
+5. Publique. Abra o app publicado, espere um erro real (ou force um) e veja em Observability → Frontend → **Soliv** → **Errors**. As versões aparecem como `web`, `android-N` e `ios-N`.
 
 O monitoramento só liga no build publicado; no `npm run dev` fica desligado.
 
@@ -87,7 +86,7 @@ Grafana → **Alerting → Contact points** → crie um com seu e-mail (e/ou Tel
 |---|---|---|
 | App fora do ar | a checagem *Site* ou *Backend + banco* falha por 2 execuções seguidas (as checagens já trazem um alerta pronto: "Synthetics → check → Alerting → sensibilidade *High*") | site, edge functions ou banco caíram |
 | Login fora do ar | a checagem *Login* falha por 10 min | ninguém consegue entrar |
-| Muitos erros no app | em Frontend → `soliv` → Errors: mais de 20 erros em 15 min | algo quebrou depois de uma publicação |
+| Muitos erros no app | em Frontend → `Soliv` → Errors: mais de 20 erros em 15 min | algo quebrou depois de uma publicação |
 | Erros nas edge functions | Loki: `sum(count_over_time({app="soliv", source="edge-function"}[10m])) > 5` | pagamento, SOS ou agendamento falhando |
 | Erro no SOS (crítico) | Loki: `sum(count_over_time({app="soliv", fn=~"emergency-sos\|psychologist-emergency\|initiate-webrtc"}[5m])) > 0` | qualquer falha no atendimento de crise avisa na hora |
 
@@ -109,4 +108,4 @@ Passar para o Pro só quando chegar perto das 50 mil sessões ou quando precisar
 
 ## 8. Privacidade (LGPD)
 
-O Grafana Labs entra como operador em `docs/lgpd/registro-de-tratamento.md` e na política de privacidade (seção 6). Itens para o advogado: região dos dados e transferência internacional (`docs/lgpd/LEIA-ME.md`, item 7). Para desligar tudo a qualquer momento: apagar `VITE_FARO_URL` e os 3 secrets `GRAFANA_LOKI_*`.
+O Grafana Labs entra como operador em `docs/lgpd/registro-de-tratamento.md` e na política de privacidade (seção 6). Itens para o advogado: região dos dados e transferência internacional (`docs/lgpd/LEIA-ME.md`, item 7). Para desligar tudo a qualquer momento: publicar com `VITE_FARO_URL=off` e apagar os 3 secrets `GRAFANA_LOKI_*`.

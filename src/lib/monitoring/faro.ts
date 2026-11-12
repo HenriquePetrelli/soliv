@@ -20,7 +20,7 @@ export function startFaro(settings: FaroSettings): Faro {
   return initializeFaro({
     url: settings.url,
     app: {
-      name: 'soliv',
+      name: 'Soliv',
       version: settings.version,
       environment: settings.environment,
     },

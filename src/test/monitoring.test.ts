@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import { scrubDeep, scrubText } from '@/lib/monitoring/scrub';
-import { isMonitoringEnabled, parseSampleRate, startMonitoring } from '@/lib/monitoring';
+import { collectorUrl, DEFAULT_FARO_URL, isMonitoringEnabled, parseSampleRate, startMonitoring } from '@/lib/monitoring';
 import { monitored, scrubText as scrubEdgeText } from '../../supabase/functions/_shared/monitoring';
 
 describe('limpeza do que vai para o Grafana (app)', () => {
@@ -34,10 +34,14 @@ describe('limpeza do que vai para o Grafana (app)', () => {
 });
 
 describe('ligar o monitoramento', () => {
-  it('só no build publicado e com o endereço do coletor', () => {
+  it('só no build publicado; usa o coletor do Soliv, outro endereço ou "off"', () => {
     expect(isMonitoringEnabled({ PROD: false, MODE: 'development', VITE_FARO_URL: 'https://c' })).toBe(false);
-    expect(isMonitoringEnabled({ PROD: true, MODE: 'production', VITE_FARO_URL: ' ' })).toBe(false);
-    expect(isMonitoringEnabled({ PROD: true, MODE: 'production', VITE_FARO_URL: 'https://c' })).toBe(true);
+    expect(isMonitoringEnabled({ PROD: true, MODE: 'production', VITE_FARO_URL: 'off' })).toBe(false);
+    expect(isMonitoringEnabled({ PROD: true, MODE: 'production' })).toBe(true);
+    expect(collectorUrl({ PROD: true, MODE: 'production' })).toBe(DEFAULT_FARO_URL);
+    expect(collectorUrl({ PROD: true, MODE: 'production', VITE_FARO_URL: ' ' })).toBe(DEFAULT_FARO_URL);
+    expect(collectorUrl({ PROD: true, MODE: 'production', VITE_FARO_URL: 'https://c' })).toBe('https://c');
+    expect(DEFAULT_FARO_URL).toMatch(/^https:\/\/faro-collector-prod-sa-east-1\.grafana\.net\/collect\//);
   });
 
   it('amostragem fica entre 0 e 1 e vale 1 sem configuração', () => {
