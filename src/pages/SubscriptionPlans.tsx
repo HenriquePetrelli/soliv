@@ -1,4 +1,5 @@
 import { EXTRA_NAMES, EXTRA_PRICES_CENTS, PLAN_LIST, formatCents, planTierRank as tierRank } from "@/lib/plans";
+import { canSellSubscriptionsHere } from '@/lib/storePolicy';
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -295,6 +296,9 @@ const SubscriptionPlans = () => {
     }
   };
 
+  // App instalado (Android/iOS): sem venda nem troca de plano (ver storePolicy).
+  const inStoreApp = !canSellSubscriptionsHere();
+
   return (
     <div className="min-h-screen bg-background">
       <PageHeader title="Planos de Assinatura" backTo="/home" />
@@ -310,6 +314,11 @@ const SubscriptionPlans = () => {
             <p className="text-base text-muted-foreground max-w-2xl mx-auto leading-relaxed">
               Acesso completo aos nossos serviços de bem-estar mental com profissionais qualificados
             </p>
+            {inStoreApp && (
+              <p role="note" className="mx-auto mt-4 max-w-md rounded-lg border border-border bg-muted/40 p-3 text-sm text-muted-foreground">
+                A contratação e a troca de planos não estão disponíveis neste app. Se você já tem um plano, ele vale aqui normalmente.
+              </p>
+            )}
           </div>
           
           {fromCompany && (
@@ -350,12 +359,14 @@ const SubscriptionPlans = () => {
 
                 {paymentIssue ? (
                   <div role="alert" className="w-full max-w-md rounded-lg border border-destructive/40 bg-destructive/10 p-3 text-left text-sm text-foreground">
-                    Não conseguimos cobrar a renovação. Atualize o cartão para não perder o plano — vamos tentar cobrar de novo nos próximos dias.
+                    {inStoreApp
+                      ? 'Não conseguimos cobrar a renovação do seu plano. Vamos tentar de novo nos próximos dias; se precisar de ajuda, fale com o suporte.'
+                      : 'Não conseguimos cobrar a renovação. Atualize o cartão para não perder o plano — vamos tentar cobrar de novo nos próximos dias.'}
                   </div>
                 ) : cancelAtPeriodEnd ? (
                   <div role="note" className="w-full max-w-md rounded-lg border border-warning/40 bg-warning/10 p-3 text-left text-sm text-foreground">
                     Você não será cobrado de novo. Até {formatBrazilDate(subscriptionEnd ?? "")}, tudo do {subscriptionTier} continua liberado; depois, sua conta passa para o plano grátis.
-                    <Button
+                    {!inStoreApp && <Button
                       variant="outline"
                       size="sm"
                       className="mt-2 w-full bg-background"
@@ -363,12 +374,12 @@ const SubscriptionPlans = () => {
                       onClick={() => undo("resume", "Pronto! Sua assinatura continua.")}
                     >
                       {loading === "resume" ? "Reativando..." : "Manter minha assinatura"}
-                    </Button>
+                    </Button>}
                   </div>
                 ) : pendingTier ? (
                   <div role="note" className="w-full max-w-md rounded-lg border border-primary/30 bg-background p-3 text-left text-sm text-foreground">
                     A partir de {formatDay(pendingFrom)}, seu plano passa a ser {pendingTier}.
-                    <Button
+                    {!inStoreApp && <Button
                       variant="outline"
                       size="sm"
                       className="mt-2 w-full"
@@ -376,13 +387,13 @@ const SubscriptionPlans = () => {
                       onClick={() => undo("keep_current", `Pronto! Você continua no ${subscriptionTier}.`)}
                     >
                       {loading === "keep_current" ? "Salvando..." : `Continuar no ${subscriptionTier}`}
-                    </Button>
+                    </Button>}
                   </div>
                 ) : (
                   subscriptionEnd && <p className="text-sm text-muted-foreground">Renova em {formatDay(subscriptionEnd)}.</p>
                 )}
 
-                {extraSubscriptions > 0 && (
+                {extraSubscriptions > 0 && !inStoreApp && (
                   <div role="alert" className="w-full max-w-md rounded-lg border border-destructive/40 bg-destructive/10 p-3 text-left text-sm text-foreground">
                     Você tem mais de uma assinatura ativa e está sendo cobrado em dobro. Cancele a que sobrou em "Gerenciar
                     pagamento" ou fale com o suporte para receber a diferença de volta.
@@ -390,7 +401,7 @@ const SubscriptionPlans = () => {
                 )}
 
                 <div className="flex flex-col sm:flex-row gap-3 w-full max-w-md">
-                  <Button
+                  {!inStoreApp && <Button
                     onClick={handleManagePayment}
                     disabled={loading === "portal"}
                     variant={paymentIssue ? "default" : "outline"}
@@ -398,7 +409,7 @@ const SubscriptionPlans = () => {
                   >
                     <CreditCard className="h-4 w-4" aria-hidden="true" />
                     {loading === "portal" ? "Abrindo..." : paymentIssue ? "Atualizar pagamento" : "Gerenciar pagamento"}
-                  </Button>
+                  </Button>}
                   {!cancelAtPeriodEnd && (
                     <Button
                       onClick={() => setShowCancelModal(true)}
@@ -409,7 +420,7 @@ const SubscriptionPlans = () => {
                     </Button>
                   )}
                 </div>
-                <p className="text-xs text-muted-foreground">Cartão, faturas e recibos ficam em "Gerenciar pagamento".</p>
+                {!inStoreApp && <p className="text-xs text-muted-foreground">Cartão, faturas e recibos ficam em "Gerenciar pagamento".</p>}
               </div>
             </div>
           )}
@@ -436,12 +447,14 @@ const SubscriptionPlans = () => {
               
               <CardHeader className="text-center pb-8">
                 <CardTitle className="text-2xl mb-2">{plan.name}</CardTitle>
-                <div className="mb-4">
-                  <div className="flex items-baseline justify-center gap-1">
-                    <span className="text-4xl font-bold text-foreground">{plan.price}</span>
-                    <span className="text-lg text-muted-foreground">{plan.period}</span>
+                {!inStoreApp && (
+                  <div className="mb-4">
+                    <div className="flex items-baseline justify-center gap-1">
+                      <span className="text-4xl font-bold text-foreground">{plan.price}</span>
+                      <span className="text-lg text-muted-foreground">{plan.period}</span>
+                    </div>
                   </div>
-                </div>
+                )}
               </CardHeader>
               
               <CardContent className="space-y-8">
@@ -463,6 +476,16 @@ const SubscriptionPlans = () => {
                   // Quem já paga troca de plano na mesma assinatura (nunca um
                   // segundo checkout, que cobraria as duas).
                   const switchesPlan = subscribed && !fromCompany && !isCurrent;
+                  if (inStoreApp) {
+                    // Sem venda no app: só mostra qual é o plano da pessoa.
+                    if (!isCurrent && !includedByCompany && !isScheduled) return null;
+                    return (
+                      <Badge variant="secondary" className="flex w-full justify-center gap-2 py-3 text-base">
+                        <Crown className="w-5 h-5" />
+                        {includedByCompany ? 'Incluído no plano da empresa' : isScheduled ? `Começa em ${formatDay(pendingFrom)}` : 'Plano Atual'}
+                      </Badge>
+                    );
+                  }
                   const label = loading === plan.id
                     ? null
                     : includedByCompany

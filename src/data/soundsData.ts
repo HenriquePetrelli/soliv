@@ -1,3 +1,5 @@
+import { soundUrl } from '@/lib/soundUrl';
+
 export interface Sound {
   id: string;
   name: string;
@@ -24,42 +26,42 @@ export const soundsData = {
           name: "432 Hz",
           duration: "60:00",
           category: "Tons Terapêuticos",
-          file: "/sounds/sleep/432hz.mp3"
+          file: soundUrl("/sounds/sleep/432hz.mp3")
         },
         {
           id: "sleep-2", 
           name: "Piano Relaxante",
           duration: "35:00",
           category: "Música Instrumental",
-          file: "/sounds/sleep/piano.mp3"
+          file: soundUrl("/sounds/sleep/piano.mp3")
         },
         {
           id: "sleep-3",
           name: "Ruído Rosa",
           duration: "60:00",
           category: "Tons Terapêuticos",
-          file: "/sounds/sleep/pink_noise.mp3"
+          file: soundUrl("/sounds/sleep/pink_noise.mp3")
         },
         {
           id: "sleep-4",
           name: "Chuva Suave",
           duration: "45:00",
           category: "Sons da Natureza",
-          file: "/sounds/sleep/rain.mp3"
+          file: soundUrl("/sounds/sleep/rain.mp3")
         },
         {
           id: "sleep-5",
           name: "Ondas do Mar",
           duration: "60:00",
           category: "Sons da Natureza",
-          file: "/sounds/sleep/wave.mp3"
+          file: soundUrl("/sounds/sleep/wave.mp3")
         },
         {
           id: "sleep-6",
           name: "Ruído Branco",
           duration: "60:00",
           category: "Tons Terapêuticos",
-          file: "/sounds/sleep/white_noise.mp3"
+          file: soundUrl("/sounds/sleep/white_noise.mp3")
         }
       ]
     },
@@ -72,35 +74,35 @@ export const soundsData = {
           name: "Om Mantra",
           duration: "20:00",
           category: "Meditação e Mantras",
-          file: "/sounds/meditate/aum.mp3"
+          file: soundUrl("/sounds/meditate/aum.mp3")
         },
         {
           id: "meditate-2",
           name: "Binaural Beats",
           duration: "30:00",
           category: "Tons Terapêuticos",
-          file: "/sounds/meditate/binaural.mp3"
+          file: soundUrl("/sounds/meditate/binaural.mp3")
         },
         {
           id: "meditate-3",
           name: "Canto Gregoriano",
           duration: "25:00",
           category: "Meditação e Mantras",
-          file: "/sounds/meditate/gregorian.mp3"
+          file: soundUrl("/sounds/meditate/gregorian.mp3")
         },
         {
           id: "meditate-4",
           name: "Sino Tibetano",
           duration: "18:00",
           category: "Meditação e Mantras",
-          file: "/sounds/meditate/tibetan.mp3"
+          file: soundUrl("/sounds/meditate/tibetan.mp3")
         },
         {
           id: "meditate-5",
           name: "Cachoeira",
           duration: "35:00",
           category: "Sons da Natureza",
-          file: "/sounds/meditate/waterfall.mp3"
+          file: soundUrl("/sounds/meditate/waterfall.mp3")
         }
       ]
     },
@@ -113,35 +115,35 @@ export const soundsData = {
           name: "528 Hz Frequência",
           duration: "60:00",
           category: "Tons Terapêuticos",
-          file: "/sounds/focus/528hz.mp3"
+          file: soundUrl("/sounds/focus/528hz.mp3")
         },
         {
           id: "focus-2",
           name: "Canto dos Pássaros",
           duration: "45:00",
           category: "Sons da Natureza",
-          file: "/sounds/focus/birds.mp3"
+          file: soundUrl("/sounds/focus/birds.mp3")
         },
         {
           id: "focus-3",
           name: "Ruído Marrom",
           duration: "60:00",
           category: "Tons Terapêuticos",
-          file: "/sounds/focus/brown_noise.mp3"
+          file: soundUrl("/sounds/focus/brown_noise.mp3")
         },
         {
           id: "focus-4",
           name: "Música Clássica",
           duration: "50:00",
           category: "Música Instrumental",
-          file: "/sounds/focus/classical.mp3"
+          file: soundUrl("/sounds/focus/classical.mp3")
         },
         {
           id: "focus-5",
           name: "Harpa Relaxante",
           duration: "35:00",
           category: "Música Instrumental",
-          file: "/sounds/focus/harp.mp3"
+          file: soundUrl("/sounds/focus/harp.mp3")
         }
       ]
     }

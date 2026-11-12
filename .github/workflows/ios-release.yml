@@ -62,8 +62,8 @@ jobs:
           echo "VERSION_NAME=$V" >> "$GITHUB_ENV"
           echo "Versão $V (build $BUILD_NUMBER)"
       - run: npm ci --no-audit --no-fund
-      - name: Build do app web
-        run: npm run build
+      - name: Build do app web (sem os sons, que vêm do Supabase Storage)
+        run: npm run build:native
       - name: Copiar o build para o iOS
         run: npx cap sync ios
 

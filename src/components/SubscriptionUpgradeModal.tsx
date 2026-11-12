@@ -1,4 +1,5 @@
 import React from 'react';
+import { canSellSubscriptionsHere } from '@/lib/storePolicy';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Crown, Sparkles } from 'lucide-react';
@@ -54,7 +55,7 @@ const SubscriptionUpgradeModal: React.FC<SubscriptionUpgradeModalProps> = ({
                 }
               >
                 <div className={plan.popular ? 'text-sm font-medium text-primary' : 'text-sm font-medium text-foreground'}>{plan.name}</div>
-                <div className="text-xs text-muted-foreground">{plan.price}{plan.period}</div>
+                {canSellSubscriptionsHere() && <div className="text-xs text-muted-foreground">{plan.price}{plan.period}</div>}
                 <div className="mt-1 text-[11px] leading-tight text-muted-foreground">{plan.consultation}</div>
               </div>
             ))}
@@ -63,7 +64,7 @@ const SubscriptionUpgradeModal: React.FC<SubscriptionUpgradeModalProps> = ({
           <div className="flex flex-col space-y-2">
             <Button onClick={handleUpgrade} className="w-full">
               <Sparkles className="w-4 h-4 mr-2" />
-              Assinar Agora
+              {canSellSubscriptionsHere() ? 'Assinar Agora' : 'Ver planos'}
             </Button>
             <Button variant="outline" onClick={onClose} className="w-full">
               Talvez Depois

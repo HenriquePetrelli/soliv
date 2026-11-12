@@ -7,6 +7,8 @@ O app nativo é o mesmo build web empacotado pelo Capacitor (`android/` e `ios/`
 | `Android (AAB)` (`.github/workflows/android-release.yml`) | mudança em `android/` na `main` (conferência), **Run workflow** ou tag `v*` | o `.aab` para baixar na própria execução (assinado quando os secrets existem) |
 | `iOS (TestFlight)` (`.github/workflows/ios-release.yml`) | mudança em `ios/` na `main` (compila no simulador), **Run workflow** ou tag `v*` | o build assinado, enviado direto ao TestFlight |
 
+**Sons de relaxamento:** os 16 sons somam ~440 MB e passariam do limite do Play (200 MB por download). Os apps são gerados com `npm run build:native`, que deixa os sons de fora; no app eles tocam pela internet do bucket público `sounds` do Supabase Storage (`src/lib/soundUrl.ts`). O site continua servindo os sons de `public/sounds/`. **Som novo ou trocado:** além de pôr o arquivo em `public/sounds/`, enviar o mesmo arquivo, no mesmo caminho, para o bucket `sounds` (Supabase → Storage).
+
 O número da versão (`versionCode` no Android, número do build no iOS) é o número da execução do workflow, então nunca se repete. A versão que aparece na loja (ex.: `1.0.0`) é o campo pedido no **Run workflow**, ou a tag (`v1.0.1` vira `1.0.1`).
 
 > **Antes de enviar para revisão:** ver a seção [Pagamentos nas lojas](#pagamentos-nas-lojas). É o ponto com mais risco de recusa.
@@ -139,7 +141,7 @@ Hoje a assinatura é vendida pelo checkout do Stripe, inclusive dentro do app in
 - **Apple no Brasil (acordo com o CADE, em vigor desde junho de 2026):** o app pode oferecer pagamento alternativo ou link para o site, sempre ao lado da compra pela Apple, com comissão menor que a padrão.
 - **Google Play:** bens físicos e serviços prestados fora do app não precisam do faturamento do Play; conteúdo digital precisa. No Brasil também há regras de pagamento alternativo em andamento.
 
-Os planos do Soliv misturam consulta e SOS com psicólogo (pessoa a pessoa, ao vivo) com recursos do app (diário, respiração, grupos, conteúdos). A decisão sobre o modelo de cobrança nos apps está registrada em `docs/pendencias-antes-do-lancamento.md`.
+Os planos do Soliv misturam consulta e SOS com psicólogo (pessoa a pessoa, ao vivo) com recursos do app (diário, respiração, grupos, conteúdos). **Decisão (2026-11-09):** nos apps a assinatura não é vendida nem trocada; quem assina pelo site usa o plano no app e pode cancelar por lá. O avulso (SOS ou consulta) continua à venda no app. Detalhes na pendência 26 de `docs/pendencias-antes-do-lancamento.md`. **Nas notas para o revisor:** "Os planos incluem principalmente atendimento ao vivo com psicólogos (consultas e SOS, pessoa a pessoa); o app não vende assinatura."
 
 ---
 
