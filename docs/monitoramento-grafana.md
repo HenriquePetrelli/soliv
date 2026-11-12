@@ -27,7 +27,7 @@ O que já está no código (`src/lib/monitoring/`):
 Passo a passo:
 1. Grafana Cloud (sua stack, `….grafana.net`) → **Observability → Frontend** → **Create new**.
 2. Nome: `Soliv`. Em **CORS allowed origins / Domains**, coloque:
-   - `https://calmconnect-auth-flow.lovable.app` (e o domínio próprio, quando houver)
+   - o endereço publicado do site (ou o domínio próprio). **Em 2026-11-12 o site ainda não estava publicado:** adicionar no dia da publicação em Frontend → Soliv → Settings, senão o navegador bloqueia o envio dos erros do site
    - `https://localhost` (app Android)
    - `capacitor://localhost` (app iOS)
 3. Escolha **Manual instrumentation** e **React**. **Não** cole o código que a tela mostra: o Soliv já tem o dele. O exemplo do Grafana liga o *tracing*, que acrescenta cabeçalhos em toda chamada ao Supabase (risco de quebrar o CORS) e manda as URLs com ids; também não limpa dados pessoais.
@@ -63,7 +63,7 @@ Grafana Cloud → **Testing & synthetics → Synthetics → Add new check → AP
 
 | Checagem | Endereço | Frequência | Esperado | Execuções/mês |
 |---|---|---|---|---|
-| Site | `https://calmconnect-auth-flow.lovable.app` | 2 min | status 200 | ~21.600 |
+| Site (**criar no dia da publicação**) | endereço publicado do site | 2 min | status 200 | ~21.600 |
 | Backend + banco | `https://ihrrgmmsfuvlasmzdmwf.supabase.co/functions/v1/health` | 2 min | status 200 e corpo contém `"ok"` | ~21.600 |
 | Login (Supabase Auth) | `https://ihrrgmmsfuvlasmzdmwf.supabase.co/auth/v1/health` com o cabeçalho `apikey: <chave anon>` | 5 min | status 200 | ~8.600 |
 | **Total** | | | | **~52 mil de 100 mil grátis** |
