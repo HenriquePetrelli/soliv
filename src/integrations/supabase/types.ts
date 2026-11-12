@@ -10,7 +10,7 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "12.2.12"
+    PostgrestVersion: "14.18"
   }
   public: {
     Tables: {
@@ -101,6 +101,24 @@ export type Database = {
           id?: string
           is_active?: boolean
           user_id?: string
+        }
+        Relationships: []
+      }
+      app_settings: {
+        Row: {
+          environment: string
+          id: boolean
+          updated_at: string
+        }
+        Insert: {
+          environment?: string
+          id?: boolean
+          updated_at?: string
+        }
+        Update: {
+          environment?: string
+          id?: boolean
+          updated_at?: string
         }
         Relationships: []
       }
@@ -208,6 +226,7 @@ export type Database = {
           cancelled_by: string | null
           created_at: string
           duration: number | null
+          extra_credit_id: string | null
           id: string
           notes: string | null
           patient_id: string
@@ -228,6 +247,7 @@ export type Database = {
           cancelled_by?: string | null
           created_at?: string
           duration?: number | null
+          extra_credit_id?: string | null
           id?: string
           notes?: string | null
           patient_id: string
@@ -248,6 +268,7 @@ export type Database = {
           cancelled_by?: string | null
           created_at?: string
           duration?: number | null
+          extra_credit_id?: string | null
           id?: string
           notes?: string | null
           patient_id?: string
@@ -262,6 +283,13 @@ export type Database = {
           video_room_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "appointments_extra_credit_id_fkey"
+            columns: ["extra_credit_id"]
+            isOneToOne: false
+            referencedRelation: "extra_credits"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "appointments_psychologist_fk"
             columns: ["psychologist_id"]
@@ -454,36 +482,6 @@ export type Database = {
         }
         Relationships: []
       }
-      default_weekly_goals: {
-        Row: {
-          category: string
-          created_at: string | null
-          description: string
-          icon: string
-          id: string
-          target: number
-          title: string
-        }
-        Insert: {
-          category: string
-          created_at?: string | null
-          description: string
-          icon: string
-          id?: string
-          target?: number
-          title: string
-        }
-        Update: {
-          category?: string
-          created_at?: string | null
-          description?: string
-          icon?: string
-          id?: string
-          target?: number
-          title?: string
-        }
-        Relationships: []
-      }
       emergency_contacts: {
         Row: {
           created_at: string
@@ -542,6 +540,7 @@ export type Database = {
           ended_by: string | null
           ended_by_type: string | null
           expires_at: string | null
+          extra_credit_id: string | null
           id: string
           patient_details: Json
           patient_id: string
@@ -566,6 +565,7 @@ export type Database = {
           ended_by?: string | null
           ended_by_type?: string | null
           expires_at?: string | null
+          extra_credit_id?: string | null
           id?: string
           patient_details?: Json
           patient_id: string
@@ -590,6 +590,7 @@ export type Database = {
           ended_by?: string | null
           ended_by_type?: string | null
           expires_at?: string | null
+          extra_credit_id?: string | null
           id?: string
           patient_details?: Json
           patient_id?: string
@@ -600,6 +601,56 @@ export type Database = {
           triage?: string[]
           updated_at?: string
           video_room_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "emergency_requests_extra_credit_id_fkey"
+            columns: ["extra_credit_id"]
+            isOneToOne: false
+            referencedRelation: "extra_credits"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      extra_credits: {
+        Row: {
+          amount_cents: number
+          appointment_id: string | null
+          consumed_at: string | null
+          created_at: string
+          emergency_request_id: string | null
+          id: string
+          kind: string
+          price_tier: string
+          status: string
+          stripe_payment_intent_id: string
+          user_id: string
+        }
+        Insert: {
+          amount_cents: number
+          appointment_id?: string | null
+          consumed_at?: string | null
+          created_at?: string
+          emergency_request_id?: string | null
+          id?: string
+          kind: string
+          price_tier: string
+          status?: string
+          stripe_payment_intent_id: string
+          user_id: string
+        }
+        Update: {
+          amount_cents?: number
+          appointment_id?: string | null
+          consumed_at?: string | null
+          created_at?: string
+          emergency_request_id?: string | null
+          id?: string
+          kind?: string
+          price_tier?: string
+          status?: string
+          stripe_payment_intent_id?: string
+          user_id?: string
         }
         Relationships: []
       }
@@ -2412,6 +2463,27 @@ export type Database = {
           },
         ]
       }
+      stripe_customer_state: {
+        Row: {
+          state: Json
+          stripe_customer_id: string | null
+          synced_at: string
+          user_id: string
+        }
+        Insert: {
+          state: Json
+          stripe_customer_id?: string | null
+          synced_at?: string
+          user_id: string
+        }
+        Update: {
+          state?: Json
+          stripe_customer_id?: string | null
+          synced_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       subscribers: {
         Row: {
           appointments_last_used: string | null
@@ -2561,6 +2633,30 @@ export type Database = {
           status?: string | null
           updated_at?: string | null
           user_id?: string | null
+        }
+        Relationships: []
+      }
+      testimonial_bans: {
+        Row: {
+          blocked_by: string | null
+          blocked_until: string | null
+          created_at: string
+          reason: string | null
+          user_id: string
+        }
+        Insert: {
+          blocked_by?: string | null
+          blocked_until?: string | null
+          created_at?: string
+          reason?: string | null
+          user_id: string
+        }
+        Update: {
+          blocked_by?: string | null
+          blocked_until?: string | null
+          created_at?: string
+          reason?: string | null
+          user_id?: string
         }
         Relationships: []
       }
@@ -2817,48 +2913,6 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      admin_export_access_logs: {
-        Args: {
-          p_event?: string
-          p_from?: string
-          p_reason: string
-          p_search?: string
-          p_to?: string
-        }
-        Returns: {
-          created_at: string
-          email: string
-          event: string
-          id: number
-          ip_address: string
-          user_agent: string
-          user_id: string
-          user_name: string
-        }[]
-      }
-      admin_get_access_logs: {
-        Args: {
-          p_event?: string
-          p_from?: string
-          p_limit?: number
-          p_offset?: number
-          p_search?: string
-          p_to?: string
-        }
-        Returns: {
-          created_at: string
-          email: string
-          event: string
-          id: number
-          ip_address: string
-          user_agent: string
-          user_id: string
-          user_name: string
-          total_count: number
-        }[]
-      }
-      purge_access_logs: { Args: never; Returns: number }
-      register_access: { Args: never; Returns: boolean }
       abrir_conversa: { Args: { p_psicologo_id: string }; Returns: string }
       accept_safety_plan_suggestion: {
         Args: {
@@ -2872,6 +2926,29 @@ export type Database = {
           p_warning_signs?: string[]
         }
         Returns: string
+      }
+      access_logs_filtered: {
+        Args: {
+          p_event: string
+          p_from: string
+          p_search: string
+          p_to: string
+        }
+        Returns: {
+          created_at: string
+          email: string | null
+          event: string
+          id: number
+          ip_address: unknown
+          user_agent: string | null
+          user_id: string | null
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "access_logs"
+          isOneToOne: false
+          isSetofReturn: true
+        }
       }
       account_block_status: {
         Args: { p_email: string; p_password: string }
@@ -2909,9 +2986,12 @@ export type Database = {
         }
         Returns: undefined
       }
-      admin_mfa_required: { Args: never; Returns: boolean }
-      admin_revoke_user_sessions: {
-        Args: { p_user_id: string }
+      admin_add_organization_manager: {
+        Args: { p_email: string; p_org: string }
+        Returns: Json
+      }
+      admin_archive_conversa: {
+        Args: { p_conversa_id: string }
         Returns: undefined
       }
       admin_block_testimonials: {
@@ -2923,18 +3003,6 @@ export type Database = {
         }
         Returns: Json
       }
-      admin_unblock_testimonials: {
-        Args: { p_user_id: string }
-        Returns: undefined
-      }
-      admin_add_organization_manager: {
-        Args: { p_email: string; p_org: string }
-        Returns: Json
-      }
-      admin_archive_conversa: {
-        Args: { p_conversa_id: string }
-        Returns: undefined
-      }
       admin_delete_testimonial: {
         Args: { p_testimonial_id: string }
         Returns: undefined
@@ -2942,6 +3010,46 @@ export type Database = {
       admin_dismiss_testimonial_reports: {
         Args: { p_testimonial_id: string }
         Returns: undefined
+      }
+      admin_export_access_logs: {
+        Args: {
+          p_event?: string
+          p_from?: string
+          p_reason: string
+          p_search?: string
+          p_to?: string
+        }
+        Returns: {
+          created_at: string
+          email: string
+          event: string
+          id: number
+          ip_address: string
+          user_agent: string
+          user_id: string
+          user_name: string
+        }[]
+      }
+      admin_get_access_logs: {
+        Args: {
+          p_event?: string
+          p_from?: string
+          p_limit?: number
+          p_offset?: number
+          p_search?: string
+          p_to?: string
+        }
+        Returns: {
+          created_at: string
+          email: string
+          event: string
+          id: number
+          ip_address: string
+          total_count: number
+          user_agent: string
+          user_id: string
+          user_name: string
+        }[]
       }
       admin_list_organization_members: {
         Args: { p_org: string }
@@ -2955,6 +3063,15 @@ export type Database = {
           status: string
           user_id: string
         }[]
+      }
+      admin_mfa_required: { Args: never; Returns: boolean }
+      admin_revoke_user_sessions: {
+        Args: { p_user_id: string }
+        Returns: undefined
+      }
+      admin_unblock_testimonials: {
+        Args: { p_user_id: string }
+        Returns: undefined
       }
       admin_update_testimonial: {
         Args: { p_testimonial_id: string; p_texto: string }
@@ -2977,22 +3094,10 @@ export type Database = {
         Returns: string
       }
       assert_caller_is: { Args: { p_user_id: string }; Returns: undefined }
-      calculate_psychologist_average_rating: {
-        Args: { psychologist_user_id: string }
-        Returns: number
-      }
       call_clock: { Args: { p_session_id: string }; Returns: Json }
       call_time_limit_seconds: {
         Args: { p_session_id: string }
         Returns: number
-      }
-      can_access_document: {
-        Args: { bucket_name: string; object_name: string }
-        Returns: boolean
-      }
-      can_upload_document: {
-        Args: { bucket_name: string; object_name: string }
-        Returns: boolean
       }
       can_use_sos: {
         Args: { p_user_id: string }
@@ -3047,10 +3152,6 @@ export type Database = {
         Returns: string[]
       }
       cleanup_quarterly_activities: { Args: never; Returns: undefined }
-      cleanup_rejected_psychologist: {
-        Args: { p_user_id: string }
-        Returns: boolean
-      }
       confirm_psychologist_payout: {
         Args: {
           p_admin_email: string
@@ -3062,59 +3163,33 @@ export type Database = {
         }
         Returns: Json
       }
+      consume_extra_credit: {
+        Args: {
+          p_appointment_id?: string
+          p_emergency_request_id?: string
+          p_kind: string
+          p_user_id: string
+        }
+        Returns: string
+      }
       count_available_psychologists: { Args: never; Returns: number }
-      create_psychologist_profile:
-        | {
-            Args: {
-              p_accepts_presential: boolean
-              p_address?: string
-              p_bio: string
-              p_city: string
-              p_cpf?: string
-              p_crp_number: string
-              p_document_url?: string
-              p_email: string
-              p_full_name: string
-              p_professional_email?: string
-              p_specialization: string
-              p_state: string
-              p_user_id: string
-            }
-            Returns: Json
-          }
-        | {
-            Args: {
-              p_address?: string
-              p_bio: string
-              p_city: string
-              p_cpf?: string
-              p_crp_number: string
-              p_document_url?: string
-              p_email: string
-              p_full_name: string
-              p_specialization: string
-              p_state: string
-              p_user_id: string
-            }
-            Returns: Json
-          }
-        | {
-            Args: {
-              p_address?: string
-              p_area_atendimento?: string
-              p_bio: string
-              p_city: string
-              p_cpf?: string
-              p_crp_number: string
-              p_document_url?: string
-              p_email: string
-              p_full_name: string
-              p_specialization: string
-              p_state: string
-              p_user_id: string
-            }
-            Returns: Json
-          }
+      create_psychologist_profile: {
+        Args: {
+          p_address?: string
+          p_area_atendimento?: string
+          p_bio: string
+          p_city: string
+          p_cpf?: string
+          p_crp_number: string
+          p_document_url?: string
+          p_email: string
+          p_full_name: string
+          p_specialization: string
+          p_state: string
+          p_user_id: string
+        }
+        Returns: Json
+      }
       create_psychologist_profile_unchecked: {
         Args: {
           p_address?: string
@@ -3247,7 +3322,6 @@ export type Database = {
         }[]
       }
       get_login_state: { Args: never; Returns: Json }
-      get_my_testimonial_block: { Args: never; Returns: Json }
       get_my_psychologist_private: {
         Args: never
         Returns: {
@@ -3257,19 +3331,12 @@ export type Database = {
           pix_type: string
         }[]
       }
+      get_my_testimonial_block: { Args: never; Returns: Json }
       get_or_create_appointment_webrtc_session: {
         Args: { p_appointment_id: string }
         Returns: string
       }
       get_organization_dashboard: { Args: { p_org: string }; Returns: Json }
-      get_patient_statistics: {
-        Args: { patient_user_id: string }
-        Returns: {
-          average_rating: number
-          consultation_count: number
-          sos_count: number
-        }[]
-      }
       get_patient_statistics_unchecked: {
         Args: { patient_user_id: string }
         Returns: {
@@ -3299,10 +3366,6 @@ export type Database = {
           duration_minutes: number
           starts_at: string
         }[]
-      }
-      get_psychologist_document_url: {
-        Args: { document_path: string }
-        Returns: string
       }
       get_psychologist_rejection_status: {
         Args: { p_user_id: string }
@@ -3350,6 +3413,16 @@ export type Database = {
       get_sos_patient_context: { Args: { p_request_id: string }; Returns: Json }
       get_sos_safety_plan: { Args: { p_request_id: string }; Returns: Json }
       get_user_type: { Args: { user_id_param: string }; Returns: string }
+      grant_extra_credit: {
+        Args: {
+          p_amount_cents: number
+          p_kind: string
+          p_payment_intent: string
+          p_price_tier: string
+          p_user_id: string
+        }
+        Returns: string
+      }
       handle_psychologist_approval: {
         Args: { admin_id: string; psychologist_id: string }
         Returns: undefined
@@ -3391,6 +3464,7 @@ export type Database = {
       is_organization_manager: { Args: { p_org: string }; Returns: boolean }
       is_sos_participant: { Args: { p_request_id: string }; Returns: boolean }
       is_super_admin: { Args: { user_id_param?: string }; Returns: boolean }
+      is_valid_timezone: { Args: { p_tz: string }; Returns: boolean }
       join_organization: { Args: { p_code: string }; Returns: Json }
       join_organization_for_user: {
         Args: { p_code: string; p_user_id: string }
@@ -3426,6 +3500,7 @@ export type Database = {
       }
       my_psychologist_documents_locked: { Args: never; Returns: boolean }
       normalize_invite_code: { Args: { p_code: string }; Returns: string }
+      normalize_plan_tier: { Args: { p_tier: string }; Returns: string }
       notify_consultation_waiting: {
         Args: { p_appointment_id: string }
         Returns: Json
@@ -3450,6 +3525,17 @@ export type Database = {
           tier: string
         }[]
       }
+      plan_sos_quota: {
+        Args: { p_user_id: string }
+        Returns: {
+          can_use: boolean
+          plan_type: string
+          reason: string
+        }[]
+      }
+      plan_tier_has_appointments: { Args: { p_tier: string }; Returns: boolean }
+      plan_tier_limits: { Args: { p_tier: string }; Returns: Json }
+      plan_tier_rank: { Args: { p_tier: string }; Returns: number }
       pode_criar_conversa: {
         Args: { p_paciente_id: string; p_psicologo_id: string }
         Returns: boolean
@@ -3478,6 +3564,7 @@ export type Database = {
         Args: { p_user_id: string }
         Returns: boolean
       }
+      purge_access_logs: { Args: never; Returns: number }
       purge_archived_psychologist_payouts: { Args: never; Returns: number }
       purge_cron_history: { Args: never; Returns: number }
       purge_expired_care_records: { Args: never; Returns: Json }
@@ -3505,6 +3592,7 @@ export type Database = {
         Args: { p_user_id: string }
         Returns: undefined
       }
+      register_access: { Args: never; Returns: boolean }
       register_habit_relapse: {
         Args: { p_habit_id: string; p_local_date: string; p_note?: string }
         Returns: string
@@ -3537,12 +3625,14 @@ export type Database = {
         Args: { p_details?: string; p_reason: string; p_testimonial_id: string }
         Returns: undefined
       }
-      reset_patient_weekly_goals_array: { Args: never; Returns: undefined }
+      request_client_ip: { Args: never; Returns: unknown }
       reset_weekly_goals: { Args: never; Returns: undefined }
+      return_extra_credit: { Args: { p_credit_id: string }; Returns: boolean }
       rotate_organization_invite_code: {
         Args: { p_org: string }
         Returns: string
       }
+      safe_inet: { Args: { p_value: string }; Returns: unknown }
       safety_plan_items_ok: { Args: { p_items: string[] }; Returns: boolean }
       save_post_crisis_plan: {
         Args: {
@@ -3621,8 +3711,8 @@ export type Database = {
         Args: { p_request_id: string }
         Returns: boolean
       }
-      sync_consultation_counts: { Args: never; Returns: undefined }
       sync_psychologist_payments: { Args: never; Returns: undefined }
+      testimonial_ban_active: { Args: { p_user_id: string }; Returns: boolean }
       testimonial_like_totals: {
         Args: { p_testimonial_id: string }
         Returns: Json
@@ -3652,12 +3742,6 @@ export type Database = {
           starts_at: string
           status: string
         }[]
-      }
-      validate_cpf: { Args: { cpf_input: string }; Returns: boolean }
-      validate_crp: { Args: { crp_input: string }; Returns: boolean }
-      validate_route_access: {
-        Args: { route_path: string; user_id_param: string }
-        Returns: boolean
       }
       validate_unique_crp: {
         Args: { crp_input: string; exclude_id?: string }
