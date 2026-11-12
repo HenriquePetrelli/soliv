@@ -5,8 +5,8 @@ Como saber, sem depender de alguém reclamar, que o Soliv caiu ou está dando er
 | O que | Ferramenta do Grafana | Situação |
 |---|---|---|
 | Erros no app (site, Android e iOS) | Frontend Observability (SDK Faro) | **Pronto e configurado** (app Soliv, São Paulo); liga na próxima publicação |
-| Erros nas edge functions | Loki (logs) | **Pronto no código**, faltam 3 secrets no Supabase |
-| O app está no ar? | Synthetic Monitoring | Função `health` **pronta**, falta criar as checagens |
+| Erros nas edge functions | Loki (logs) | **Ligado** (secrets e deploy em 2026-11-12) |
+| O app está no ar? | Synthetic Monitoring | Função `health` **no ar**, falta criar as checagens |
 | Saúde do banco | Integração Supabase (Metrics API) | Só ligar no painel |
 | Avisos | Alerting (e-mail, Telegram etc.) | Criar as regras abaixo |
 

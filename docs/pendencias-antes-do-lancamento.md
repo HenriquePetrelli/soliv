@@ -70,7 +70,8 @@ O que precisa ser resolvido antes de o app ficar pronto. Ao resolver um item, mo
 
 - **Situação (2026-11-09):** o código está pronto e fica desligado até receber as configurações. O app envia erros (site, Android e iOS) pelo SDK Faro, limpos de dados pessoais (`src/lib/monitoring/`). As 41 edge functions enviam ao Loki os erros 5xx (`supabase/functions/_shared/monitoring.ts`). A nova função `health` responde se o backend e o banco estão de pé.
 - **Feito em 2026-11-12:** conta Free criada e app **Soliv** no Frontend Observability (região São Paulo); o endereço do coletor já está no código e liga na próxima publicação do site e dos apps.
-- **O que falta:** passo a passo em `docs/monitoramento-grafana.md`: os 3 secrets `GRAFANA_LOKI_*` no Supabase, publicar as edge functions (todas mudaram, mais a `health`), criar as 3 checagens de "no ar", ligar a integração do Supabase e os alertas.
+- **Feito em 2026-11-12 (Loki):** os 3 secrets `GRAFANA_LOKI_*` estão no Supabase (token só com `logs:write`) e todas as edge functions foram publicadas de novo. A `health` responde `{"status":"ok","db":"ok"}`.
+- **O que falta:** passo a passo em `docs/monitoramento-grafana.md`: criar as 3 checagens de "no ar", ligar a integração do Supabase e os alertas.
 - **Como conferir:** derrubar uma tela de propósito no app publicado e ver o erro em Frontend → Errors; a checagem da `health` verde; a consulta `{app="soliv", source="edge-function"}` no Explore sem erro de autenticação.
 - **Registrado em:** 2026-11-09.
 
