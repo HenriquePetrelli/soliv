@@ -63,7 +63,7 @@ Grafana Cloud → **Testing & synthetics → Synthetics → Add new check → AP
 
 | Checagem | Endereço | Frequência | Esperado | Execuções/mês |
 |---|---|---|---|---|
-| Site (**criar no dia da publicação**) | endereço publicado do site | 2 min | status 200 | ~21.600 |
+| Site (**criar no dia da publicação**, pendência 28) | endereço publicado do site | 2 min | status 200 | ~21.600 |
 | Backend + banco | `https://ihrrgmmsfuvlasmzdmwf.supabase.co/functions/v1/health` | 2 min | status 200 e corpo contém `"ok"` | ~21.600 |
 | Login (Supabase Auth) | `https://ihrrgmmsfuvlasmzdmwf.supabase.co/auth/v1/health` com o cabeçalho `apikey: <chave anon>` | 5 min | status 200 | ~8.600 |
 | **Total** | | | | **~52 mil de 100 mil grátis** |
