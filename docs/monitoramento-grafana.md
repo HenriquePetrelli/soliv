@@ -7,7 +7,7 @@ Como saber, sem depender de alguém reclamar, que o Soliv caiu ou está dando er
 | Erros no app (site, Android e iOS) | Frontend Observability (SDK Faro) | **Pronto e configurado** (app Soliv, São Paulo); liga na próxima publicação |
 | Erros nas edge functions | Loki (logs) | **Ligado** (secrets e deploy em 2026-11-12) |
 | O app está no ar? | Synthetic Monitoring | Função `health` **no ar**, falta criar as checagens |
-| Saúde do banco | Integração Supabase (Metrics API) | Só ligar no painel |
+| Saúde do banco | Integração Supabase (Metrics API) | **Ligado** em 2026-11-12 (job `soliv-supabase`, painel *Integration - Supabase → Supabase Project*) |
 | Avisos | Alerting (e-mail, Telegram etc.) | Criar as regras abaixo |
 
 ## 1. Criar a conta
@@ -74,9 +74,13 @@ As checagens de navegador (abrir a tela de login de verdade) têm cota de 10 mil
 
 ## 5. Saúde do banco (Supabase)
 
-1. Supabase → **Integrations** (ou Settings → Observability) → **Grafana Cloud** → conectar. A integração lê a Metrics API do projeto (CPU, memória, disco, conexões, ~200 métricas do Postgres) a cada minuto.
-2. Se pedir chave, use uma **Secret key** (`sb_secret_...`) criada só para isso.
-3. Depois de 1 dia, confira em **Cost management → Usage** quantas *séries ativas* entraram. O Free tem 10 mil; o Supabase costuma usar bem menos. Se passar, dá para filtrar as métricas na integração.
+**Ligado em 2026-11-12.** Connections → Supabase, scrape job `soliv-supabase`, leitura a cada 1 min, projeto `ihrrgmmsfuvlasmzdmwf`, com uma chave só para o Grafana. Painel: **Dashboards → Integration - Supabase → Supabase Project**. No topo, escolha o Job `…-soliv-supabase` e o Project Ref.
+
+Para conferir se está lendo: Explore → `grafanacloud-yellowlily2958-prom` → `up{job=~".*supabase.*"}`. **1** = ok; **0** = o Supabase recusou a chave (cole de novo em Connections → Supabase); vazio = o scrape job não foi salvo.
+
+**Primeira leitura (2026-11-12):** instância com ~768 MiB de RAM e **swap ~98%** (falta de memória, consultas mais lentas com muita gente ao mesmo tempo). CPU em 100% na primeira leitura pode ser falso (a CPU é medida pela diferença entre duas leituras). Conferir os gráficos *Memory Basic* e *CPU Basic* depois de algumas horas; se o swap seguir acima de 80%, aumentar a instância antes do lançamento (Supabase → Project Settings → Compute and Disk; tem custo).
+
+**Cota:** depois de 1 dia, conferir em Cost management → Usage as *active series* (Free: 10 mil). Se passar de ~5 mil, filtrar métricas na integração.
 
 ## 6. Avisos (Alerting)
 
