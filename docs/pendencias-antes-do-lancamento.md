@@ -25,7 +25,7 @@ O que precisa ser resolvido antes de o app ficar pronto. Ao resolver um item, mo
   2. No [Resend](https://resend.com/domains), adicionar o domínio e criar os registros DNS que ele pedir (SPF e DKIM) até aparecer "Verified".
   3. Supabase → Authentication → SMTP Settings: SMTP do Resend com remetente do domínio (passo a passo em `docs/emails-de-autenticacao.md`).
   4. Trocar os remetentes das 5 edge functions da tabela pelo domínio novo (pedir ao Claude; é uma troca de texto) e publicar as funções.
-  5. Ligar o domínio ao app publicado na Lovable e usar esse endereço como Site URL no Supabase (a logo do e-mail e os links vêm dele). Depois, a pendência 28 (monitoramento do site).
+  5. Ligar o domínio ao app publicado na Lovable e usar esse endereço como Site URL no Supabase (a logo do e-mail e os links vêm dele). Depois, as pendências 28 (monitoramento do site) e 29 (alertas no e-mail oficial).
 - **Enquanto isso:** dá para colar os modelos em português no Supabase (Authentication → Email Templates) para testar com os e-mails da equipe; para usuários de fora, nenhum e-mail chega. **Feito em 2026-11-08:** os 6 modelos em português (`supabase/templates/`) e os assuntos foram colados no Supabase pela API e conferidos iguais ao repositório (teste `s01-32`). Já valem para os e-mails da equipe; a logo vem do Site URL atual (`calmconnect-auth-flow.lovable.app/email/soliv-logo.png`).
 - **Limite atual:** sem SMTP próprio o Supabase manda no máximo **2 e-mails de login por hora** para o projeto inteiro (`rate_limit_email_sent = 2`). Depois do SMTP do Resend, subir esse limite em Authentication → Rate Limits.
 - **Como conferir:** pedir "Esqueci minha senha" com um e-mail que não é da equipe; o e-mail chega em português, com a logo e remetente "Soliv". Enviar um pedido de suporte e conferir que ele chega na caixa da equipe.
@@ -71,7 +71,7 @@ O que precisa ser resolvido antes de o app ficar pronto. Ao resolver um item, mo
 - **Situação (2026-11-09):** o código está pronto e fica desligado até receber as configurações. O app envia erros (site, Android e iOS) pelo SDK Faro, limpos de dados pessoais (`src/lib/monitoring/`). As 41 edge functions enviam ao Loki os erros 5xx (`supabase/functions/_shared/monitoring.ts`). A nova função `health` responde se o backend e o banco estão de pé.
 - **Feito em 2026-11-12:** conta Free criada e app **Soliv** no Frontend Observability (região São Paulo); o endereço do coletor já está no código e liga na próxima publicação do site e dos apps.
 - **Feito em 2026-11-12 (Loki):** os 3 secrets `GRAFANA_LOKI_*` estão no Supabase (token só com `logs:write`) e todas as edge functions foram publicadas de novo. A `health` responde `{"status":"ok","db":"ok"}`.
-- **O que falta:** passo a passo em `docs/monitoramento-grafana.md`: checagens `soliv-backend` e `soliv-login` (um local só), integração do Supabase e alertas. O que depende do site publicado está na pendência 28.
+- **O que falta:** passo a passo em `docs/monitoramento-grafana.md`: checagens `soliv-backend` e `soliv-login` (um local só), integração do Supabase e alertas. O que depende do site publicado está na pendência 28. Os alertas estão na pendência 29.
 - **Como conferir:** derrubar uma tela de propósito no app publicado e ver o erro em Frontend → Errors; a checagem da `health` verde; a consulta `{app="soliv", source="edge-function"}` no Explore sem erro de autenticação.
 - **Registrado em:** 2026-11-09.
 
@@ -82,6 +82,16 @@ O que precisa ser resolvido antes de o app ficar pronto. Ao resolver um item, mo
   1. Grafana → **Observability → Frontend → Soliv → Settings** → em **CORS allowed origins**, adicionar o endereço publicado (ex.: `https://soliv.lovable.app` ou `https://app.SEU-DOMINIO`). Sem isso o navegador bloqueia o envio dos erros do site.
   2. Grafana → **Testing & synthetics → Synthetics → Add new check → API Endpoint**: job name `soliv-site`, `GET` no endereço publicado, status válido `2xx`, **um local só** (o mesmo das outras checagens), frequência **2 min**, alerta de falha ligado.
 - **Como conferir:** a checagem `soliv-site` verde em Synthetics → Checks; abrir o site publicado e ver a sessão aparecer em Frontend → Soliv em alguns minutos.
+- **Registrado em:** 2026-11-12.
+
+### 29. Alertas do monitoramento (esperando o e-mail oficial)
+
+- **Situação (2026-11-12):** as checagens e o Loki já coletam, mas nenhum aviso sai do Grafana: falta para onde mandar. O Soliv ainda não tem e-mail oficial, que depende do domínio (pendência 2).
+- **O que fazer quando houver o e-mail:** passo a passo em `docs/monitoramento-grafana.md`, seção 6:
+  1. Contact point `soliv-equipe` com o e-mail oficial (opcional: Telegram) e torná-lo o padrão da Default policy.
+  2. Regras do Loki `Soliv - erros nas edge functions` (mais de 5 em 10 min) e `Soliv - ERRO NO SOS` (qualquer erro em 5 min), com **"no data" = Normal**.
+  3. Ligar o alerta de falha nas checagens `soliv-backend` e `soliv-login` (e `soliv-site`, pendência 28).
+- **Como conferir:** **Send test notification** chega no e-mail oficial; as regras aparecem como *Normal* em Alert rules.
 - **Registrado em:** 2026-11-12.
 
 ### 24. Voltar a exigir o código de verificação do admin

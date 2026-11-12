@@ -80,15 +80,28 @@ As checagens de navegador (abrir a tela de login de verdade) têm cota de 10 mil
 
 ## 6. Avisos (Alerting)
 
-Grafana → **Alerting → Contact points** → crie um com seu e-mail (e/ou Telegram, Discord, Slack). Depois **Alert rules → New alert rule**:
+**Pendente (pendência 29):** esperar o e-mail oficial do Soliv (pendência 2) para usar como destino.
 
-| Regra | Condição | Por quê |
-|---|---|---|
-| App fora do ar | a checagem *Site* ou *Backend + banco* falha por 2 execuções seguidas (as checagens já trazem um alerta pronto: "Synthetics → check → Alerting → sensibilidade *High*") | site, edge functions ou banco caíram |
-| Login fora do ar | a checagem *Login* falha por 10 min | ninguém consegue entrar |
-| Muitos erros no app | em Frontend → `Soliv` → Errors: mais de 20 erros em 15 min | algo quebrou depois de uma publicação |
-| Erros nas edge functions | Loki: `sum(count_over_time({app="soliv", source="edge-function"}[10m])) > 5` | pagamento, SOS ou agendamento falhando |
-| Erro no SOS (crítico) | Loki: `sum(count_over_time({app="soliv", fn=~"emergency-sos\|psychologist-emergency\|initiate-webrtc"}[5m])) > 0` | qualquer falha no atendimento de crise avisa na hora |
+**Para onde vão (Contact point).** Na stack: **Alerts & IRM → Alerting → Contact points → + Create contact point**.
+- Name `soliv-equipe`, Integration `Email`, Addresses: o e-mail oficial (mais de um separado por `;`). Opcional: também Telegram (bot do @BotFather).
+- **Test → Send test notification**, conferir a chegada (e o spam) e salvar.
+- **Notification policies → Default policy → ⋯ → Edit → Default contact point** = `soliv-equipe`. Assim os alertas das checagens e as regras abaixo vão todos para lá.
+
+**Regras do Loki.** **Alert rules → + New alert rule**, uma por linha da tabela:
+- Data source `grafanacloud-yellowlily2958-logs`, modo **Code**, a consulta da tabela.
+- Expressions: **Reduce** `Last` e **Threshold** `IS ABOVE` o limite da tabela.
+- Pasta `Soliv`, grupo de avaliação `soliv` a cada `1m`, pending period `0s`.
+- **Configure no data and error handling → Alert state if no data = Normal (OK).** Obrigatório: sem erros a consulta volta vazia e, sem isso, o Grafana avisa "sem dados" o tempo todo.
+- Contact point `soliv-equipe` e um Summary curto.
+
+| Regra | Consulta (Loki) | Limite | Por quê |
+|---|---|---|---|
+| `Soliv - erros nas edge functions` | `sum(count_over_time({app="soliv", source="edge-function"} [10m]))` | acima de 5 | pagamento, agendamento ou outra função falhando |
+| `Soliv - ERRO NO SOS` | `sum(count_over_time({app="soliv", fn=~"emergency-sos\|psychologist-emergency\|initiate-webrtc\|mark-sos-used"} [5m]))` | acima de 0 | qualquer falha no atendimento de crise avisa na hora |
+
+**Alertas das checagens.** Em Synthetics → Checks → cada checagem → **Edit → passo 5 (Alerting)**: ligar o alerta de falha. Eles seguem a Default policy.
+
+**Depois que o site estiver publicado (pendência 28):** regra "muitos erros no app" (Frontend → `Soliv` → Errors: mais de 20 erros em 15 min).
 
 Alertas são gratuitos e não gastam cota.
 
