@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Roxo do Soliv (theme_color do site), usado no ícone dos avisos. -->
+    <color name="soliv_notification">#7C3BED</color>
+</resources>

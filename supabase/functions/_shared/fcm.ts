@@ -134,6 +134,8 @@ export const buildFcmMessage = (token: string, message: PushMessage) => {
         'apns-expiration': String(Math.floor(Date.now() / 1000) + ttl),
         ...(message.tag ? { 'apns-collapse-id': message.tag.slice(0, 64) } : {}),
       },
+      // Sem `sound` o iPhone mostra o aviso calado (o Android usa o som do canal).
+      payload: { aps: { sound: 'default' } },
     },
     webpush: {
       headers: { TTL: String(ttl), Urgency: message.urgent ? 'high' : 'normal' },

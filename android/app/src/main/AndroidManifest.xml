@@ -24,6 +24,16 @@
 
         </activity>
 
+        <!-- Push (Firebase): ícone da barra de avisos só com a silhueta do
+             logo (o Android pinta de branco/cinza) e cor de destaque roxa.
+             Sem isso aparece um quadrado no lugar do ícone. -->
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_icon"
+            android:resource="@drawable/ic_stat_soliv" />
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_color"
+            android:resource="@color/soliv_notification" />
+
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="${applicationId}.fileprovider"
