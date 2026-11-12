@@ -78,7 +78,7 @@ As checagens de navegador (abrir a tela de login de verdade) têm cota de 10 mil
 
 Para conferir se está lendo: Explore → `grafanacloud-yellowlily2958-prom` → `up{job=~".*supabase.*"}`. **1** = ok; **0** = o Supabase recusou a chave (cole de novo em Connections → Supabase); vazio = o scrape job não foi salvo.
 
-**Primeira leitura (2026-11-12):** instância com ~768 MiB de RAM e **swap ~98%** (falta de memória, consultas mais lentas com muita gente ao mesmo tempo). CPU em 100% na primeira leitura pode ser falso (a CPU é medida pela diferença entre duas leituras). Conferir os gráficos *Memory Basic* e *CPU Basic* depois de algumas horas; se o swap seguir acima de 80%, aumentar a instância antes do lançamento (Supabase → Project Settings → Compute and Disk; tem custo).
+**Primeira leitura (2026-11-12):** instância com ~768 MiB de RAM e **swap ~98%** (falta de memória, consultas mais lentas com muita gente ao mesmo tempo). CPU em 100% na primeira leitura pode ser falso (a CPU é medida pela diferença entre duas leituras). Conferir os gráficos *Memory Basic* e *CPU Basic* depois de algumas horas; se o swap seguir acima de 80%, aumentar a instância antes do lançamento (Supabase → Project Settings → Compute and Disk; tem custo). Acompanhado na pendência 30.
 
 **Cota:** depois de 1 dia, conferir em Cost management → Usage as *active series* (Free: 10 mil). Se passar de ~5 mil, filtrar métricas na integração.
 

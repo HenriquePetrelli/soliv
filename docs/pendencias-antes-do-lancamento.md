@@ -71,8 +71,8 @@ O que precisa ser resolvido antes de o app ficar pronto. Ao resolver um item, mo
 - **Situação (2026-11-09):** o código está pronto e fica desligado até receber as configurações. O app envia erros (site, Android e iOS) pelo SDK Faro, limpos de dados pessoais (`src/lib/monitoring/`). As 41 edge functions enviam ao Loki os erros 5xx (`supabase/functions/_shared/monitoring.ts`). A nova função `health` responde se o backend e o banco estão de pé.
 - **Feito em 2026-11-12:** conta Free criada e app **Soliv** no Frontend Observability (região São Paulo); o endereço do coletor já está no código e liga na próxima publicação do site e dos apps.
 - **Feito em 2026-11-12 (Loki):** os 3 secrets `GRAFANA_LOKI_*` estão no Supabase (token só com `logs:write`) e todas as edge functions foram publicadas de novo. A `health` responde `{"status":"ok","db":"ok"}`.
-- **Feito em 2026-11-12 (banco):** integração Supabase → Grafana ligada (job `soliv-supabase`, painel *Supabase Project*). **Atenção:** a primeira leitura mostrou a instância com ~768 MiB de RAM e swap ~98%; conferir depois de algumas horas e, se seguir acima de 80%, aumentar a instância antes do lançamento (Compute and Disk, tem custo).
-- **O que falta:** passo a passo em `docs/monitoramento-grafana.md`: conferir as checagens `soliv-backend` e `soliv-login` (um local só) e a cota de séries depois de 1 dia. Os alertas estão na pendência 29. O que depende do site publicado está na pendência 28. Os alertas estão na pendência 29.
+- **Feito em 2026-11-12 (banco):** integração Supabase → Grafana ligada (job `soliv-supabase`, painel *Supabase Project*). **Atenção:** a primeira leitura mostrou a instância com ~768 MiB de RAM e swap ~98% (pendência 30).
+- **O que falta:** as conferências da pendência 30 (memória do banco, checagens e cotas), o site (pendência 28) e os alertas (pendência 29). O que depende do site publicado está na pendência 28. Os alertas estão na pendência 29.
 - **Como conferir:** derrubar uma tela de propósito no app publicado e ver o erro em Frontend → Errors; a checagem da `health` verde; a consulta `{app="soliv", source="edge-function"}` no Explore sem erro de autenticação.
 - **Registrado em:** 2026-11-09.
 
@@ -93,6 +93,17 @@ O que precisa ser resolvido antes de o app ficar pronto. Ao resolver um item, mo
   2. Regras do Loki `Soliv - erros nas edge functions` (mais de 5 em 10 min) e `Soliv - ERRO NO SOS` (qualquer erro em 5 min), com **"no data" = Normal**.
   3. Ligar o alerta de falha nas checagens `soliv-backend` e `soliv-login` (e `soliv-site`, pendência 28).
 - **Como conferir:** **Send test notification** chega no e-mail oficial; as regras aparecem como *Normal* em Alert rules.
+- **Registrado em:** 2026-11-12.
+
+### 30. Memória do banco e conferências do monitoramento
+
+- **Situação (2026-11-12):** na primeira leitura do Grafana, o banco do Supabase tem cerca de **768 MiB de RAM** e o **swap está em ~98%**. É sinal de falta de memória: com vários usuários ao mesmo tempo, as consultas ficam lentas. A CPU em 100% na mesma leitura pode ser falsa (a primeira medida não tem com o que comparar).
+- **O que fazer:**
+  1. **Algumas horas depois (ou no dia seguinte):** Grafana → Dashboards → *Integration - Supabase → Supabase Project*, últimas 6 h. Olhar *Memory Basic* (swap) e *CPU Basic*.
+  2. **Se o swap seguir acima de 80% ou a CPU ficar perto de 100%:** aumentar a instância antes do lançamento em Supabase → Project Settings → **Compute and Disk** (tem custo; conferir o valor antes).
+  3. **Synthetics → Checks:** `soliv-backend` e `soliv-login` verdes, cada uma rodando de **um local só** (não Calgary nem vários).
+  4. **Cost management → Usage** depois de 1 dia: *Metrics active series* abaixo de 5 mil (o Free tem 10 mil); sessões, logs e execuções das checagens dentro das cotas grátis (`docs/monitoramento-grafana.md`, seção 7).
+- **Como conferir:** swap abaixo de 80% e CPU folgada no painel; as duas checagens verdes; uso dentro do plano gratuito.
 - **Registrado em:** 2026-11-12.
 
 ### 24. Voltar a exigir o código de verificação do admin
