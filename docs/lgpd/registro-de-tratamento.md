@@ -4,7 +4,7 @@
 
 ## Controlador e encarregado
 
-- Controlador: **[RAZÃO SOCIAL] LTDA** (sociedade limitada, com dois sócios administradores), CNPJ **[CNPJ]**, **[ENDEREÇO]**.
+- Controlador: **[RAZÃO SOCIAL] LTDA** (sociedade limitada, com três sócios), CNPJ **[CNPJ]**, **[ENDEREÇO]**.
 - Encarregado (DPO) e canal do titular: **[NOME]** — **[E-MAIL]**.
 - Público: **somente maiores de 18 anos**.
 
