@@ -54,6 +54,7 @@ Quase tudo o que o paciente registra é **dado pessoal sensível referente à sa
 | Google Firebase Cloud Messaging | token do aparelho, título/texto da notificação | push |
 | Google e Twilio (STUN) | endereço IP durante a chamada | estabelecer a conexão de vídeo; o áudio/vídeo vai direto entre os participantes e **não é gravado** |
 | Lovable | código e build do app | hospedagem do front-end **[CONFIRMAR]** |
+| Grafana Labs (Grafana Cloud) | erros do app e das edge functions: tela, navegador, sistema, versão do app, mensagem e pilha do erro, sessão anônima do próprio SDK. Antes de sair, e-mail, telefone, CPF, ids, tokens e o que vem depois de `?` e `#` nos endereços são apagados (`src/lib/monitoring/scrub.ts`, `supabase/functions/_shared/monitoring.ts`). Sem usuário, console, gravação de tela nem localização. Guarda: 14 dias (plano gratuito) | monitorar falhas e disponibilidade (legítimo interesse, art. 7º, IX) **[CONFIRMAR região e base legal]** |
 
 Transferência internacional (art. 33): todos os operadores acima processam dados fora do Brasil **[CONFIRMAR regiões e cláusulas contratuais]**.
 

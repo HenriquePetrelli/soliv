@@ -1,5 +1,6 @@
 import { Component, type ErrorInfo, type ReactNode } from 'react';
 import { AlertTriangle, Phone } from 'lucide-react';
+import { reportError } from '@/lib/monitoring';
 
 interface State {
   error: Error | null;
@@ -20,6 +21,7 @@ class AppErrorBoundary extends Component<{ children: ReactNode }, State> {
 
   componentDidCatch(error: Error, info: ErrorInfo) {
     console.error('AppErrorBoundary', error, info.componentStack);
+    reportError(error, { origem: 'AppErrorBoundary' });
   }
 
   render() {

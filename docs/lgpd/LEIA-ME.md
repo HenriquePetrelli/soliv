@@ -30,7 +30,7 @@ O encarregado pode ser um dos sócios. O importante é que o e-mail seja lido e 
 4. **Responsabilidade da plataforma** pelo atendimento feito pelo psicólogo, e o limite de responsabilidade por falhas técnicas diante do Código de Defesa do Consumidor.
 5. **SOS sem garantia de tempo:** a redação protege a empresa sem ser abusiva para o consumidor?
 6. **Cancelamento imediato da assinatura:** hoje o app encerra o acesso na hora do cancelamento. Seria melhor manter o acesso até o fim do mês já pago?
-7. **Transferência internacional:** quais garantias citar para Supabase, Stripe, Resend, Google e Twilio?
+7. **Transferência internacional:** quais garantias citar para Supabase, Stripe, Resend, Google, Twilio e Grafana Labs (monitoramento de erros)?
 8. **Guarda do chat:** as mensagens entre paciente e psicólogo são apagadas após 3 meses. Elas fazem parte do registro do atendimento e deveriam seguir o prazo de 5 anos?
 9. **e-Psi e Resolução CFP 11/2018:** exigências de cadastro para atendimento on-line.
 10. **Registros de acesso (Marco Civil, art. 15):** o app grava, numa tabela própria (`access_logs`), a data, a hora (UTC) e o IP de cada login e do uso do app (no máximo um registro a cada 30 min por IP), com o e-mail do momento. Guarda de **7 meses** (6 da lei + 1 de folga), mesmo após a exclusão da conta; consulta e exportação só pelo admin, com MFA, e registradas na Auditoria com o motivo. Pontos para o advogado: (a) o Supabase não informa a **porta de origem**, exigida pelos tribunais quando o IP é compartilhado (CGNAT); (b) a folga de 1 mês e a guarda após a exclusão da conta estão adequadas?

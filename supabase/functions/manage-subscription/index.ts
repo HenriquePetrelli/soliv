@@ -2,6 +2,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import type Stripe from "https://esm.sh/stripe@14.21.0";
 import { changeDirection, parseTier, tierForPrice } from "../_shared/billing.ts";
 import { PLAN_PRICES, findCustomerId, liveSubscriptions, newStripe, releaseSchedule } from "../_shared/stripe.ts";
+import { monitored } from "../_shared/monitoring.ts";
 
 // Mudanças na assinatura própria, sem passar por um novo checkout:
 //   - preview_change / change_plan: subir de plano cobra só a diferença
@@ -36,7 +37,7 @@ const upgradeAmount = async (stripe: Stripe, subscription: Stripe.Subscription, 
   return upcoming.lines.data.filter((line) => line.proration).reduce((total, line) => total + line.amount, 0);
 };
 
-Deno.serve(async (req) => {
+Deno.serve(monitored("manage-subscription", async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
@@ -176,4 +177,4 @@ Deno.serve(async (req) => {
     log("ERROR", { message });
     return json({ error: message }, 500);
   }
-});
+}));

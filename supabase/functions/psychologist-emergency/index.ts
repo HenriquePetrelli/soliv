@@ -3,6 +3,7 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient, type SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.52.1";
 import { isPriorityTriage } from '../_shared/sosTriage.ts';
 import { errorMessage } from '../_shared/errors.ts';
+import { monitored } from "../_shared/monitoring.ts";
 
 const getCorsHeaders = (origin: string | null) => {
   // Check if origin is from Lovable domains or localhost
@@ -60,7 +61,7 @@ async function canPsychologistHelp(supabase: SupabaseClient, psychologistId: str
   }
 }
 
-serve(async (req) => {
+serve(monitored("psychologist-emergency", async (req) => {
   const origin = req.headers.get('origin');
   const corsHeaders = getCorsHeaders(origin);
   
@@ -524,4 +525,4 @@ serve(async (req) => {
       }
     );
   }
-});
+}));

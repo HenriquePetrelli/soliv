@@ -2,6 +2,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { isTrustedCaller } from "../_shared/guards.ts";
 import { firebaseServiceAccount, getAccessToken, sendToTokens } from "../_shared/fcm.ts";
 import { ROUND_BUDGET_MS, mapLimit } from "../_shared/batch.ts";
+import { monitored } from "../_shared/monitoring.ts";
 
 // Lembretes de "Meus hábitos", chamados pelo pg_cron a cada 15 minutos.
 //
@@ -124,7 +125,7 @@ export const buildMessage = (r: DueReminder): { title: string; body: string } =>
   }
 };
 
-Deno.serve(async (req: Request): Promise<Response> => {
+Deno.serve(monitored("habit-reminders", async (req: Request): Promise<Response> => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   const json = (body: unknown, status = 200) =>
@@ -224,4 +225,4 @@ Deno.serve(async (req: Request): Promise<Response> => {
     console.error("habit-reminders error:", error);
     return json({ error: "Falha ao processar lembretes" }, 500);
   }
-});
+}));

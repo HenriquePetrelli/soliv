@@ -2,6 +2,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { isTrustedCaller } from "../_shared/guards.ts";
 import { firebaseServiceAccount, getAccessToken, sendToTokens } from "../_shared/fcm.ts";
 import { ROUND_BUDGET_MS, mapLimit } from "../_shared/batch.ts";
+import { monitored } from "../_shared/monitoring.ts";
 
 // Envia para o celular as notificações do app marcadas com `push` (consultas:
 // nova solicitação, confirmação, recusa, remarcação, cancelamento e lembretes
@@ -29,7 +30,7 @@ interface PendingPush {
   link: string | null;
 }
 
-Deno.serve(async (req: Request): Promise<Response> => {
+Deno.serve(monitored("notification-push", async (req: Request): Promise<Response> => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   const json = (body: unknown, status = 200) =>
@@ -138,4 +139,4 @@ Deno.serve(async (req: Request): Promise<Response> => {
     console.error("notification-push error:", error);
     return json({ error: "Falha ao enviar notificações" }, 500);
   }
-});
+}));

@@ -84,6 +84,7 @@ Usamos empresas que prestam serviços para nós e tratam dados apenas conforme n
 | Resend | e-mail e conteúdo dos avisos | envio de e-mails |
 | Google (Firebase Cloud Messaging) | token do aparelho, título e texto da notificação | notificações push |
 | Google e Twilio (servidores STUN) | endereço IP, por alguns instantes | estabelecer a conexão das chamadas de vídeo |
+| Grafana Labs (Grafana Cloud) | relatórios de erro técnicos: tela, navegador, aparelho e a mensagem do erro, sem nome, e-mail, conteúdo de conversas ou diário | saber quando o app falha ou fica fora do ar, para corrigir |
 | [HOSPEDAGEM DO SITE] | código do aplicativo | disponibilizar o aplicativo na web ⚖️ |
 
 **Transferência internacional (art. 33):** alguns desses serviços armazenam ou processam dados fora do Brasil, em países como os Estados Unidos. A transferência se apoia em **[cláusulas contratuais padrão / garantias contratuais dos fornecedores]** ⚖️.

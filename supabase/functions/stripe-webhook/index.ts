@@ -3,6 +3,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { PLAN_LIMITS, stripeState } from "../_shared/billing.ts";
 import { PLAN_PRICES, listSubscriptions, newStripe } from "../_shared/stripe.ts";
 import { grantFromPaymentIntent } from "../_shared/extras.ts";
+import { monitored } from "../_shared/monitoring.ts";
 
 // Mantém `subscribers` em dia com o Stripe sem depender de a pessoa abrir o
 // app (check-subscription): cancelamento, renovação recusada, troca de plano
@@ -149,7 +150,7 @@ const notifyPaymentFailed = async (customerId: string) => {
   if (error) log("Could not notify payment failure", { message: error.message });
 };
 
-Deno.serve(async (req) => {
+Deno.serve(monitored("stripe-webhook", async (req) => {
   if (req.method !== "POST") return new Response("Method not allowed", { status: 405 });
 
   const secret = Deno.env.get("STRIPE_WEBHOOK_SECRET");
@@ -212,4 +213,4 @@ Deno.serve(async (req) => {
     log("Error handling event", { type: event.type, message: err instanceof Error ? err.message : String(err) });
     return new Response("Webhook handler failed", { status: 500 });
   }
-});
+}));

@@ -2,6 +2,7 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { PLAN_PRICES, findCustomerId, liveSubscriptions, newStripe } from "../_shared/stripe.ts";
 import { parseTier, tierRank } from "../_shared/billing.ts";
+import { monitored } from "../_shared/monitoring.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -16,7 +17,7 @@ const logStep = (step: string, details?: unknown) => {
 const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), { headers: { ...corsHeaders, "Content-Type": "application/json" }, status });
 
-serve(async (req) => {
+serve(monitored("create-checkout", async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
@@ -97,4 +98,4 @@ serve(async (req) => {
     logStep("ERROR in create-checkout", { message: errorMessage });
     return json({ error: errorMessage }, 500);
   }
-});
+}));

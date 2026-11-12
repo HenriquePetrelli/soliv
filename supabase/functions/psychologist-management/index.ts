@@ -3,6 +3,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 import { Resend } from "https://esm.sh/resend@2.0.0";
 import { adminMfaSatisfied } from "../_shared/adminMfa.ts";
 import { errorMessage } from '../_shared/errors.ts';
+import { monitored } from "../_shared/monitoring.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -498,4 +499,4 @@ const handler = async (req: Request): Promise<Response> => {
   }
 };
 
-serve(handler);
+serve(monitored("psychologist-management", handler));

@@ -3,6 +3,7 @@
 // Só responde a quem sabe a senha da conta; senha errada ou conta sem
 // bloqueio devolvem a mesma resposta vazia.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { monitored } from "../_shared/monitoring.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -21,7 +22,7 @@ const json = (body: unknown, status = 200) =>
     headers: { "Content-Type": "application/json", ...corsHeaders },
   });
 
-Deno.serve(async (req: Request): Promise<Response> => {
+Deno.serve(monitored("account-block-status", async (req: Request): Promise<Response> => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
   if (req.method !== "POST") return json({ error: "Método não permitido" }, 405);
 
@@ -41,4 +42,4 @@ Deno.serve(async (req: Request): Promise<Response> => {
     console.error("account-block-status error:", error);
     return json({ block: null });
   }
-});
+}));

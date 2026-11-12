@@ -3,6 +3,7 @@ import type Stripe from "https://esm.sh/stripe@14.21.0";
 import { EXTRA_LABELS, EXTRA_PRICES, parseExtraKind, type ExtraKind } from "../_shared/billing.ts";
 import { EXTRA_PRICE_IDS, findCustomerId, newStripe } from "../_shared/stripe.ts";
 import { grantFromPaymentIntent as grant } from "../_shared/extras.ts";
+import { monitored } from "../_shared/monitoring.ts";
 
 // Atendimento avulso (SOS ou consulta agendada), cobrado na hora.
 //   - action "buy": com cartão salvo no Stripe, cobra direto e devolve
@@ -36,7 +37,7 @@ const savedCard = async (stripe: Stripe, customerId: string): Promise<string | n
   return cards.data[0]?.id ?? null;
 };
 
-Deno.serve(async (req) => {
+Deno.serve(monitored("buy-extra", async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
   try {
     if (!Deno.env.get("STRIPE_SECRET_KEY")) throw new Error("STRIPE_SECRET_KEY is not set");
@@ -176,4 +177,4 @@ Deno.serve(async (req) => {
     log("ERROR", { message });
     return json({ error: message }, 500);
   }
-});
+}));

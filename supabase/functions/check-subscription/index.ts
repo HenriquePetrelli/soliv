@@ -2,6 +2,7 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { EXTRA_PRICES, PLAN_LIMITS, parseTier, stripeState, tierRank, type StripeState, type Tier } from "../_shared/billing.ts";
 import { PLAN_PRICES, findCustomerId, listSubscriptions, newStripe, syncCustomerEmail } from "../_shared/stripe.ts";
+import { monitored } from "../_shared/monitoring.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -41,7 +42,7 @@ const isSameBrazilMonthAsDateOnly = (storedDateOnly: string, instant: Date): boo
   return storedYear === brazilInstant.getFullYear() && storedMonth === brazilInstant.getMonth() + 1;
 };
 
-serve(async (req) => {
+serve(monitored("check-subscription", async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
@@ -317,4 +318,4 @@ serve(async (req) => {
       status: 500,
     });
   }
-});
+}));

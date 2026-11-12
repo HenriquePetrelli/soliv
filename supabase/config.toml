@@ -3,6 +3,10 @@ project_id = "ihrrgmmsfuvlasmzdmwf"
 [functions.reset-weekly-goals]
 verify_jwt = false
 
+# Checagem pública de "app no ar" do Grafana Cloud (docs/monitoramento-grafana.md).
+[functions.health]
+verify_jwt = false
+
 [api]
 enabled = true
 port = 54321

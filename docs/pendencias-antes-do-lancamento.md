@@ -66,6 +66,14 @@ O que precisa ser resolvido antes de o app ficar pronto. Ao resolver um item, mo
 
 ## Importantes
 
+### 27. Ligar o monitoramento (Grafana Cloud, plano gratuito)
+
+- **Situação (2026-11-09):** o código está pronto e fica desligado até receber as configurações. O app envia erros (site, Android e iOS) pelo SDK Faro, limpos de dados pessoais (`src/lib/monitoring/`). As 41 edge functions enviam ao Loki os erros 5xx (`supabase/functions/_shared/monitoring.ts`). A nova função `health` responde se o backend e o banco estão de pé.
+- **Feito em 2026-11-12:** conta Free criada e app **Soliv** no Frontend Observability (região São Paulo); o endereço do coletor já está no código e liga na próxima publicação do site e dos apps.
+- **O que falta:** passo a passo em `docs/monitoramento-grafana.md`: os 3 secrets `GRAFANA_LOKI_*` no Supabase, publicar as edge functions (todas mudaram, mais a `health`), criar as 3 checagens de "no ar", ligar a integração do Supabase e os alertas.
+- **Como conferir:** derrubar uma tela de propósito no app publicado e ver o erro em Frontend → Errors; a checagem da `health` verde; a consulta `{app="soliv", source="edge-function"}` no Explore sem erro de autenticação.
+- **Registrado em:** 2026-11-09.
+
 ### 24. Voltar a exigir o código de verificação do admin
 
 - **Situação:** com o app em teste, o admin entra só com a senha; o código do app autenticador (verificação em duas etapas) é pedido apenas quando o ambiente está em produção. O ambiente fica na tabela `public.app_settings` (migration `20261109120000_bloqueio_flexivel_e_mfa_por_ambiente.sql`), começando em `test`. O banco (`is_super_admin`), as edge functions de admin (`adminMfaSatisfied`) e o painel leem o mesmo valor.
