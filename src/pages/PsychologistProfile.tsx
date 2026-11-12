@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { getFriendlyErrorMessage } from '@/utils/errorMessage';
 import { supabase } from '@/integrations/supabase/client';
+import type { Database } from '@/integrations/supabase/types';
 import { getSessionUser } from '@/lib/currentUser';
 import { KeyRound, LogOut, Lock, Pencil, Check, MessageCircle, Wallet, BellRing, Palette, ScrollText, LockKeyhole } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
@@ -97,7 +98,7 @@ const PsychologistProfile = () => {
     };
   }, []);
 
-  const updatePsych = async (values: Record<string, unknown>) => {
+  const updatePsych = async (values: Database['public']['Tables']['psychologists']['Update']) => {
     if (!userId) return;
     const { error } = await supabase.from('psychologists').update(values).eq('user_id', userId);
     if (error) throw error;

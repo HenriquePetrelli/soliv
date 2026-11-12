@@ -241,6 +241,9 @@ serve(monitored("send-appointment-notification", async (req) => {
   }
 
   // Send email notification
+  if (!recipientEmail) {
+    console.warn('No recipient email; skipping email notification');
+  } else {
   const { error: emailError } = await resend.emails.send({
     from: 'Soliv <notifications@soliv.app>',
     to: [recipientEmail],
@@ -252,6 +255,7 @@ serve(monitored("send-appointment-notification", async (req) => {
       console.error('Error sending email:', emailError);
       // Don't throw error - notification was created successfully
     }
+  }
 
     console.log('Notification sent successfully');
 
