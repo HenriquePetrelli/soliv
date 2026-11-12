@@ -19,6 +19,7 @@ describe('mensagem do push (FCM)', () => {
     expect(m.android.ttl).toBe('600s');
     expect(m.webpush.headers).toEqual({ TTL: '600', Urgency: 'high' });
     expect(m.apns.headers['apns-priority']).toBe('10');
+    expect(m.apns.payload.aps.sound).toBe('default'); // iPhone toca o som do aviso
     expect(m.webpush.fcm_options).toEqual({ link: '/psychologist-dashboard' });
     expect(m.data.url).toBe('/psychologist-dashboard');
   });

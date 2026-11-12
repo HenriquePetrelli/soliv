@@ -9,6 +9,8 @@ O app nativo é o mesmo build web empacotado pelo Capacitor (`android/` e `ios/`
 
 **Sons de relaxamento:** os 16 sons somam ~440 MB e passariam do limite do Play (200 MB por download). Os apps são gerados com `npm run build:native`, que deixa os sons de fora; no app eles tocam pela internet do bucket público `sounds` do Supabase Storage (`src/lib/soundUrl.ts`). O site continua servindo os sons de `public/sounds/`. **Som novo ou trocado:** além de pôr o arquivo em `public/sounds/`, enviar o mesmo arquivo, no mesmo caminho, para o bucket `sounds` (Supabase → Storage).
 
+**Ícones:** no iOS ficam em `ios/App/App/Assets.xcassets`. No Android são gerados do `assets/logo.png` por `python3 scripts/gerar-icones-android.py assets/logo.png android/app/src/main/res` (rodar de novo se o logo mudar).
+
 O número da versão (`versionCode` no Android, número do build no iOS) é o número da execução do workflow, então nunca se repete. A versão que aparece na loja (ex.: `1.0.0`) é o campo pedido no **Run workflow**, ou a tag (`v1.0.1` vira `1.0.1`).
 
 > **Antes de enviar para revisão:** ver a seção [Pagamentos nas lojas](#pagamentos-nas-lojas). É o ponto com mais risco de recusa.
