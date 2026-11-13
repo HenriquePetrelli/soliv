@@ -2,7 +2,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { History, Ban, Eye, Download, Unlock, Pencil, Trash2, CheckCircle2, XCircle, CreditCard, Plus } from 'lucide-react';
+import { History, Ban, Eye, Download, Unlock, Pencil, Trash2, CheckCircle2, XCircle, CreditCard, Plus, BadgeCheck } from 'lucide-react';
 import { EmptyState } from '@/components/EmptyState';
 import { SkeletonTable } from '@/components/skeletons/Skeletons';
 import { ContentTransition } from '@/components/skeletons/ContentTransition';
@@ -19,6 +19,7 @@ const ACTION_LABELS: Record<string, string> = {
   update_psychologist: 'Editou psicólogo',
   approve_psychologist: 'Aprovou psicólogo',
   reject_psychologist: 'Recusou psicólogo',
+  verify_psychologist_crp: 'Conferiu CRP no CFP',
   confirm_payout: 'Confirmou repasse',
   update_group_testimonial: 'Editou depoimento',
   delete_group_testimonial: 'Excluiu depoimento',
@@ -44,6 +45,7 @@ const ACTION_ICONS: Record<string, React.ComponentType<{ className?: string }>> 
   update_psychologist: Pencil,
   approve_psychologist: CheckCircle2,
   reject_psychologist: XCircle,
+  verify_psychologist_crp: BadgeCheck,
   confirm_payout: CreditCard,
   update_group_testimonial: Pencil,
   delete_group_testimonial: Trash2,
@@ -84,6 +86,8 @@ const formatDetails = (entry: AuditLogEntry): string => {
   const parts: string[] = [];
   if (d.duration) parts.push(`período: ${d.duration}`);
   if (d.reason) parts.push(`motivo: ${d.reason}`);
+  if (d.cfp_situacao) parts.push(`CFP: ${d.cfp_situacao}`);
+  else if (d.status === 'nao_encontrado') parts.push('CFP: não encontrado');
   if (Array.isArray(d.fields_changed) && d.fields_changed.length > 0) {
     parts.push(`campos: ${d.fields_changed.join(', ')}`);
   }

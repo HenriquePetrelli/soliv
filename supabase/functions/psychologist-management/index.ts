@@ -4,6 +4,7 @@ import { Resend } from "https://esm.sh/resend@2.0.0";
 import { adminMfaSatisfied } from "../_shared/adminMfa.ts";
 import { errorMessage } from '../_shared/errors.ts';
 import { monitored } from "../_shared/monitoring.ts";
+import { canApproveWithCrp, CRP_APPROVAL_MAX_AGE_DAYS, crpStatusFromRow, rowMatchesCrp, sanitizeCfpRow } from "../_shared/crp.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -333,7 +334,10 @@ const handler = async (req: Request): Promise<Response> => {
           is_blocked,
           blocked_until,
           blocked_reason,
-          blocked_at
+          blocked_at,
+          crp_status,
+          crp_situacao,
+          crp_verified_at
         `)
         .order('submitted_at', { ascending: false });
       
@@ -378,6 +382,13 @@ const handler = async (req: Request): Promise<Response> => {
         throw new Error('Psicólogo não encontrado');
       }
 
+      // Só aprova com o CRP ATIVO no CFP numa consulta recente.
+      if (!canApproveWithCrp(psychologist)) {
+        throw new Error(
+          `Confira o CRP no site do CFP antes de aprovar: ele precisa estar ATIVO numa consulta dos últimos ${CRP_APPROVAL_MAX_AGE_DAYS} dias.`,
+        );
+      }
+
       // Usar função RPC para aprovação. admin_id vem do usuário já
       // verificado (user.id), nunca do corpo da requisição — do contrário
       // qualquer admin poderia atribuir a aprovação a outro admin no
@@ -418,6 +429,77 @@ const handler = async (req: Request): Promise<Response> => {
         success: true, 
         message: 'Psicólogo aprovado com sucesso!' 
       }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    // Guardar a consulta do CRP no CFP (antes da aprovação ou de rotina).
+    // Corpo: { psychologist_id, row: linha da tabela do CFP ou null quando o
+    // CRP não aparece na busca, notes? }. O status sai da linha (ATIVO ou
+    // não), nunca do corpo, e a linha tem de ser do CRP cadastrado.
+    if (req.method === 'POST' && action === 'crp-verify') {
+      const body = await req.json() as { psychologist_id?: unknown; row?: unknown; notes?: unknown };
+      const psychologistId = typeof body.psychologist_id === 'string' ? body.psychologist_id : '';
+      validateInput({ psychologist_id: psychologistId }, ['psychologist_id']);
+
+      const row = body.row == null ? null : sanitizeCfpRow(body.row);
+      if (body.row != null && !row) throw new Error('Linha do CFP inválida');
+      const notes = typeof body.notes === 'string' ? body.notes.trim().slice(0, 1000) || null : null;
+
+      const { data: psychologist, error: fetchError } = await supabase
+        .from('psychologists')
+        .select('id, user_id, full_name, crp_number, approval_status')
+        .eq('id', psychologistId)
+        .single();
+      if (fetchError || !psychologist) throw new Error('Psicólogo não encontrado');
+
+      if (row && !rowMatchesCrp(row, psychologist.crp_number)) {
+        throw new Error(`O registro do CFP (${row.regiao} ${row.registro}) não é o CRP cadastrado (${psychologist.crp_number}).`);
+      }
+
+      const status = crpStatusFromRow(row);
+      const context = psychologist.approval_status === 'pending' ? 'aprovacao' : 'rotina';
+      const verifiedAt = new Date().toISOString();
+
+      const { error: historyError } = await supabase.from('crp_verifications').insert({
+        psychologist_id: psychologist.id,
+        crp_number: psychologist.crp_number,
+        status,
+        context,
+        cfp_situacao: row?.situacao || null,
+        cfp_nome: row?.nome || null,
+        cfp_regiao: row?.regiao || null,
+        cfp_registro: row?.registro || null,
+        cfp_inscricao: row?.inscricao || null,
+        notes,
+        verified_by: user.id,
+        verified_at: verifiedAt,
+      });
+      if (historyError) throw historyError;
+
+      const { data: updated, error: updateError } = await supabase
+        .from('psychologists')
+        .update({
+          crp_status: status,
+          crp_situacao: row?.situacao || null,
+          crp_verified_at: verifiedAt,
+          crp_verified_by: user.id,
+        })
+        .eq('id', psychologist.id)
+        .select('*')
+        .single();
+      if (updateError) throw updateError;
+
+      await supabase.from('admin_audit_log').insert({
+        admin_id: user.id,
+        action: 'verify_psychologist_crp',
+        target_type: 'psychologist',
+        target_id: psychologist.user_id ?? null,
+        target_name: psychologist.full_name ?? null,
+        details: { status, context, cfp_situacao: row?.situacao ?? null },
+      });
+
+      return new Response(JSON.stringify({ success: true, data: updated }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }

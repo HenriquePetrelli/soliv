@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { errorText, getFriendlyErrorMessage } from '@/utils/errorMessage';
+import type { CfpRow } from '@/lib/crpVerification';
 
 export interface PsychologistData {
   id: string;
@@ -28,6 +29,10 @@ export interface PsychologistData {
   blocked_until?: string | null;
   blocked_reason?: string | null;
   blocked_at?: string | null;
+  /** Última consulta ao CFP (null = nunca conferido). */
+  crp_status?: 'ativo' | 'irregular' | 'nao_encontrado' | null;
+  crp_situacao?: string | null;
+  crp_verified_at?: string | null;
 }
 
 export interface PsychologistRegistration {
@@ -143,6 +148,27 @@ export const usePsychologistManagement = () => {
     }
   };
 
+  /**
+   * Guarda a consulta do CRP no CFP. `row` é a linha da tabela do CFP com o
+   * CRP do psicólogo, ou null quando ele não aparece na busca.
+   */
+  const verifyCrp = async (psychologistId: string, row: CfpRow | null, notes?: string) => {
+    try {
+      const { data: result, error } = await supabase.functions.invoke('psychologist-management?action=crp-verify', {
+        method: 'POST',
+        body: { psychologist_id: psychologistId, row, notes },
+      });
+      if (error) throw error;
+      if (!result.success) throw new Error(result.error || 'Erro ao salvar a verificação');
+      setPendingPsychologists((list) => list.map((p) => (p.id === psychologistId ? { ...p, ...result.data } : p)));
+      return { success: true as const, data: result.data as PsychologistData };
+    } catch (error: unknown) {
+      console.error('Erro ao salvar verificação do CRP:', error);
+      toast.error(getFriendlyErrorMessage(error, 'Erro ao salvar a verificação do CRP'));
+      return { success: false as const, error: errorText(error) };
+    }
+  };
+
   const rejectPsychologist = async (psychologistId: string, adminUserId: string, rejectionReason?: string) => {
     setLoading(true);
     try {
@@ -242,6 +268,7 @@ export const usePsychologistManagement = () => {
     getPsychologistDetails,
     approvePsychologist,
     rejectPsychologist,
+    verifyCrp,
     checkPsychologistApproval,
     validateCrpUnique
   };
