@@ -10,7 +10,7 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Eye, CheckCircle, XCircle, FileText, Download, MapPin, UserCheck, User, Users, Pencil, Ban, Unlock, Search, MoreHorizontal, Trash2, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Eye, CheckCircle, XCircle, FileText, Download, MapPin, UserCheck, User, Users, Pencil, Ban, Unlock, Search, MoreHorizontal, Trash2, ChevronLeft, ChevronRight, ShieldCheck, AlertTriangle } from 'lucide-react';
 import { usePsychologistManagement, PsychologistData } from '@/hooks/usePsychologistManagement';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -24,6 +24,9 @@ import { ContentTransition } from '@/components/skeletons/ContentTransition';
 import { extractDocumentRef, openStorageDocument } from '@/lib/storageDocument';
 
 import { EmptyState } from '@/components/EmptyState';
+import { CrpStatusBadge } from './CrpStatusBadge';
+import { CrpVerificationDialog } from './CrpVerificationDialog';
+import { canApproveWithCrp, CRP_APPROVAL_MAX_AGE_DAYS, needsCrpCheck } from '@/lib/crpVerification';
 import { ErrorState } from '@/components/ErrorState';
 
 
@@ -35,7 +38,7 @@ interface PsychologistApprovalPanelProps {
 export const PsychologistApprovalPanel = ({ adminUserId, onDataChange }: PsychologistApprovalPanelProps) => {
   const [selectedPsychologist, setSelectedPsychologist] = useState<PsychologistData | null>(null);
   const [rejectionReason, setRejectionReason] = useState('');
-  const [filter, setFilter] = useState<'all' | 'pending' | 'approved' | 'rejected'>('pending');
+  const [filter, setFilter] = useState<'all' | 'pending' | 'approved' | 'rejected' | 'crp'>('pending');
   const [editOpen, setEditOpen] = useState(false);
   const [blockTarget, setBlockTarget] = useState<PsychologistData | null>(null);
   const [blockMode, setBlockMode] = useState<'block' | 'unblock'>('block');
@@ -45,6 +48,9 @@ export const PsychologistApprovalPanel = ({ adminUserId, onDataChange }: Psychol
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<PsychologistData | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [crpTarget, setCrpTarget] = useState<PsychologistData | null>(null);
+  // Verificação de rotina: fila fixa no início, um psicólogo por vez.
+  const [routine, setRoutine] = useState<{ ids: string[]; index: number; ok: number; problems: number; skipped: number } | null>(null);
 
   const {
     loading,
@@ -53,7 +59,8 @@ export const PsychologistApprovalPanel = ({ adminUserId, onDataChange }: Psychol
     getPendingPsychologists,
     getPsychologistDetails,
     approvePsychologist,
-    rejectPsychologist
+    rejectPsychologist,
+    verifyCrp
   } = usePsychologistManagement();
 
   useEffect(() => {
@@ -110,7 +117,9 @@ export const PsychologistApprovalPanel = ({ adminUserId, onDataChange }: Psychol
   const filteredPsychologists = useMemo(() => {
     const term = search.trim().toLowerCase();
     return pendingPsychologists.filter((psych) => {
-      const statusOk = filter === 'all' || psych.approval_status === filter;
+      const statusOk =
+        filter === 'all' ||
+        (filter === 'crp' ? psych.approval_status === 'approved' && needsCrpCheck(psych) : psych.approval_status === filter);
       if (!statusOk) return false;
       if (!term) return true;
       return (
@@ -120,6 +129,65 @@ export const PsychologistApprovalPanel = ({ adminUserId, onDataChange }: Psychol
       );
     });
   }, [pendingPsychologists, filter, search]);
+
+  // Verificação de rotina: aprovados com CRP nunca conferido, conferido há
+  // mais de 6 meses ou com problema na última consulta ao CFP.
+  const crpDueCount = useMemo(
+    () => pendingPsychologists.filter((p) => p.approval_status === 'approved' && needsCrpCheck(p)).length,
+    [pendingPsychologists]
+  );
+
+  const handleCrpVerified = (updated: PsychologistData) => {
+    setSelectedPsychologist((current) => (current?.id === updated.id ? { ...current, ...updated } : current));
+    onDataChange?.();
+    if (routine) advanceRoutine(updated.crp_status === 'ativo' ? 'ok' : 'problems');
+  };
+
+  const startRoutine = () => {
+    // Problemas da última consulta primeiro, depois nunca conferidos, depois os mais antigos.
+    const rank = (p: PsychologistData) => (p.crp_status === 'irregular' || p.crp_status === 'nao_encontrado' ? 0 : p.crp_verified_at ? 2 : 1);
+    const ids = pendingPsychologists
+      .filter((p) => p.approval_status === 'approved' && needsCrpCheck(p))
+      .sort((a, b) => rank(a) - rank(b) || (a.crp_verified_at ?? '').localeCompare(b.crp_verified_at ?? ''))
+      .map((p) => p.id);
+    if (ids.length === 0) {
+      toast.success('Todos os CRPs foram conferidos no CFP nos últimos 6 meses');
+      return;
+    }
+    setCrpTarget(null);
+    setDetailsOpen(false);
+    setRoutine({ ids, index: 0, ok: 0, problems: 0, skipped: 0 });
+  };
+
+  const finishRoutine = (r: NonNullable<typeof routine>, early: boolean) => {
+    setRoutine(null);
+    const parts = [`${r.ok} ativo(s)`];
+    if (r.problems) parts.push(`${r.problems} com problema`);
+    if (r.skipped) parts.push(`${r.skipped} pulado(s)`);
+    const left = r.ids.length - r.index;
+    if (early && left > 0) {
+      toast.info(`Rotina pausada: ${parts.join(', ')}. Faltam ${left}; eles continuam na aba Verificar CRP.`);
+    } else if (r.problems) {
+      toast.warning(`Rotina concluída: ${parts.join(', ')}. Veja os com problema na aba Verificar CRP.`);
+    } else {
+      toast.success(`Rotina concluída: ${parts.join(', ')}.`);
+    }
+  };
+
+  const advanceRoutine = (outcome: 'ok' | 'problems' | 'skipped') => {
+    if (!routine) return;
+    const next = { ...routine, [outcome]: routine[outcome] + 1, index: routine.index + 1 };
+    if (next.index >= next.ids.length) finishRoutine(next, false);
+    else setRoutine(next);
+  };
+
+  const routineTarget = routine ? pendingPsychologists.find((p) => p.id === routine.ids[routine.index]) ?? null : null;
+
+  // Saiu da lista no meio da rotina (excluído, por exemplo): pula.
+  useEffect(() => {
+    if (routine && !routineTarget) advanceRoutine('skipped');
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- só quando o alvo some
+  }, [routine, routineTarget]);
 
   const handleExportCsv = () => {
     if (filteredPsychologists.length === 0) {
@@ -192,7 +260,17 @@ export const PsychologistApprovalPanel = ({ adminUserId, onDataChange }: Psychol
   return (
     <div className="space-y-4 sm:space-y-6">
       <div className="flex sm:justify-end">
-        <div className="flex gap-2 w-full sm:w-auto">
+        <div className="flex flex-wrap gap-2 w-full sm:w-auto">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={startRoutine}
+            disabled={loading || !!routine}
+            className="flex-1 sm:flex-none"
+          >
+            <ShieldCheck className="h-4 w-4 mr-2" />
+            Verificação de rotina do CRP{crpDueCount > 0 ? ` (${crpDueCount})` : ''}
+          </Button>
           <Button
             variant="outline"
             size="sm"
@@ -209,11 +287,32 @@ export const PsychologistApprovalPanel = ({ adminUserId, onDataChange }: Psychol
         </div>
       </div>
 
+      {crpDueCount > 0 && filter !== 'crp' && (
+        <div className="flex flex-col gap-2 rounded-lg border border-warning/30 bg-warning/10 p-3 text-sm sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-start gap-2">
+            <AlertTriangle className="h-4 w-4 shrink-0 text-warning mt-0.5" />
+            <span>
+              {crpDueCount} psicólogo(s) aprovado(s) com CRP sem verificação no CFP nos últimos 6 meses (ou com problema na última consulta).
+            </span>
+          </div>
+          <div className="flex gap-2">
+            <Button size="sm" variant="outline" onClick={() => setFilter('crp')}>
+              Ver lista
+            </Button>
+            <Button size="sm" onClick={startRoutine} disabled={!!routine}>
+              <ShieldCheck className="h-4 w-4 mr-2" />
+              Iniciar verificação
+            </Button>
+          </div>
+        </div>
+      )}
+
       <Tabs value={filter} onValueChange={(value) => setFilter(value as typeof filter)} className="w-full">
-        <TabsList className="w-full h-auto p-1 bg-muted/60 grid grid-cols-2 sm:grid-cols-4 gap-1 rounded-lg">
+        <TabsList className="w-full h-auto p-1 bg-muted/60 grid grid-cols-2 sm:grid-cols-5 gap-1 rounded-lg">
           <TabsTrigger value="pending" className="text-xs sm:text-sm data-[state=active]:bg-card data-[state=active]:text-primary data-[state=active]:shadow-sm">Pendentes ({pendingPsychologists.filter(p => p.approval_status === 'pending').length})</TabsTrigger>
           <TabsTrigger value="approved" className="text-xs sm:text-sm data-[state=active]:bg-card data-[state=active]:text-primary data-[state=active]:shadow-sm">Aprovados ({pendingPsychologists.filter(p => p.approval_status === 'approved').length})</TabsTrigger>
           <TabsTrigger value="rejected" className="text-xs sm:text-sm data-[state=active]:bg-card data-[state=active]:text-primary data-[state=active]:shadow-sm">Rejeitados ({pendingPsychologists.filter(p => p.approval_status === 'rejected').length})</TabsTrigger>
+          <TabsTrigger value="crp" className="text-xs sm:text-sm data-[state=active]:bg-card data-[state=active]:text-primary data-[state=active]:shadow-sm">Verificar CRP ({crpDueCount})</TabsTrigger>
           <TabsTrigger value="all" className="text-xs sm:text-sm data-[state=active]:bg-card data-[state=active]:text-primary data-[state=active]:shadow-sm">Todos ({pendingPsychologists.length})</TabsTrigger>
         </TabsList>
       </Tabs>
@@ -256,6 +355,7 @@ export const PsychologistApprovalPanel = ({ adminUserId, onDataChange }: Psychol
                   <TableHead className="min-w-[180px]">Nome</TableHead>
                   <TableHead className="min-w-[200px]">Email</TableHead>
                   <TableHead className="min-w-[120px]">CRP</TableHead>
+                  <TableHead className="min-w-[150px]">CFP</TableHead>
                   <TableHead className="min-w-[160px]">Especialização</TableHead>
                   <TableHead className="min-w-[110px]">Status</TableHead>
                   {filter !== 'pending' && <TableHead className="w-[70px] text-right">Ações</TableHead>}
@@ -271,6 +371,11 @@ export const PsychologistApprovalPanel = ({ adminUserId, onDataChange }: Psychol
                     <TableCell className="font-medium">{psychologist.full_name}</TableCell>
                     <TableCell className="text-muted-foreground">{psychologist.email}</TableCell>
                     <TableCell className="text-muted-foreground">{psychologist.crp_number}</TableCell>
+                    <TableCell onClick={(e) => e.stopPropagation()}>
+                      <button type="button" onClick={() => setCrpTarget(psychologist)} title="Verificar CRP no CFP">
+                        <CrpStatusBadge psychologist={psychologist} />
+                      </button>
+                    </TableCell>
                     <TableCell className="text-muted-foreground">
                       {psychologist.specialization || '—'}
                     </TableCell>
@@ -290,6 +395,10 @@ export const PsychologistApprovalPanel = ({ adminUserId, onDataChange }: Psychol
                           <DropdownMenuItem onClick={() => handleViewDetails(psychologist)}>
                             <Eye className="h-4 w-4 mr-2" />
                             Detalhes
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => setCrpTarget(psychologist)}>
+                            <ShieldCheck className="h-4 w-4 mr-2" />
+                            Verificar CRP no CFP
                           </DropdownMenuItem>
                           {isCurrentlyBlocked(psychologist) ? (
                             <DropdownMenuItem
@@ -482,6 +591,16 @@ export const PsychologistApprovalPanel = ({ adminUserId, onDataChange }: Psychol
                               <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">CRP</label>
                               <p className="text-sm text-muted-foreground mt-1">{selectedPsychologist.crp_number}</p>
                             </div>
+                            <div className="sm:col-span-2">
+                              <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Situação no CFP</label>
+                              <div className="mt-1 flex flex-wrap items-center gap-2">
+                                <CrpStatusBadge psychologist={selectedPsychologist} />
+                                <Button variant="outline" size="sm" onClick={() => setCrpTarget(selectedPsychologist)}>
+                                  <ShieldCheck className="h-4 w-4 mr-2" />
+                                  Verificar no CFP
+                                </Button>
+                              </div>
+                            </div>
                             <div>
                               <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Especialização</label>
                               <p className="text-sm text-muted-foreground mt-1">
@@ -617,13 +736,25 @@ export const PsychologistApprovalPanel = ({ adminUserId, onDataChange }: Psychol
                         </div>
                         )}
 
+                        {selectedPsychologist.approval_status === 'pending' && !canApproveWithCrp(selectedPsychologist) && (
+                          <div className="flex flex-col gap-2 rounded-md border border-warning/30 bg-warning/10 p-3 text-sm sm:flex-row sm:items-center sm:justify-between">
+                            <span>
+                              Para aprovar, o CRP precisa estar <strong>ATIVO</strong> no CFP numa consulta dos últimos {CRP_APPROVAL_MAX_AGE_DAYS} dias.
+                            </span>
+                            <Button size="sm" onClick={() => setCrpTarget(selectedPsychologist)}>
+                              <ShieldCheck className="h-4 w-4 mr-2" />
+                              Verificar no CFP
+                            </Button>
+                          </div>
+                        )}
+
                         {selectedPsychologist.approval_status === 'pending' && (
                           <div className="flex flex-col sm:flex-row gap-2 pt-4 border-t">
 
 
                             <AlertDialog>
                               <AlertDialogTrigger asChild>
-                                <Button className="flex-1" variant="default">
+                                <Button className="flex-1" variant="default" disabled={!canApproveWithCrp(selectedPsychologist)}>
                                   <CheckCircle className="h-4 w-4 mr-2" />
                                   Aprovar
                                 </Button>
@@ -697,7 +828,7 @@ export const PsychologistApprovalPanel = ({ adminUserId, onDataChange }: Psychol
           description={
             filter === 'pending'
               ? 'Não há cadastros pendentes de aprovação no momento.'
-              : ({ approved: 'Não há psicólogos aprovados no momento.', rejected: 'Não há cadastros rejeitados.', all: 'Ainda não há psicólogos cadastrados.' } as Record<string, string>)[filter] ?? 'Nenhum resultado.'
+              : ({ crp: 'Todos os CRPs foram conferidos no CFP nos últimos 6 meses.', approved: 'Não há psicólogos aprovados no momento.', rejected: 'Não há cadastros rejeitados.', all: 'Ainda não há psicólogos cadastrados.' } as Record<string, string>)[filter] ?? 'Nenhum resultado.'
           }
           variant={filter === 'pending' ? 'primary' : 'muted'}
         />
@@ -746,6 +877,30 @@ export const PsychologistApprovalPanel = ({ adminUserId, onDataChange }: Psychol
       </AlertDialog>
 
 
+
+      {routine && routineTarget ? (
+        <CrpVerificationDialog
+          open
+          onOpenChange={(o) => { if (!o) finishRoutine(routine, true); }}
+          psychologist={routineTarget}
+          verifyCrp={verifyCrp}
+          onVerified={handleCrpVerified}
+          routine={{
+            position: routine.index + 1,
+            total: routine.ids.length,
+            onSkip: () => advanceRoutine('skipped'),
+            onStop: () => finishRoutine(routine, true),
+          }}
+        />
+      ) : crpTarget && (
+        <CrpVerificationDialog
+          open={!!crpTarget}
+          onOpenChange={(o) => { if (!o) setCrpTarget(null); }}
+          psychologist={crpTarget}
+          verifyCrp={verifyCrp}
+          onVerified={handleCrpVerified}
+        />
+      )}
 
       {selectedPsychologist && (
         <EditPsychologistModal

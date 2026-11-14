@@ -482,6 +482,62 @@ export type Database = {
         }
         Relationships: []
       }
+      crp_verifications: {
+        Row: {
+          cfp_inscricao: string | null
+          cfp_nome: string | null
+          cfp_regiao: string | null
+          cfp_registro: string | null
+          cfp_situacao: string | null
+          context: string
+          crp_number: string
+          id: string
+          notes: string | null
+          psychologist_id: string
+          status: string
+          verified_at: string
+          verified_by: string | null
+        }
+        Insert: {
+          cfp_inscricao?: string | null
+          cfp_nome?: string | null
+          cfp_regiao?: string | null
+          cfp_registro?: string | null
+          cfp_situacao?: string | null
+          context: string
+          crp_number: string
+          id?: string
+          notes?: string | null
+          psychologist_id: string
+          status: string
+          verified_at?: string
+          verified_by?: string | null
+        }
+        Update: {
+          cfp_inscricao?: string | null
+          cfp_nome?: string | null
+          cfp_regiao?: string | null
+          cfp_registro?: string | null
+          cfp_situacao?: string | null
+          context?: string
+          crp_number?: string
+          id?: string
+          notes?: string | null
+          psychologist_id?: string
+          status?: string
+          verified_at?: string
+          verified_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crp_verifications_psychologist_id_fkey"
+            columns: ["psychologist_id"]
+            isOneToOne: false
+            referencedRelation: "psychologists"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       emergency_contacts: {
         Row: {
           created_at: string
@@ -1940,6 +1996,10 @@ export type Database = {
           cpf: string | null
           created_at: string | null
           crp_number: string
+          crp_situacao: string | null
+          crp_status: string | null
+          crp_verified_at: string | null
+          crp_verified_by: string | null
           document_url: string | null
           documents: string[] | null
           email: string
@@ -1974,6 +2034,10 @@ export type Database = {
           cpf?: string | null
           created_at?: string | null
           crp_number: string
+          crp_situacao?: string | null
+          crp_status?: string | null
+          crp_verified_at?: string | null
+          crp_verified_by?: string | null
           document_url?: string | null
           documents?: string[] | null
           email: string
@@ -2008,6 +2072,10 @@ export type Database = {
           cpf?: string | null
           created_at?: string | null
           crp_number?: string
+          crp_situacao?: string | null
+          crp_status?: string | null
+          crp_verified_at?: string | null
+          crp_verified_by?: string | null
           document_url?: string | null
           documents?: string[] | null
           email?: string
