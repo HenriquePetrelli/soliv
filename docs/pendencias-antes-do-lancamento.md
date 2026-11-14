@@ -71,7 +71,8 @@ O que precisa ser resolvido antes de o app ficar pronto. Ao resolver um item, mo
 
 - **Situação:** o painel do admin confere o CRP no Cadastro Nacional do CFP antes de aprovar (precisa estar ATIVO numa consulta dos últimos 30 dias) e de rotina a cada 6 meses (aba **Verificar CRP** e botão **Verificação de rotina do CRP**, que passa por todos os pendentes um a um). O site do CFP tem reCAPTCHA: a busca é feita pelo admin e o atalho do navegador "Soliv: ler CFP" lê a tabela de resultados.
 - **Aplicado em 2026-11-14:** migration `20261113120000_verificacao_crp_cfp.sql` no Supabase (registrada no histórico). Conferido no banco, em transação desfeita: psicólogo não marca o próprio CRP como verificado e trocar o número do CRP apaga a verificação.
-- **Falta:** publicar a edge function `psychologist-management` (ação `crp-verify` e a trava na aprovação); testar o atalho no site real do CFP; conferir os 5 psicólogos aprovados (todos "Não verificado").
+- **Publicado em 2026-11-14:** edge function `psychologist-management` (ação `crp-verify` e trava na aprovação) pela CLI v3 com `--use-api`, `verify_jwt` mantido (versão 242; sem login responde 401).
+- **Falta:** testar o atalho no site real do CFP; conferir os 5 psicólogos aprovados (todos "Não verificado").
 
 ### 27. Ligar o monitoramento (Grafana Cloud, plano gratuito)
 
