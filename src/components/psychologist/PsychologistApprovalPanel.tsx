@@ -49,6 +49,8 @@ export const PsychologistApprovalPanel = ({ adminUserId, onDataChange }: Psychol
   const [deleteTarget, setDeleteTarget] = useState<PsychologistData | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [crpTarget, setCrpTarget] = useState<PsychologistData | null>(null);
+  // Verificação de rotina: fila fixa no início, um psicólogo por vez.
+  const [routine, setRoutine] = useState<{ ids: string[]; index: number; ok: number; problems: number; skipped: number } | null>(null);
 
   const {
     loading,
@@ -138,7 +140,54 @@ export const PsychologistApprovalPanel = ({ adminUserId, onDataChange }: Psychol
   const handleCrpVerified = (updated: PsychologistData) => {
     setSelectedPsychologist((current) => (current?.id === updated.id ? { ...current, ...updated } : current));
     onDataChange?.();
+    if (routine) advanceRoutine(updated.crp_status === 'ativo' ? 'ok' : 'problems');
   };
+
+  const startRoutine = () => {
+    // Problemas da última consulta primeiro, depois nunca conferidos, depois os mais antigos.
+    const rank = (p: PsychologistData) => (p.crp_status === 'irregular' || p.crp_status === 'nao_encontrado' ? 0 : p.crp_verified_at ? 2 : 1);
+    const ids = pendingPsychologists
+      .filter((p) => p.approval_status === 'approved' && needsCrpCheck(p))
+      .sort((a, b) => rank(a) - rank(b) || (a.crp_verified_at ?? '').localeCompare(b.crp_verified_at ?? ''))
+      .map((p) => p.id);
+    if (ids.length === 0) {
+      toast.success('Todos os CRPs foram conferidos no CFP nos últimos 6 meses');
+      return;
+    }
+    setCrpTarget(null);
+    setDetailsOpen(false);
+    setRoutine({ ids, index: 0, ok: 0, problems: 0, skipped: 0 });
+  };
+
+  const finishRoutine = (r: NonNullable<typeof routine>, early: boolean) => {
+    setRoutine(null);
+    const parts = [`${r.ok} ativo(s)`];
+    if (r.problems) parts.push(`${r.problems} com problema`);
+    if (r.skipped) parts.push(`${r.skipped} pulado(s)`);
+    const left = r.ids.length - r.index;
+    if (early && left > 0) {
+      toast.info(`Rotina pausada: ${parts.join(', ')}. Faltam ${left}; eles continuam na aba Verificar CRP.`);
+    } else if (r.problems) {
+      toast.warning(`Rotina concluída: ${parts.join(', ')}. Veja os com problema na aba Verificar CRP.`);
+    } else {
+      toast.success(`Rotina concluída: ${parts.join(', ')}.`);
+    }
+  };
+
+  const advanceRoutine = (outcome: 'ok' | 'problems' | 'skipped') => {
+    if (!routine) return;
+    const next = { ...routine, [outcome]: routine[outcome] + 1, index: routine.index + 1 };
+    if (next.index >= next.ids.length) finishRoutine(next, false);
+    else setRoutine(next);
+  };
+
+  const routineTarget = routine ? pendingPsychologists.find((p) => p.id === routine.ids[routine.index]) ?? null : null;
+
+  // Saiu da lista no meio da rotina (excluído, por exemplo): pula.
+  useEffect(() => {
+    if (routine && !routineTarget) advanceRoutine('skipped');
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- só quando o alvo some
+  }, [routine, routineTarget]);
 
   const handleExportCsv = () => {
     if (filteredPsychologists.length === 0) {
@@ -211,7 +260,17 @@ export const PsychologistApprovalPanel = ({ adminUserId, onDataChange }: Psychol
   return (
     <div className="space-y-4 sm:space-y-6">
       <div className="flex sm:justify-end">
-        <div className="flex gap-2 w-full sm:w-auto">
+        <div className="flex flex-wrap gap-2 w-full sm:w-auto">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={startRoutine}
+            disabled={loading || !!routine}
+            className="flex-1 sm:flex-none"
+          >
+            <ShieldCheck className="h-4 w-4 mr-2" />
+            Verificação de rotina do CRP{crpDueCount > 0 ? ` (${crpDueCount})` : ''}
+          </Button>
           <Button
             variant="outline"
             size="sm"
@@ -236,9 +295,15 @@ export const PsychologistApprovalPanel = ({ adminUserId, onDataChange }: Psychol
               {crpDueCount} psicólogo(s) aprovado(s) com CRP sem verificação no CFP nos últimos 6 meses (ou com problema na última consulta).
             </span>
           </div>
-          <Button size="sm" variant="outline" onClick={() => setFilter('crp')}>
-            Ver lista
-          </Button>
+          <div className="flex gap-2">
+            <Button size="sm" variant="outline" onClick={() => setFilter('crp')}>
+              Ver lista
+            </Button>
+            <Button size="sm" onClick={startRoutine} disabled={!!routine}>
+              <ShieldCheck className="h-4 w-4 mr-2" />
+              Iniciar verificação
+            </Button>
+          </div>
         </div>
       )}
 
@@ -813,7 +878,21 @@ export const PsychologistApprovalPanel = ({ adminUserId, onDataChange }: Psychol
 
 
 
-      {crpTarget && (
+      {routine && routineTarget ? (
+        <CrpVerificationDialog
+          open
+          onOpenChange={(o) => { if (!o) finishRoutine(routine, true); }}
+          psychologist={routineTarget}
+          verifyCrp={verifyCrp}
+          onVerified={handleCrpVerified}
+          routine={{
+            position: routine.index + 1,
+            total: routine.ids.length,
+            onSkip: () => advanceRoutine('skipped'),
+            onStop: () => finishRoutine(routine, true),
+          }}
+        />
+      ) : crpTarget && (
         <CrpVerificationDialog
           open={!!crpTarget}
           onOpenChange={(o) => { if (!o) setCrpTarget(null); }}

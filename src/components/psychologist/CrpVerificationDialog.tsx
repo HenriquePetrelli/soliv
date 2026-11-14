@@ -3,7 +3,8 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
-import { AlertTriangle, BadgeCheck, Bookmark, ClipboardPaste, ExternalLink, Loader2, SearchX } from 'lucide-react';
+import { AlertTriangle, BadgeCheck, Bookmark, ClipboardPaste, ExternalLink, Loader2, SearchX, SkipForward, Square } from 'lucide-react';
+import { Progress } from '@/components/ui/progress';
 import { toast } from 'sonner';
 import type { PsychologistData } from '@/hooks/usePsychologistManagement';
 import {
@@ -30,6 +31,8 @@ interface CrpVerificationDialogProps {
     notes?: string,
   ) => Promise<{ success: true; data: PsychologistData } | { success: false; error: string }>;
   onVerified: (updated: PsychologistData) => void;
+  /** Verificação de rotina: posição na fila e como pular ou encerrar. */
+  routine?: { position: number; total: number; onSkip: () => void; onStop: () => void };
 }
 
 const rowKey = (row: CfpRow) => `${row.regiao}|${row.registro}|${row.nome}`;
@@ -69,7 +72,7 @@ const CfpRowCard = ({ row, selected, onSelect }: { row: CfpRow; selected?: boole
   </button>
 );
 
-export const CrpVerificationDialog = ({ open, onOpenChange, psychologist, verifyCrp, onVerified }: CrpVerificationDialogProps) => {
+export const CrpVerificationDialog = ({ open, onOpenChange, psychologist, verifyCrp, onVerified, routine }: CrpVerificationDialogProps) => {
   const [capture, setCapture] = useState<CfpCapture | null>(null);
   const [pasteOpen, setPasteOpen] = useState(false);
   const [pasted, setPasted] = useState('');
@@ -85,13 +88,12 @@ export const CrpVerificationDialog = ({ open, onOpenChange, psychologist, verify
     bookmarkletRef.current?.setAttribute('href', bookmarkletHref);
   });
 
+  // Limpa ao fechar e ao passar para o próximo psicólogo da rotina.
   useEffect(() => {
-    if (!open) {
-      setCapture(null);
-      setPasted('');
-      setPasteOpen(false);
-      setChosen(null);
-    }
+    setCapture(null);
+    setPasted('');
+    setPasteOpen(false);
+    setChosen(null);
   }, [open, psychologist.id]);
 
   // Resultado enviado pelo atalho, da janela do CFP aberta pelo botão abaixo.
@@ -150,7 +152,8 @@ export const CrpVerificationDialog = ({ open, onOpenChange, psychologist, verify
     if (status === 'ativo') toast.success('CRP ativo no CFP: verificação salva');
     else toast.warning('Verificação salva: CRP sem situação ativa no CFP');
     onVerified(result.data);
-    onOpenChange(false);
+    // Na rotina, quem chamou passa para o próximo; fora dela, fecha.
+    if (!routine) onOpenChange(false);
   };
 
   const hitLimit = (capture?.rows.length ?? 0) >= 100;
@@ -159,13 +162,29 @@ export const CrpVerificationDialog = ({ open, onOpenChange, psychologist, verify
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Verificar CRP no CFP</DialogTitle>
+          <DialogTitle>{routine ? `Verificação de rotina · ${routine.position} de ${routine.total}` : 'Verificar CRP no CFP'}</DialogTitle>
           <DialogDescription>
             {psychologist.full_name} · CRP {psychologist.crp_number}
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4 text-sm">
+          {routine && (
+            <div className="space-y-2">
+              <Progress value={((routine.position - 1) / routine.total) * 100} className="h-2" />
+              <div className="flex gap-2">
+                <Button variant="outline" size="sm" className="flex-1" onClick={routine.onSkip} disabled={saving}>
+                  <SkipForward className="h-4 w-4 mr-2" />
+                  Pular este
+                </Button>
+                <Button variant="ghost" size="sm" className="flex-1" onClick={routine.onStop} disabled={saving}>
+                  <Square className="h-4 w-4 mr-2" />
+                  Encerrar rotina
+                </Button>
+              </div>
+            </div>
+          )}
+
           <div className="flex items-center gap-2 text-muted-foreground">
             <span>Última verificação:</span>
             <CrpStatusBadge psychologist={psychologist} />

@@ -67,6 +67,12 @@ O que precisa ser resolvido antes de o app ficar pronto. Ao resolver um item, mo
 
 ## Importantes
 
+### 31. Verificação do CRP no CFP (registrada em 2026-11-14)
+
+- **Situação:** o painel do admin confere o CRP no Cadastro Nacional do CFP antes de aprovar (precisa estar ATIVO numa consulta dos últimos 30 dias) e de rotina a cada 6 meses (aba **Verificar CRP** e botão **Verificação de rotina do CRP**, que passa por todos os pendentes um a um). O site do CFP tem reCAPTCHA: a busca é feita pelo admin e o atalho do navegador "Soliv: ler CFP" lê a tabela de resultados.
+- **Aplicado em 2026-11-14:** migration `20261113120000_verificacao_crp_cfp.sql` no Supabase (registrada no histórico). Conferido no banco, em transação desfeita: psicólogo não marca o próprio CRP como verificado e trocar o número do CRP apaga a verificação.
+- **Falta:** publicar a edge function `psychologist-management` (ação `crp-verify` e a trava na aprovação); testar o atalho no site real do CFP; conferir os 5 psicólogos aprovados (todos "Não verificado").
+
 ### 27. Ligar o monitoramento (Grafana Cloud, plano gratuito)
 
 - **Situação (2026-11-09):** o código está pronto e fica desligado até receber as configurações. O app envia erros (site, Android e iOS) pelo SDK Faro, limpos de dados pessoais (`src/lib/monitoring/`). As 41 edge functions enviam ao Loki os erros 5xx (`supabase/functions/_shared/monitoring.ts`). A nova função `health` responde se o backend e o banco estão de pé.
