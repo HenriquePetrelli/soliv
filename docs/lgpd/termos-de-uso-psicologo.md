@@ -40,6 +40,7 @@ O Soliv é uma plataforma de tecnologia que conecta pacientes a psicólogos para
 
 - O psicólogo disponível recebe os pedidos de SOS e decide se aceita cada um.
 - Ao aceitar, compromete-se a conduzir o atendimento até o fim ou até o tempo máximo do atendimento (25 minutos).
+- **Queda de conexão:** se, depois de a chamada conectar, o psicólogo perder a conexão e não voltar em **3 minutos** enquanto o paciente continua na sala, ele perde o atendimento: a chamada é encerrada automaticamente, não é possível reconectar, o atendimento **não entra no repasse** e o SOS é devolvido ao paciente. ⚖️
 - Ao encerrar, registra o desfecho (por exemplo, se a crise foi resolvida) e, quando couber, anotações clínicas.
 
 ## 6. Consultas agendadas
@@ -47,6 +48,7 @@ O Soliv é uma plataforma de tecnologia que conecta pacientes a psicólogos para
 - O psicólogo define a própria agenda semanal, bloqueios e férias, e as regras de agendamento (intervalo entre consultas e antecedência mínima e máxima).
 - Deve responder a cada pedido de consulta em até **24 horas**, aceitando, recusando ou propondo outro horário. Pedidos sem resposta são recusados automaticamente.
 - Consultas confirmadas devem ser cumpridas. Faltas recorrentes podem levar à suspensão do cadastro. ⚖️
+- **Queda de conexão:** se, depois de a chamada conectar, o psicólogo perder a conexão e não voltar em **3 minutos** enquanto o paciente continua na sala, ele perde a consulta: a chamada é encerrada automaticamente, não é possível reconectar, a consulta **não entra no repasse** e é devolvida ao paciente. ⚖️
 
 ## 7. Remuneração e repasse ⚖️
 
@@ -58,7 +60,8 @@ O Soliv é uma plataforma de tecnologia que conecta pacientes a psicólogos para
 - Os valores são apurados pelo Soliv e pagos **semanalmente** por **PIX**, para a chave informada no cadastro. Cada repasse é registrado com o código de identificação da transação PIX (E2E), visível em **Meus Pagamentos**.
 - **Tributos:** o psicólogo é responsável pelos próprios tributos e obrigações fiscais, inclusive a emissão de nota fiscal ou recibo, quando exigida. ⚖️
 - Os valores podem ser alterados com aviso prévio de pelo menos **30 dias**.
-- Atendimentos interrompidos por falha técnica são avaliados caso a caso pelo suporte.
+- Atendimentos (SOS ou consulta) em que o psicólogo perdeu a conexão e não voltou em **3 minutos** não são remunerados (itens 5 e 6).
+- Os demais atendimentos interrompidos por falha técnica são avaliados caso a caso pelo suporte.
 
 ## 8. Registros e documentos
 

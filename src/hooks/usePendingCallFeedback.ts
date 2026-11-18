@@ -71,8 +71,11 @@ export const usePendingCallFeedback = () => {
         ? await query.eq('patient_id', user.id)
         : await query.eq('accepted_by', user.id);
 
-    // O paciente trocou de psicólogo porque o primeiro sumiu: não há o que avaliar.
-    const rateable = (data ?? []).filter((r) => r.end_reason !== 'psychologist_unavailable');
+    // O paciente trocou de psicólogo porque o primeiro sumiu, ou o psicólogo
+    // caiu e não voltou (SOS devolvido): não há o que avaliar.
+    const rateable = (data ?? []).filter(
+      (r) => r.end_reason !== 'psychologist_unavailable' && r.end_reason !== 'psychologist_dropped',
+    );
 
     if (!error && rateable.length) {
       const sessionIds = rateable.map((r) => r.video_room_id as string);

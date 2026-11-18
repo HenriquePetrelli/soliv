@@ -21,6 +21,11 @@ export const END_REASONS = {
   CONNECTION_FAILURE: 'connection_failure',
   /** Media/device or other technical problem. */
   TECHNICAL_ISSUE: 'technical_issue',
+  /**
+   * Psychologist lost the connection and did not come back within 3 minutes
+   * (set only by the database): not paid, and the SOS goes back to the patient.
+   */
+  PSYCHOLOGIST_DROPPED: 'psychologist_dropped',
   /** Anything else — always accompanied by `end_notes`. */
   OTHER: 'other',
 } as const;
@@ -48,6 +53,7 @@ export const END_REASON_LABELS: Record<EndReason, string> = {
   [END_REASONS.TIME_LIMIT]: 'Tempo limite atingido',
   [END_REASONS.CONNECTION_FAILURE]: 'Falha de conexão',
   [END_REASONS.TECHNICAL_ISSUE]: 'Problema técnico',
+  [END_REASONS.PSYCHOLOGIST_DROPPED]: 'Psicólogo caiu e não voltou (SOS devolvido)',
   [END_REASONS.OTHER]: 'Outro motivo',
 };
 
