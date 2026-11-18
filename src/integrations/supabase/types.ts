@@ -3770,6 +3770,10 @@ export type Database = {
         Args: { p_read?: boolean; p_request_id: string }
         Returns: Json
       }
+      claim_psychologist_dropped: {
+        Args: { p_session_id: string }
+        Returns: Json
+      }
       sos_request_other_psychologist: {
         Args: { p_request_id: string }
         Returns: Json

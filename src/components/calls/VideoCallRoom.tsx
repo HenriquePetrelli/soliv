@@ -93,6 +93,15 @@ interface VideoCallRoomProps {
 /** Quanto tempo sem áudio/vídeo (com os dois na sala) até oferecer saídas. */
 const MEDIA_FAILURE_THRESHOLD_SECONDS = 45;
 
+/**
+ * Psicólogo caiu e não voltou neste tempo (com a chamada já conectada e o
+ * paciente na sala): perde a chamada, ela não entra no repasse e o paciente
+ * recebe o SOS ou a consulta de volta. O banco confere e encerra
+ * (`claim_psychologist_dropped`); a rotina de minuto em minuto também.
+ */
+const PSYCHOLOGIST_DROP_FORFEIT_SECONDS = 180;
+const PSYCHOLOGIST_DROPPED_REASON = END_REASONS.PSYCHOLOGIST_DROPPED;
+
 const formatClock = (seconds: number) => {
   const s = Math.max(0, Math.round(seconds));
   return `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`;
@@ -122,7 +131,7 @@ const VideoCallRoom = ({
   const isSos = kind === 'sos';
   const homeRoute = userType === 'psychologist' ? (isSos ? '/psychologist-dashboard' : '/psicologo/consultas') : isSos ? '/home' : '/appointments';
 
-  const [phase, setPhase] = useState<'call' | 'ended' | 'redirected'>('call');
+  const [phase, setPhase] = useState<'call' | 'ended' | 'redirected' | 'forfeited'>('call');
   const [endedMessage, setEndedMessage] = useState<string | null>(null);
   const [sessionProblem, setSessionProblem] = useState<string | null>(null);
   const [initTimedOut, setInitTimedOut] = useState(false);
@@ -286,6 +295,10 @@ const VideoCallRoom = ({
         setPhase('redirected');
         return;
       }
+      if (request.end_reason === PSYCHOLOGIST_DROPPED_REASON) {
+        setPhase('forfeited');
+        return;
+      }
       if (userType === 'patient' && request.accepted_by) {
         const { data: psychologist } = await supabase
           .from('psychologists')
@@ -321,6 +334,12 @@ const VideoCallRoom = ({
       cleanup();
       return;
     }
+    if (row.end_reason === PSYCHOLOGIST_DROPPED_REASON) {
+      endedLocallyRef.current = true;
+      setPhase('forfeited');
+      cleanup();
+      return;
+    }
     if (Date.now() - lastMediaSignalAtRef.current < 5000) return;
     const remoteType = userType === 'patient' ? 'psychologist' : 'patient';
     if (typeof row[`${remoteType}_muted`] === 'boolean') setRemoteMuted(row[`${remoteType}_muted`] as boolean);
@@ -334,13 +353,87 @@ const VideoCallRoom = ({
     sendMediaState({ userType, cameraOff: isCameraOff, muted: isMuted, displayName: localName || null, avatarUrl: null });
   }, [sendMediaState, userType, isCameraOff, isMuted, localName, isConnected, mediaChoiceReady]);
 
-  // O outro lado encerrou.
+  // O outro lado encerrou (ou o sistema: confere se foi a queda do psicólogo).
   useEffect(() => {
     if (!callEndedBy || endedLocallyRef.current || phase !== 'call') return;
-    setEndedMessage(isSos ? getTerminationMessage(callEndedBy.userType) : consultationEndedMessage(callEndedBy.userType));
-    cleanup();
-    setPhase('ended');
-  }, [callEndedBy, phase, isSos, cleanup]);
+    let cancelled = false;
+    (async () => {
+      if (callEndedBy.userType === 'system') {
+        const { data } = await supabase.from('webrtc_sessions').select('end_reason').eq('id', sessionId).maybeSingle();
+        if (cancelled) return;
+        if (data?.end_reason === PSYCHOLOGIST_DROPPED_REASON) {
+          endedLocallyRef.current = true;
+          cleanup();
+          setPhase('forfeited');
+          return;
+        }
+      }
+      setEndedMessage(isSos ? getTerminationMessage(callEndedBy.userType) : consultationEndedMessage(callEndedBy.userType));
+      cleanup();
+      setPhase('ended');
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [callEndedBy, phase, isSos, cleanup, sessionId]);
+
+  // Psicólogo caiu e não voltou em 3 minutos (com a chamada já conectada).
+  const everConnectedRef = useRef(false);
+  if (isConnected) everConnectedRef.current = true;
+  const psychologistDropSeconds =
+    userType === 'patient' && inCall && everConnectedRef.current && !remotePresent && remoteLeftAt
+      ? Math.max(0, Math.floor((nowTick - remoteLeftAt) / 1000))
+      : 0;
+  const psychologistDropDue = psychologistDropSeconds >= PSYCHOLOGIST_DROP_FORFEIT_SECONDS;
+  const dropCountdownText = (refund: string) =>
+    userType === 'patient' && everConnectedRef.current && remoteLeftAt
+      ? psychologistDropDue
+        ? `O psicólogo não voltou em 3 minutos: encerrando a chamada e ${refund}. `
+        : `Se ele não voltar em ${formatClock(PSYCHOLOGIST_DROP_FORFEIT_SECONDS - psychologistDropSeconds)}, a chamada é encerrada e ${refund}. `
+      : '';
+
+  // Paciente: passados os 3 minutos, pede ao banco para encerrar e devolver
+  // (de novo a cada 15 s: o banco confere pelo último sinal do psicólogo).
+  useEffect(() => {
+    if (!psychologistDropDue || !inCall) return;
+    let cancelled = false;
+    const claim = async () => {
+      const { data, error: rpcError } = await supabase.rpc('claim_psychologist_dropped', { p_session_id: sessionId });
+      if (cancelled || rpcError) return;
+      if ((data as { forfeited?: boolean } | null)?.forfeited) {
+        endedLocallyRef.current = true;
+        cleanup();
+        setPhase('forfeited');
+      }
+    };
+    void claim();
+    const timer = setInterval(claim, 15_000);
+    return () => {
+      cancelled = true;
+      clearInterval(timer);
+    };
+  }, [psychologistDropDue, inCall, sessionId, cleanup]);
+
+  // Psicólogo: ao voltar a conexão, confere se a chamada já foi perdida (aí
+  // some o "reconectando" e aparece o aviso de que ela foi encerrada).
+  useEffect(() => {
+    if (userType !== 'psychologist' || !inCall) return;
+    let cancelled = false;
+    const check = async () => {
+      if (typeof navigator !== 'undefined' && navigator.onLine === false) return;
+      const { data } = await supabase.from('webrtc_sessions').select('end_reason').eq('id', sessionId).maybeSingle();
+      if (cancelled || data?.end_reason !== PSYCHOLOGIST_DROPPED_REASON) return;
+      endedLocallyRef.current = true;
+      cleanup();
+      setPhase('forfeited');
+    };
+    void check();
+    const timer = setInterval(check, 15_000);
+    return () => {
+      cancelled = true;
+      clearInterval(timer);
+    };
+  }, [userType, inCall, sessionId, cleanup, isNetworkOffline, isReconnecting]);
 
   // ------------------------------------------------------------- controles
 
@@ -606,6 +699,54 @@ const VideoCallRoom = ({
     );
   }
 
+  if (phase === 'forfeited') {
+    const patientRoute = isSos ? '/sos' : '/appointments';
+    return (
+      <CenteredMessage
+        testId="call-forfeited"
+        icon={PhoneOff}
+        title={
+          userType === 'patient'
+            ? isSos
+              ? 'Seu SOS foi devolvido'
+              : 'Sua consulta foi devolvida'
+            : isSos
+              ? 'Você perdeu este atendimento'
+              : 'Você perdeu esta consulta'
+        }
+        text={
+          userType === 'patient'
+            ? isSos
+              ? 'O psicólogo perdeu a conexão e não voltou em 3 minutos. O atendimento foi encerrado e o SOS voltou para você: você pode pedir ajuda de novo agora. Se precisar de ajuda imediata, ligue para o CVV (188) ou o SAMU (192).'
+              : 'O psicólogo perdeu a conexão e não voltou em 3 minutos. A consulta foi encerrada e voltou para você: você pode agendar outro horário.'
+            : `Sua conexão ficou fora por mais de 3 minutos e ${isSos ? 'o atendimento' : 'a consulta'} foi encerrad${isSos ? 'o' : 'a'}. Não entra no seu repasse e foi devolvid${isSos ? 'o' : 'a'} ao paciente.`
+        }
+        action={
+          <div className="flex w-full flex-col gap-2">
+            {userType === 'patient' ? (
+              <>
+                <Button className="w-full" onClick={() => navigate(patientRoute, { replace: true })}>
+                  {isSos ? 'Pedir ajuda de novo' : 'Agendar outro horário'}
+                </Button>
+                {isSos && (
+                  <Button variant="outline" className="w-full" asChild>
+                    <a href="tel:188">
+                      <Phone className="h-4 w-4" /> Ligar para o CVV (188)
+                    </a>
+                  </Button>
+                )}
+              </>
+            ) : (
+              <Button className="w-full" onClick={() => navigate(homeRoute, { replace: true })}>
+                Voltar ao painel
+              </Button>
+            )}
+          </div>
+        }
+      />
+    );
+  }
+
   if (phase === 'ended') {
     return (
       <div className="min-h-screen bg-background">
@@ -786,7 +927,7 @@ const VideoCallRoom = ({
                   <RemoteAbsentPanel
                     icon={Clock}
                     title={remoteLeftAt ? 'O psicólogo perdeu a conexão' : 'O psicólogo ainda não entrou'}
-                    description="Você pode esperar mais um pouco ou chamar outro psicólogo agora, sem gastar outro SOS. Se precisar de ajuda imediata, ligue para o CVV (188) ou o SAMU (192)."
+                    description={`${dropCountdownText('o SOS volta para você')}Você pode esperar mais um pouco ou chamar outro psicólogo agora, sem gastar outro SOS. Se precisar de ajuda imediata, ligue para o CVV (188) ou o SAMU (192).`}
                     actions={[
                       { label: 'Chamar outro psicólogo', icon: UserRound, variant: 'default', loading: busyAction === 'other', onClick: requestOtherPsychologist },
                       { label: 'Continuar esperando', onClick: () => setAbsenceSnoozedUntil(Date.now() + 2 * 60 * 1000) },
@@ -810,7 +951,7 @@ const VideoCallRoom = ({
                   title={remoteLeftAt ? `${remoteRole} saiu da sala` : `${remoteRole} ainda não entrou`}
                   description={
                     userType === 'patient'
-                      ? 'Você pode avisá-lo pelo celular. Se a consulta não acontecer, ela fica como não realizada e a consulta do mês volta para você automaticamente.'
+                      ? `${dropCountdownText('a consulta volta para você')}Você pode avisá-lo pelo celular. Se a consulta não acontecer, ela fica como não realizada e a consulta do mês volta para você automaticamente.`
                       : 'Você pode avisá-lo pelo celular. Se ele não entrar, a consulta fica como não realizada automaticamente, sem descontar do plano dele.'
                   }
                   actions={[

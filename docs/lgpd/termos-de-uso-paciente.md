@@ -76,6 +76,7 @@ Se a sua empresa oferece o Soliv, você pode usar o código de convite do RH (no
 - Ao pedir ajuda pelo SOS, seu pedido é enviado aos psicólogos disponíveis naquele momento.
 - **Não há garantia de atendimento em um tempo determinado.** O atendimento depende de haver um psicólogo disponível. Se ninguém aceitar o pedido em **10 minutos**, ele é encerrado, não consome a sua cota, e o app indica o CVV (188) para você conversar com alguém imediatamente. ⚖️
 - A duração máxima do atendimento é de 25 minutos. O tempo pausa se alguém perder a conexão.
+- **Se o psicólogo cair:** se, depois de a chamada conectar, o psicólogo perder a conexão e não voltar em **3 minutos** enquanto você continua na sala, o atendimento é encerrado automaticamente e o **SOS volta para você na hora** (o do mês ou o avulso), para você pedir ajuda de novo.
 - Durante o atendimento, o psicólogo pode consultar os seus planos de segurança e contatos de emergência. Se ele avaliar que há risco à sua vida ou à de outra pessoa, pode acionar esses contatos ou os serviços de emergência, como preveem o Código de Ética Profissional do Psicólogo e a Resolução CFP nº 09/2024. ⚖️
 
 ## 7. Consultas agendadas
@@ -83,7 +84,8 @@ Se a sua empresa oferece o Soliv, você pode usar o código de convite do RH (no
 - Disponíveis nos planos Flex e Completo: 1 consulta de 50 minutos por mês (no Flex, no lugar do SOS do mês).
 - O psicólogo tem **24 horas** para aceitar, recusar ou propor outro horário. Se a consulta for recusada ou não tiver resposta, a cota do mês é devolvida.
 - A sala de vídeo abre 10 minutos antes do horário e fica disponível até 15 minutos depois do fim previsto.
-- **Falhas técnicas:** se um atendimento (SOS ou consulta) for interrompido por falha técnica, o caso é avaliado pelo suporte, que pode devolver a cota do mês. Para isso, escreva para **[E-MAIL DE SUPORTE]** em até **7 dias** depois do atendimento. ⚖️
+- **Se o psicólogo cair:** se, depois de a chamada conectar, o psicólogo perder a conexão e não voltar em **3 minutos** enquanto você continua na sala, a consulta é encerrada automaticamente e **volta para você na hora** (a do mês ou a avulsa), para você agendar outro horário.
+- **Falhas técnicas:** nos demais casos, se um atendimento (SOS ou consulta) for interrompido por falha técnica, o caso é avaliado pelo suporte, que pode devolver a cota do mês. Para isso, escreva para **[E-MAIL DE SUPORTE]** em até **7 dias** depois do atendimento. ⚖️
 
 ## 8. Grupos de apoio
 
