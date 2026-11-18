@@ -16,6 +16,7 @@ interface SubscriptionContextType {
   canScheduleAppointment: boolean;
   appointmentReason: string | null;
   /** Cota do próprio plano (sem contar avulsos) e o motivo quando não há. */
+  planCanUseSos: boolean;
   planCanScheduleAppointment: boolean;
   planAppointmentReason: string | null;
   /** Atendimentos avulsos pagos e ainda não usados. */
@@ -86,6 +87,7 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
   const [currentUsage, setCurrentUsage] = useState({ appointments: 0, sos_uses: 0 });
   const [canScheduleAppointment, setCanScheduleAppointment] = useState(false);
   const [appointmentReason, setAppointmentReason] = useState<string | null>(null);
+  const [planCanUseSos, setPlanCanUseSos] = useState(false);
   const [planCanScheduleAppointment, setPlanCanScheduleAppointment] = useState(false);
   const [planAppointmentReason, setPlanAppointmentReason] = useState<string | null>(null);
   const [extraCredits, setExtraCredits] = useState<Record<ExtraKind, number>>({ sos: 0, appointment: 0 });
@@ -120,6 +122,7 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
     setCurrentUsage(data.current_usage || { appointments: 0, sos_uses: 0 });
     setCanScheduleAppointment(data.can_schedule_appointment ?? false);
     setAppointmentReason(data.appointment_reason ?? null);
+    setPlanCanUseSos(data.plan_can_use_sos ?? data.can_use_sos ?? false);
     setPlanCanScheduleAppointment(data.plan_can_schedule_appointment ?? data.can_schedule_appointment ?? false);
     setPlanAppointmentReason(data.plan_appointment_reason ?? data.appointment_reason ?? null);
     setExtraCredits({ sos: Number(data.extra_credits?.sos ?? 0), appointment: Number(data.extra_credits?.appointment ?? 0) });
@@ -184,6 +187,9 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
       setCurrentUsage({ appointments: 0, sos_uses: 0 });
       setCanScheduleAppointment(false);
       setAppointmentReason(null);
+      setPlanCanUseSos(false);
+      setPlanCanScheduleAppointment(false);
+      setExtraCredits({ sos: 0, appointment: 0 });
       setEntitlementSource(null);
       setOrganizationName(null);
       setPersonalSubscriptionTier(null);
@@ -243,6 +249,7 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
         currentUsage,
         canScheduleAppointment,
         appointmentReason,
+        planCanUseSos,
         planCanScheduleAppointment,
         planAppointmentReason,
         extraCredits,
