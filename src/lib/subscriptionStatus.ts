@@ -37,8 +37,10 @@ export interface CheckSubscriptionData {
   cancel_at_period_end?: boolean;
   plan_limits?: { appointments: number; sos_uses: number };
   current_usage?: { appointments: number; sos_uses: number };
+  can_use_sos?: boolean;
   can_schedule_appointment?: boolean;
   appointment_reason?: string | null;
+  plan_can_use_sos?: boolean;
   plan_can_schedule_appointment?: boolean;
   plan_appointment_reason?: string | null;
   extra_credits?: { sos?: number; appointment?: number };
@@ -65,5 +67,7 @@ export const withExpiredCancellation = <T extends CheckSubscriptionData>(data: T
     cancel_at_period_end: false,
     plan_limits: { appointments: 0, sos_uses: 0 },
     can_schedule_appointment: false,
+    plan_can_use_sos: false,
+    plan_can_schedule_appointment: false,
   };
 };

@@ -24,6 +24,7 @@ import { toast } from 'sonner';
 import React from "react";
 import { useTheme } from "next-themes";
 import ActiveCallBanner from "@/components/sos/ActiveCallBanner";
+import HomeAllowanceLine from "@/components/home/HomeAllowanceLine";
 import { HomeSkeleton } from "@/components/skeletons/PageSkeletons";
 
 
@@ -230,6 +231,7 @@ const HomeContent = () => {
   return (
     <>
       <div>
+        <HomeAllowanceLine />
         <ActiveCallBanner />
 
         {/* Mobile/Tablet Mood Section */}
