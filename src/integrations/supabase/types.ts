@@ -1508,6 +1508,14 @@ export type Database = {
           email: string
           full_name: string
           id: string
+          identity_document_path: string | null
+          identity_prompt_after_plan_at: string | null
+          identity_prompt_seen_at: string | null
+          identity_rejection_reason: string | null
+          identity_reviewed_at: string | null
+          identity_reviewed_by: string | null
+          identity_status: string
+          identity_submitted_at: string | null
           is_blocked: boolean
           last_mood_date: string | null
           last_mood_value: number | null
@@ -1533,6 +1541,14 @@ export type Database = {
           email: string
           full_name: string
           id?: string
+          identity_document_path?: string | null
+          identity_prompt_after_plan_at?: string | null
+          identity_prompt_seen_at?: string | null
+          identity_rejection_reason?: string | null
+          identity_reviewed_at?: string | null
+          identity_reviewed_by?: string | null
+          identity_status?: string
+          identity_submitted_at?: string | null
           is_blocked?: boolean
           last_mood_date?: string | null
           last_mood_value?: number | null
@@ -1558,6 +1574,14 @@ export type Database = {
           email?: string
           full_name?: string
           id?: string
+          identity_document_path?: string | null
+          identity_prompt_after_plan_at?: string | null
+          identity_prompt_seen_at?: string | null
+          identity_rejection_reason?: string | null
+          identity_reviewed_at?: string | null
+          identity_reviewed_by?: string | null
+          identity_status?: string
+          identity_submitted_at?: string | null
           is_blocked?: boolean
           last_mood_date?: string | null
           last_mood_value?: number | null
@@ -2981,6 +3005,18 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      patient_identity_verified: {
+        Args: { p_user_id: string }
+        Returns: boolean
+      }
+      review_patient_identity: {
+        Args: { p_approve: boolean; p_patient_id: string; p_reason?: string }
+        Returns: string
+      }
+      submit_patient_identity: {
+        Args: { p_document_path: string }
+        Returns: string
+      }
       abrir_conversa: { Args: { p_psicologo_id: string }; Returns: string }
       accept_safety_plan_suggestion: {
         Args: {

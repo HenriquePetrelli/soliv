@@ -2,13 +2,14 @@ import { tierHasAppointments } from "@/lib/plans";
 import React, { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Plus, Calendar } from 'lucide-react';
+import { Plus, Calendar, IdCard } from 'lucide-react';
 import { useSearchParams } from 'react-router-dom';
 import ExtraPurchaseDialog from '@/components/ExtraPurchaseDialog';
 import { AppointmentScheduler } from '@/components/appointments/AppointmentScheduler';
 import { UpcomingAppointments } from '@/components/appointments/UpcomingAppointments';
 import { AppointmentHistory } from '@/components/appointments/AppointmentHistory';
 import { useSubscription } from '@/contexts/SubscriptionContext';
+import { useIdentityVerification } from '@/contexts/IdentityVerificationContext';
 
 
 const Appointments = () => {
@@ -16,14 +17,23 @@ const Appointments = () => {
   const { subscriptionTier, canScheduleAppointment, planCanScheduleAppointment, planAppointmentReason, extraCredits, checkSubscription } = useSubscription();
   const [showScheduler, setShowScheduler] = useState(false);
   const [showPurchase, setShowPurchase] = useState(false);
+  const { status: identityStatus, isVerified, requireVerified, openPrompt } = useIdentityVerification();
+
+  // Entrar em Consultas sem identidade confirmada: mostra a modal (uma vez por visita).
+  const identityKnown = identityStatus !== null;
+  useEffect(() => {
+    if (identityKnown && !isVerified) requireVerified('appointment');
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- só ao entrar na tela / quando a situação chega
+  }, [identityKnown, isVerified]);
 
   // Volta do pagamento de uma consulta avulsa: abre a agenda direto.
   useEffect(() => {
     if (searchParams.get('agendar') === '1') {
-      setShowScheduler(true);
+      if (requireVerified('appointment')) setShowScheduler(true);
       searchParams.delete('agendar');
       setSearchParams(searchParams, { replace: true });
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- requireVerified muda com a situação; o parâmetro é lido uma vez
   }, [searchParams, setSearchParams]);
 
   const handleScheduleSuccess = () => {
@@ -35,6 +45,7 @@ const Appointments = () => {
 
   // Sem cota do plano e sem avulso disponível: oferece comprar avulso ou assinar.
   const handleScheduleClick = () => {
+    if (!requireVerified('appointment')) return;
     if (!canScheduleAppointment) {
       setShowPurchase(true);
       return;
@@ -61,6 +72,26 @@ const Appointments = () => {
 
   return (
     <div className="space-y-6">
+
+        {identityKnown && !isVerified && (
+          <Card className="border-warning/30 bg-warning/10">
+            <CardContent className="p-4">
+              <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+                <IdCard className="h-5 w-5 shrink-0 text-warning" aria-hidden="true" />
+                <p className="flex-1 text-sm">
+                  {identityStatus === 'pendente'
+                    ? 'Sua identidade está em análise (até 24 horas). Depois de confirmada, você poderá agendar consultas.'
+                    : 'Para agendar consultas, sua identidade precisa estar confirmada.'}
+                </p>
+                {identityStatus !== 'pendente' && (
+                  <Button size="sm" variant="outline" onClick={() => openPrompt('appointment')}>
+                    Verificar identidade
+                  </Button>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Schedule New Appointment */}
         <Card className="border-border bg-card">

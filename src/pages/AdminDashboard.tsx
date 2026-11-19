@@ -52,6 +52,8 @@ const AdminDashboard = () => {
   const [metrics, setMetrics] = useState<AdminMetrics | null>(null);
   const [metricsLoading, setMetricsLoading] = useState(true);
   const [metricsError, setMetricsError] = useState<string | null>(null);
+  // Identidades de pacientes aguardando verificação (prazo: 24 horas).
+  const [pendingIdentities, setPendingIdentities] = useState(0);
   // A seção fica na URL (?secao=pacientes): recarregar a página ou voltar
   // no navegador mantém o admin onde estava.
   const [searchParams, setSearchParams] = useSearchParams();
@@ -117,6 +119,13 @@ const AdminDashboard = () => {
     try {
       setMetricsLoading(true);
       setMetricsError(null);
+      void supabase
+        .from('patients')
+        .select('id', { count: 'exact', head: true })
+        .eq('identity_status', 'pendente')
+        .then(({ count, error: countError }) => {
+          if (!countError) setPendingIdentities(count ?? 0);
+        });
       const { data, error } = await supabase.rpc('get_admin_metrics');
       if (error) throw error;
       if (data && data.length > 0) setMetrics(data[0]);
@@ -228,7 +237,7 @@ const AdminDashboard = () => {
     },
   };
 
-  const badges = { psychologists: metrics?.pending_psychologists ?? 0 };
+  const badges = { psychologists: metrics?.pending_psychologists ?? 0, patients: pendingIdentities };
 
   return (
     <AdminLayout active={activeTab} badges={badges}>
@@ -360,6 +369,22 @@ const AdminDashboard = () => {
                     </div>
                   ) : null}
 
+                  {pendingIdentities > 0 ? (
+                    <div className="flex items-center justify-between p-3 bg-primary/5 rounded-lg border border-primary/20">
+                      <div className="min-w-0">
+                        <p className="font-medium text-sm text-foreground">
+                          {pendingIdentities === 1 ? '1 identidade de paciente para verificar' : `${pendingIdentities} identidades de pacientes para verificar`}
+                        </p>
+                        <p className="text-xs text-muted-foreground mt-0.5">
+                          Prometemos resposta em até 24 horas; sem ela o paciente não usa SOS nem agenda
+                        </p>
+                      </div>
+                      <Button size="sm" variant="outline" onClick={() => setActiveTab("patients")}>
+                        Verificar
+                      </Button>
+                    </div>
+                  ) : null}
+
                   {metrics?.sos_requests_last_30_days && metrics.sos_requests_last_30_days > 10 ? (
                     <div className="flex items-center justify-between p-3 bg-destructive/5 rounded-lg border border-destructive/20">
                       <div className="min-w-0">
@@ -373,7 +398,7 @@ const AdminDashboard = () => {
                     </div>
                   ) : null}
 
-                  {(!metrics?.pending_psychologists || metrics.pending_psychologists === 0) &&
+                  {(!metrics?.pending_psychologists || metrics.pending_psychologists === 0) && pendingIdentities === 0 &&
                     (!metrics?.sos_requests_last_30_days || metrics.sos_requests_last_30_days <= 10) && (
                       <div className="flex items-center justify-center py-8 text-center">
                         <div>
@@ -396,7 +421,7 @@ const AdminDashboard = () => {
           </TabsContent>
 
           <TabsContent value="patients" className="mt-0">
-            <PatientsPanel />
+            <PatientsPanel onDataChange={fetchMetrics} />
           </TabsContent>
 
           <TabsContent value="sos" className="mt-0">

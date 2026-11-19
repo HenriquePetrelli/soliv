@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Bell, Building2, Check, Crown, LockKeyhole, LogOut, MessageCircle, Palette, ScrollText, Stethoscope, Target, User as UserIcon } from "lucide-react";
+import { Bell, Building2, Check, Crown, IdCard, LockKeyhole, LogOut, MessageCircle, Palette, ScrollText, Stethoscope, Target, User as UserIcon } from "lucide-react";
 import { SettingsRow, SettingsSection } from "@/components/settings/SettingsList";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { DailyMoodToggle } from "@/components/DailyMoodToggle";
@@ -14,6 +14,8 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { getSessionUser } from '@/lib/currentUser';
 import { useSubscription } from "@/contexts/SubscriptionContext";
+import { useIdentityVerification } from "@/contexts/IdentityVerificationContext";
+import { IDENTITY_STATUS_LABEL } from "@/lib/identityVerification";
 import { useToast } from "@/hooks/use-toast";
 import { useWeeklyGoals } from "@/hooks/useWeeklyGoals";
 import { useCompanyBenefit } from "@/hooks/useCompanyBenefit";
@@ -26,6 +28,7 @@ import type { User } from '@supabase/supabase-js';
 const Profile = () => {
   const navigate = useNavigate();
   const { subscribed, subscriptionTier, entitlementSource, organizationName, paymentIssue, cancelAtPeriodEnd, subscriptionEnd } = useSubscription();
+  const { status: identityStatus, openPrompt: openIdentityPrompt } = useIdentityVerification();
   const fromCompany = entitlementSource === 'organization';
   // "Benefício da empresa" só aparece para quem tem vínculo (colaborador ou RH).
   // Quem ainda não tem usa o código no cadastro ou em Planos.
@@ -120,6 +123,15 @@ const Profile = () => {
           ? `${planInfo.price}/mês`
           : 'Sem custo';
 
+  const identityDescription =
+    identityStatus === 'aprovado'
+      ? 'Confirmada: SOS e agendamento liberados'
+      : identityStatus === 'pendente'
+        ? 'Em análise: verificamos em até 24 horas'
+        : identityStatus === 'recusado'
+          ? 'Recusada: envie um novo documento'
+          : 'Necessária para usar o SOS e agendar consultas';
+
   return (
     <div className="mx-auto w-full max-w-3xl space-y-6 pb-4">
       {/* Quem é: avatar, nome, e-mail e plano. */}
@@ -195,6 +207,14 @@ const Profile = () => {
           description="Nome, e-mail, senha e seus dados"
           onClick={() => navigate('/account-settings')}
         />
+        {identityStatus && (
+          <SettingsRow
+            icon={<IdCard />}
+            title={`Identidade: ${IDENTITY_STATUS_LABEL[identityStatus]}`}
+            description={identityDescription}
+            onClick={() => openIdentityPrompt('manual')}
+          />
+        )}
         <SettingsRow
           icon={<Stethoscope />}
           title="Meus sintomas"

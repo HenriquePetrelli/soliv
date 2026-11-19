@@ -9,6 +9,7 @@ import BottomNavigation from "@/components/BottomNavigation";
 import ConfirmationModal from "@/components/sos/ConfirmationModal";
 import { DesktopSidebar } from "@/components/DesktopSidebar";
 import { useAuth } from "@/contexts/AuthContext";
+import { useIdentityVerification } from "@/contexts/IdentityVerificationContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useNotifications } from "@/hooks/useNotifications";
 import RouteSkeleton from "@/components/skeletons/RouteSkeleton";
@@ -28,6 +29,12 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
   const [showSOSModal, setShowSOSModal] = useState(false);
   const [moodEnabled, setMoodEnabled] = useState(true);
   const { unreadCount } = useNotifications();
+  const { requireVerified } = useIdentityVerification();
+  // SOS sem identidade confirmada: abre a modal de identidade no lugar da confirmação.
+  const openSos = () => {
+    if (!requireVerified('sos')) return;
+    setShowSOSModal(true);
+  };
   const isNotificationsRoute = location.pathname === '/notifications';
 
   useEffect(() => {
@@ -99,7 +106,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
   return (
     <div className="min-h-screen">
       <div className="min-h-screen">
-        <DesktopSidebar onSOSClick={() => setShowSOSModal(true)} />
+        <DesktopSidebar onSOSClick={openSos} />
         
         <div className="md:pl-64">
           {/* Mobile/Tablet Header */}
@@ -173,7 +180,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
 
         {/* Bottom Navigation - Only on Mobile/Tablet */}
         <div className="md:hidden">
-          <BottomNavigation onSOSClick={() => setShowSOSModal(true)} />
+          <BottomNavigation onSOSClick={openSos} />
         </div>
 
         {/* SOS Modal */}
