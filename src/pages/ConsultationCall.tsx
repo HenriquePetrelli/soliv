@@ -9,6 +9,7 @@ import VideoCallRoom from '@/components/calls/VideoCallRoom';
 import RouteSkeleton from '@/components/skeletons/RouteSkeleton';
 import { consultationDurationMinutes } from '@/lib/consultationWindow';
 import { getFriendlyErrorMessage } from '@/utils/errorMessage';
+import NoPrescriptionNotice from '@/components/calls/NoPrescriptionNotice';
 import TranscriptionConsentCheckbox from '@/components/calls/TranscriptionConsentCheckbox';
 import { TRANSCRIPTION_CONSENT_VERSION } from '@/lib/callTranscription';
 
@@ -158,6 +159,7 @@ const ConsultationCall = () => {
             checked={consentChecked}
             onCheckedChange={setConsentChecked}
           />
+          <NoPrescriptionNotice userType="patient" />
           {consentError && (
             <p role="alert" className="text-center text-sm text-destructive">{consentError}</p>
           )}

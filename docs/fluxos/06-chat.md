@@ -32,6 +32,7 @@ O chat dá continuidade ao cuidado depois de uma consulta. Só nasce de uma cons
 9. **Excluir** (paciente): a conversa some **só da lista de quem excluiu** (`ocultar_conversa`). O psicólogo continua com o histórico. Ela volta para a lista se chegar mensagem nova, se o paciente reabrir com o mesmo psicólogo ou se uma nova consulta for concluída.
 10. **Aparelho compartilhado**: ao sair da conta, as mensagens não enviadas e os rascunhos do chat saem do aparelho; e o app só reenvia pendentes da própria conta.
 11. **Caixa de texto**: Enter envia, Shift+Enter quebra a linha, a caixa cresce até 6 linhas e mostra quantos caracteres faltam perto do limite.
+12. **Sem medicamentos**: abaixo do cabeçalho da conversa fica o aviso de que o Soliv não receita medicamentos (`NoPrescriptionNotice`), com texto próprio para o paciente (procure um médico, como um psiquiatra) e para o psicólogo (não indique nem prescreva; oriente a procurar um médico). O mesmo aviso aparece no SOS por mensagem.
 
 ## Regras
 

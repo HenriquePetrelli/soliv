@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AlertTriangle, Check, CheckCheck, Clock, Loader2, MessageSquareText, Phone, RefreshCw, Send, ShieldCheck, UserRound } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import NoPrescriptionNotice from '@/components/calls/NoPrescriptionNotice';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
@@ -370,6 +371,8 @@ const SosTextChatRoom = ({
           Encerrar
         </Button>
       </header>
+
+      <NoPrescriptionNotice variant="banner" userType={userType} />
 
       {isPsychologist && (
         <p className="border-b bg-muted/40 px-4 py-2 text-xs text-muted-foreground">
