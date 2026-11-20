@@ -61,6 +61,13 @@ vi.mock('@/hooks/useWebRTC', async () => {
     }),
   };
 });
+const transcription = vi.hoisted(() => ({ enabled: false, calls: [] as Array<{ sessionId: string; active: boolean; localStream: unknown }> }));
+vi.mock('@/hooks/useCallTranscription', () => ({
+  useCallTranscription: (opts: { sessionId: string; active: boolean; localStream: unknown }) => {
+    transcription.calls.push(opts);
+    return { transcriptionEnabled: transcription.enabled };
+  },
+}));
 vi.mock('@/hooks/useAudioLevel', () => ({ useAudioLevel: () => ({ level: 0, speaking: false }) }));
 
 const presence = { remotePresent: false, remoteLeftAt: null as number | null };
@@ -215,5 +222,34 @@ describe('VideoCallRoom — uma sala para o SOS e a consulta', () => {
       window.dispatchEvent(new KeyboardEvent('keydown', { key: 'e', ctrlKey: true }));
     });
     expect(webrtcState.toggleVideo).toHaveBeenCalled();
+  });
+});
+
+describe('VideoCallRoom: transcrição', () => {
+  beforeEach(() => {
+    transcription.enabled = false;
+    transcription.calls = [];
+  });
+
+  it('com o consentimento do paciente, os dois lados veem "Chamada sendo transcrita"', () => {
+    transcription.enabled = true;
+    webrtcState.isConnected = true;
+    renderRoom();
+    expect(screen.getByTestId('transcription-indicator')).toHaveTextContent('Chamada sendo transcrita');
+    renderRoom({ userType: 'patient' });
+    expect(screen.getAllByTestId('transcription-indicator')).toHaveLength(2);
+  });
+
+  it('sem consentimento, não há aviso', () => {
+    renderRoom();
+    expect(screen.queryByTestId('transcription-indicator')).not.toBeInTheDocument();
+  });
+
+  it('a captura só fica ativa com a chamada conectada, com o microfone desta pessoa', () => {
+    renderRoom();
+    expect(transcription.calls.at(-1)).toMatchObject({ sessionId: '11111111-1111-4111-8111-111111111111', active: false });
+    webrtcState.isConnected = true;
+    renderRoom();
+    expect(transcription.calls.at(-1)).toMatchObject({ active: true, localStream: webrtcState.localStream });
   });
 });

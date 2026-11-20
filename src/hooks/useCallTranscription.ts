@@ -2,13 +2,14 @@ import { useEffect, useRef, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import {
   SILENCE_RMS,
-  TRANSCRIPTION_CHUNK_SECONDS,
   TRANSCRIPTION_SAMPLE_RATE,
   bytesToBase64,
   concatFloat32,
   downsample,
   encodeWav,
+  PAUSE_RMS,
   rms,
+  shouldCutChunk,
 } from '@/lib/callTranscription';
 
 interface UseCallTranscriptionOptions {
@@ -28,7 +29,7 @@ type AudioContextCtor = typeof AudioContext;
 /**
  * Transcrição da chamada: confere com o banco se o paciente consentiu
  * (`get_call_transcription_status`) e, se sim, envia o próprio microfone em
- * trechos de 30 s para `transcribe-call-chunk`. Microfone desligado ou
+ * trechos de 30 a 40 s, cortados numa pausa da fala, para `transcribe-call-chunk`. Microfone desligado ou
  * silêncio não são enviados. Devolve se a transcrição está ligada, para a sala
  * mostrar o aviso aos dois lados.
  */
@@ -79,8 +80,8 @@ export const useCallTranscription = ({ sessionId, localStream, active }: UseCall
 
     let parts: Float32Array[] = [];
     let collected = 0;
+    let quietSeconds = 0;
     let chunkStartedAt = Date.now();
-    const chunkSamples = TRANSCRIPTION_CHUNK_SECONDS * context.sampleRate;
     let queue: Promise<void> = Promise.resolve();
     let disposed = false;
 
@@ -124,9 +125,11 @@ export const useCallTranscription = ({ sessionId, localStream, active }: UseCall
     processor.onaudioprocess = (event) => {
       if (disposed || stoppedRef.current) return;
       if (collected === 0) chunkStartedAt = Date.now() - Math.round((event.inputBuffer.length / context.sampleRate) * 1000);
-      parts.push(new Float32Array(event.inputBuffer.getChannelData(0)));
-      collected += event.inputBuffer.length;
-      if (collected >= chunkSamples) flush(0);
+      const block = new Float32Array(event.inputBuffer.getChannelData(0));
+      parts.push(block);
+      collected += block.length;
+      quietSeconds = rms(block) < PAUSE_RMS ? quietSeconds + block.length / context.sampleRate : 0;
+      if (shouldCutChunk(collected / context.sampleRate, quietSeconds)) flush(0);
     };
 
     source.connect(processor);

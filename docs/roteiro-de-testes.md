@@ -172,6 +172,15 @@ O mesmo roteiro está no checklist interativo (mesmos itens e códigos `sNN-MM`)
 - [ ] `s03-64` Psicólogo → consulta seguinte com o mesmo paciente → Contexto do paciente ⇒ Mostra o resumo e a anotação privada ("só você vê") das sessões anteriores
 - [ ] `s03-65` Paciente Completo com cancelamento agendado → agendar consulta depois do fim do plano ⇒ "Seu plano termina em DD/MM. Agende até essa data ou renove o plano."
 
+### Transcrição das chamadas (automatizado em `e2e/transcricao/rodar.sh`; aqui, o que só dá para ver em produção)
+
+- [ ] `s03-70` Paciente → entrar na consulta ⇒ tela "Antes de entrar na consulta"; "Concordar e entrar" só com a caixa marcada; "Voltar" não abre a sala
+- [ ] `s03-71` Paciente e psicólogo conversando 2 min ⇒ "Chamada sendo transcrita" nos dois lados; Psicólogo → Histórico → Ver ⇒ "Transcrição da chamada" com o que foi dito, separado entre Paciente e Você (**serviço de transcrição real**)
+- [ ] `s03-72` Na mesma consulta, paciente desliga o microfone por 1 min ⇒ nada do que ela diria aparece nesse tempo
+- [ ] `s03-73` Paciente → SOS → confirmação ⇒ por vídeo, "Sim, chamar um psicólogo" só com a caixa marcada; por mensagem, sem caixa
+- [ ] `s03-74` SOS por vídeo com consentimento, 2 min de conversa ⇒ transcrição nos detalhes do SOS no Histórico do psicólogo
+- [ ] `s03-75` Edge Functions → `transcribe-call-chunk` → Logs, depois de s03-71 ⇒ sem erro do provedor (Lovable AI ou OpenAI)
+
 ## 4. Chat (ficha 06)
 
 
@@ -488,6 +497,7 @@ _Para quem publica edge functions ou migrations (detalhes na pendência 19 de `d
 - [ ] `s19-08` Publicar função pela CLI ⇒ `verify_jwt` de cada função igual ao do `supabase/config.toml` (conferir em Edge Functions depois)
 - [ ] `s19-09` Migration nova ⇒ aplicar só ela (sem `supabase db push`) e conferir em `supabase_migrations.schema_migrations`
 - [ ] `s19-10` Depois de publicar ⇒ repetir s06-41 (webhook com 200) e s19-01 (rotinas sem erro)
+- [ ] `s19-11` Mudou chamada, SOS, consulta ou transcrição ⇒ `e2e/transcricao/rodar.sh` (Docker; ~10 min na primeira vez) com 7 testes passando
 
 ## 20. Sem internet (offline)
 

@@ -18,8 +18,14 @@ export const TRANSCRIPTION_CONSENT_DETAILS =
   'O áudio é usado só para gerar a transcrição e não fica guardado. O texto fica no seu registro de atendimento, ' +
   'visível para você e para o psicólogo que te atender, e é guardado pelo prazo legal dos registros de atendimento (5 anos).';
 
-/** Duração de cada trecho enviado. */
+/** Duração mínima de cada trecho enviado: a partir dela, corta na próxima pausa. */
 export const TRANSCRIPTION_CHUNK_SECONDS = 30;
+/** Sem pausa na fala, corta mesmo assim neste limite (o servidor aceita até 90 s). */
+export const TRANSCRIPTION_MAX_CHUNK_SECONDS = 40;
+/** Abaixo disso (RMS de um bloco de ~85 ms), o bloco é silêncio. */
+export const PAUSE_RMS = 0.01;
+/** Silêncio seguido por esse tempo é uma pausa entre frases (não entre palavras). */
+export const PAUSE_SECONDS = 0.3;
 /** Frequência do áudio enviado (suficiente para voz e 3x menor que 48 kHz). */
 export const TRANSCRIPTION_SAMPLE_RATE = 16000;
 /** Abaixo disso (RMS), o trecho é silêncio e não é enviado. */
@@ -79,6 +85,15 @@ export const downsample = (input: Float32Array, fromRate: number, toRate: number
   }
   return out;
 };
+
+/**
+ * Corta o trecho numa pausa da fala depois de 30 s, para não partir palavras
+ * ou frases entre dois trechos (cada um é transcrito separado); sem pausa,
+ * corta em 40 s. `quietSeconds` é há quanto tempo o microfone está em silêncio.
+ */
+export const shouldCutChunk = (collectedSeconds: number, quietSeconds: number): boolean =>
+  collectedSeconds >= TRANSCRIPTION_MAX_CHUNK_SECONDS ||
+  (collectedSeconds >= TRANSCRIPTION_CHUNK_SECONDS && quietSeconds >= PAUSE_SECONDS);
 
 export const rms = (samples: Float32Array): number => {
   if (samples.length === 0) return 0;
