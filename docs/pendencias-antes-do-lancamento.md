@@ -9,6 +9,7 @@ O que precisa ser resolvido antes de o app ficar pronto. Ao resolver um item, mo
 ### 2. Domínio do Soliv e envio de e-mails
 
 - **Situação (2026-11-20):** domínio comprado: **`solivsaude.com.br`**. O site vai ficar em `https://solivsaude.com.br` (o `www` também abre). Os remetentes das 5 edge functions já foram trocados no código para `nao-responda@solivsaude.com.br`, mas **só devem ser publicados depois que o Resend verificar o domínio** (passo 2). Falta: passos 2, 3, 5 e a publicação das funções.
+- **`soliv.com.br` continua sendo o domínio desejado (2026-11-20):** o `solivsaude.com.br` é para lançar já; as 3 tarefas agendadas que acompanham o `soliv.com.br` continuam ligadas. Se ele for conseguido: ligar na Lovable como endereço principal (o `solivsaude.com.br` passa a redirecionar para ele), verificar no Resend, trocar Site URL e Redirect URLs no Supabase, o CORS do Grafana e, se quiser, os remetentes das 5 funções (troca de texto).
 - **Histórico (2026-10-13):** `soliv.com.br` está registrado por uma pessoa física, sem site, e vence em **03/12/2026** (foi renovado em 12/2025). `soliv.com` e `soliv.app` também estão ocupados. Decisão: aguardar o vencimento antes de escolher outro domínio. Lembretes agendados para 26/11/2026 (uma semana antes) e 10/12/2026 (para ver se foi renovado ou entrou no processo de liberação do Registro.br).
 - **O que depende do domínio:**
 
