@@ -77,6 +77,7 @@ Se a sua empresa oferece o Soliv, você pode usar o código de convite do RH (no
 - **Não há garantia de atendimento em um tempo determinado.** O atendimento depende de haver um psicólogo disponível. Se ninguém aceitar o pedido em **10 minutos**, ele é encerrado, não consome a sua cota, e o app indica o CVV (188) para você conversar com alguém imediatamente. ⚖️
 - A duração máxima do atendimento é de 25 minutos. O tempo pausa se alguém perder a conexão.
 - **Se o psicólogo cair:** se, depois de a chamada conectar, o psicólogo perder a conexão e não voltar em **3 minutos** enquanto você continua na sala, o atendimento é encerrado automaticamente e o **SOS volta para você na hora** (o do mês ou o avulso), para você pedir ajuda de novo.
+- **Transcrição:** no SOS por vídeo, antes de chamar o psicólogo, você é perguntado se concorda que o áudio da chamada seja **gravado e transcrito em texto**. Para chamar por vídeo é preciso concordar; se preferir não ter a conversa transcrita, peça o **SOS por mensagem**. Como funciona a transcrição está no item 7A. ⚖️
 - Durante o atendimento, o psicólogo pode consultar os seus planos de segurança e contatos de emergência. Se ele avaliar que há risco à sua vida ou à de outra pessoa, pode acionar esses contatos ou os serviços de emergência, como preveem o Código de Ética Profissional do Psicólogo e a Resolução CFP nº 09/2024. ⚖️
 
 ## 7. Consultas agendadas
@@ -84,8 +85,16 @@ Se a sua empresa oferece o Soliv, você pode usar o código de convite do RH (no
 - Disponíveis nos planos Flex e Completo: 1 consulta de 50 minutos por mês (no Flex, no lugar do SOS do mês).
 - O psicólogo tem **24 horas** para aceitar, recusar ou propor outro horário. Se a consulta for recusada ou não tiver resposta, a cota do mês é devolvida.
 - A sala de vídeo abre 10 minutos antes do horário e fica disponível até 15 minutos depois do fim previsto.
+- **Transcrição:** antes de entrar na sala, você é perguntado se concorda que o áudio da consulta seja **gravado e transcrito em texto**. A pergunta aparece uma vez para cada consulta, e só é possível entrar na sala depois de concordar (item 7A). ⚖️
 - **Se o psicólogo cair:** se, depois de a chamada conectar, o psicólogo perder a conexão e não voltar em **3 minutos** enquanto você continua na sala, a consulta é encerrada automaticamente e **volta para você na hora** (a do mês ou a avulsa), para você agendar outro horário.
 - **Falhas técnicas:** nos demais casos, se um atendimento (SOS ou consulta) for interrompido por falha técnica, o caso é avaliado pelo suporte, que pode devolver a cota do mês. Para isso, escreva para **[E-MAIL DE SUPORTE]** em até **7 dias** depois do atendimento. ⚖️
+
+## 7A. Transcrição das chamadas ⚖️
+
+- Com o seu consentimento, o Soliv transcreve em texto o que é falado nas chamadas de vídeo do SOS e das consultas, a sua voz e a do psicólogo. Os dois veem na tela o aviso **"Chamada sendo transcrita"**.
+- **O vídeo nunca é gravado.** O áudio é usado só para gerar o texto e **não fica guardado**.
+- A transcrição faz parte do registro do seu atendimento: só você e o psicólogo que participou da chamada podem lê-la, e ela é guardada pelo mesmo prazo dos registros de atendimento (5 anos). A equipe do Soliv não tem acesso.
+- O consentimento vale só para o atendimento em que foi dado. Detalhes, como o serviço que faz a transcrição, estão na **Política de Privacidade**.
 
 ## 8. Grupos de apoio
 
@@ -103,7 +112,7 @@ Você continua sendo o autor dos seus depoimentos. Ao publicá-los, autoriza o S
 
 ## 9. Condutas proibidas
 
-É proibido usar o Soliv para fins ilegais; tentar acessar dados de outros usuários; interferir no funcionamento do app; gravar, divulgar ou reproduzir atendimentos sem o consentimento de todos os participantes; ou ofender, ameaçar ou assediar psicólogos e outros usuários.
+É proibido usar o Soliv para fins ilegais; tentar acessar dados de outros usuários; interferir no funcionamento do app; gravar, divulgar ou reproduzir atendimentos por conta própria, fora da transcrição feita pelo Soliv (item 7A), sem o consentimento de todos os participantes; ou ofender, ameaçar ou assediar psicólogos e outros usuários.
 
 O descumprimento pode levar à suspensão ou ao encerramento da conta, sem prejuízo das medidas legais cabíveis.
 
