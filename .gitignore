@@ -44,3 +44,4 @@ supabase/.temp/
 *.p12
 *.mobileprovision
 keystore.properties
+/.e2e-transcricao/

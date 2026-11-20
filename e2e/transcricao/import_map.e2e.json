@@ -1,0 +1,9 @@
+{
+  "imports": {
+    "https://esm.sh/@supabase/supabase-js@2.52.1": "npm:@supabase/supabase-js@2.52.1",
+    "https://esm.sh/@supabase/supabase-js@2.45.0": "npm:@supabase/supabase-js@2.52.1",
+    "https://esm.sh/@supabase/supabase-js@2": "npm:@supabase/supabase-js@2.52.1",
+    "https://esm.sh/stripe@14.21.0": "npm:stripe@14.21.0",
+    "https://deno.land/std@0.190.0/http/server.ts": "./stdServeShim.ts"
+  }
+}
