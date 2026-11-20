@@ -34,7 +34,15 @@ O Soliv é uma plataforma de tecnologia que conecta pacientes a psicólogos para
 - **Sigilo profissional:** o psicólogo deve manter sigilo sobre tudo o que souber no atendimento, inclusive o conteúdo dos planos de segurança dos pacientes.
 - **Ambiente:** atender de um local reservado, que preserve a privacidade do paciente, com conexão adequada.
 - **Situações de risco:** diante de risco à vida do paciente ou de terceiros, o psicólogo pode usar os contatos de emergência e o plano de segurança do paciente e acionar os serviços de emergência, na forma do Código de Ética.
-- É proibido **gravar** os atendimentos ou usar os dados dos pacientes para qualquer finalidade alheia ao atendimento, inclusive contato fora da plataforma para oferecer serviços. ⚖️
+- É proibido **gravar** os atendimentos por conta própria (fora da transcrição feita pelo Soliv, item 4A) ou usar os dados dos pacientes para qualquer finalidade alheia ao atendimento, inclusive contato fora da plataforma para oferecer serviços. ⚖️
+
+## 4A. Transcrição das chamadas ⚖️
+
+- Quando o paciente consente, antes de entrar no SOS por vídeo ou na consulta, o Soliv **grava o áudio e transcreve em texto** o que é falado na chamada, inclusive **a voz do psicólogo**. Ao aceitar estes Termos, o psicólogo concorda com a transcrição da própria fala nesses atendimentos.
+- O psicólogo vê na tela o aviso **"Chamada sendo transcrita"** sempre que a transcrição estiver ativa. Sem o consentimento do paciente, nada é transcrito.
+- **O vídeo nunca é gravado.** O áudio é usado só para gerar o texto e **não fica guardado**.
+- A transcrição faz parte do registro do atendimento: só o paciente e o psicólogo que participou da chamada podem lê-la, no Histórico de consultas. O psicólogo deve tratá-la com o mesmo **sigilo profissional** das próprias anotações e não pode copiá-la, divulgá-la ou usá-la fora do atendimento.
+- A transcrição é automática e pode conter erros. Ela **não substitui** as anotações clínicas nem o registro documental que cabem ao psicólogo pela Resolução CFP nº 01/2009. ⚖️
 
 ## 5. Atendimentos de emergência (SOS)
 
