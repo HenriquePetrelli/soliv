@@ -6,6 +6,7 @@ import {
   Camera,
   CameraOff,
   Clock,
+  FileText,
   Loader2,
   Mic,
   MicOff,
@@ -42,6 +43,7 @@ import { useCallPresence } from '@/hooks/useCallPresence';
 import { useParticipantHeartbeat } from '@/hooks/useParticipantHeartbeat';
 import { useRemoteAbsence } from '@/hooks/useRemoteAbsence';
 import { useSharedCallTimer } from '@/hooks/useSharedCallTimer';
+import { useCallTranscription } from '@/hooks/useCallTranscription';
 import { dismissAppointmentFeedback } from '@/hooks/usePendingCallFeedback';
 import { getConnectionBannerState, isRemoteDropInvoluntary } from '@/lib/callBanner';
 import { getTerminationMessage } from '@/lib/callTermination';
@@ -192,6 +194,8 @@ const VideoCallRoom = ({
   const inCall = phase === 'call';
 
   const { remotePresent, remoteLeftAt } = useCallPresence({ sessionId, userType, enabled: inCall });
+  // Com o consentimento do paciente, cada lado transcreve a própria voz.
+  const { transcriptionEnabled } = useCallTranscription({ sessionId, localStream, active: inCall && isConnected });
   useParticipantHeartbeat({ sessionId, userType, enabled: inCall });
 
   const absenceSeconds = useRemoteAbsence({
@@ -883,6 +887,18 @@ const VideoCallRoom = ({
                 <span className="text-zinc-300">· {timerStarted ? 'pausado' : 'aguardando'}</span>
               )}
             </div>
+
+            {transcriptionEnabled && (
+              <div
+                data-testid="transcription-indicator"
+                role="status"
+                className="absolute left-3 top-12 z-10 flex items-center gap-1.5 rounded-full bg-zinc-900/75 px-3 py-1 text-xs font-medium text-white"
+                title="O paciente consentiu: o áudio da chamada é transcrito em texto (o áudio não fica guardado)"
+              >
+                <FileText className="h-3.5 w-3.5" aria-hidden="true" />
+                Chamada sendo transcrita
+              </div>
+            )}
 
             {banner.visible && (
               <div data-testid="connection-banner" role="status" className="absolute left-1/2 top-14 z-20 w-[92%] max-w-md -translate-x-1/2">

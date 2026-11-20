@@ -188,10 +188,21 @@ serve(monitored("emergency-sos", async (req) => {
       
       // Triagem opcional (o que o paciente marcou na confirmação). Só as
       // opções conhecidas; corpo ausente ou inválido = sem triagem.
-      const requestBody = await req.json().catch(() => null) as { triage?: unknown; channel?: unknown } | null;
+      const requestBody = await req.json().catch(() => null) as {
+        triage?: unknown;
+        channel?: unknown;
+        transcription_consent?: unknown;
+        transcription_consent_version?: unknown;
+      } | null;
       const triage = sanitizeTriage(requestBody?.triage);
       // "Por vídeo" (padrão) ou "Por mensagem", escolhido na confirmação.
       const channel = requestBody?.channel === 'text' ? 'text' : 'video';
+      // Consentimento com a transcrição, marcado na confirmação (só no vídeo:
+      // o SOS por mensagem já é texto). Sem ele, a chamada não é transcrita.
+      const consentVersion = typeof requestBody?.transcription_consent_version === 'string'
+        ? requestBody.transcription_consent_version.slice(0, 20)
+        : '';
+      const transcriptionConsent = channel === 'video' && requestBody?.transcription_consent === true && consentVersion.length > 0;
 
       const { data: emergencyRequest, error: insertError } = await supabase
         .from('emergency_requests')
@@ -200,6 +211,9 @@ serve(monitored("emergency-sos", async (req) => {
           status: 'pending',
           channel,
           ...(triage.length > 0 ? { triage } : {}),
+          ...(transcriptionConsent
+            ? { transcription_consent_at: new Date().toISOString(), transcription_consent_version: consentVersion }
+            : {}),
         })
         .select()
         .single();

@@ -20,6 +20,7 @@ import { useIdentityVerification } from "@/contexts/IdentityVerificationContext"
 import { formatCents } from "@/lib/plans";
 import { notifySosQueueChanged, subscribeSosQueue } from "@/lib/sosQueueChannel";
 import type { RealtimeChannel } from '@supabase/supabase-js';
+import { saveSosTranscriptionConsent, takeSosTranscriptionConsent } from "@/lib/callTranscription";
 
 
 /** Server-side TTL for pending SOS requests (finalize_stale_emergency_sessions). */
@@ -60,6 +61,8 @@ const SosPage = () => {
   
   // Use ref to store requestId for cleanup without causing re-renders
   const requestIdRef = useRef<string | null>(null);
+  // Consentimento com a transcrição dado na confirmação ("Tentar de novo" mantém).
+  const transcriptionConsentRef = useRef(false);
   const acceptedRef = useRef<boolean>(false);
   
   // Update ref when requestId changes
@@ -182,9 +185,12 @@ const SosPage = () => {
           setTriage(chosenTriage);
           const chosenChannel = takeSosChannel();
           setChannel(chosenChannel);
+          const chosenConsent = takeSosTranscriptionConsent();
+          transcriptionConsentRef.current = chosenConsent;
           const newId = await createEmergencyRequest({
             triage: chosenTriage,
             channel: chosenChannel,
+            transcriptionConsent: chosenConsent,
             onDenied: (info) => {
               denied = true;
               setDenial(info);
@@ -428,6 +434,7 @@ const SosPage = () => {
                       // Tenta de novo do mesmo jeito que a pessoa escolheu.
                       saveSosChannel(channel);
                       saveSosTriage(triage);
+                      saveSosTranscriptionConsent(transcriptionConsentRef.current);
                       window.location.reload();
                     }}
                     className="min-h-12 w-full"

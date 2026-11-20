@@ -15,6 +15,8 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { SOS_TRIAGE_OPTIONS, hasDangerRisk, hasSelfHarmRisk, saveSosTriage, type SosTriageKey } from "@/lib/sosTriage";
 import { saveSosChannel, type SosChannel } from "@/lib/sosChannel";
+import { saveSosTranscriptionConsent } from "@/lib/callTranscription";
+import TranscriptionConsentCheckbox from "@/components/calls/TranscriptionConsentCheckbox";
 
 interface ConfirmationModalProps {
   open: boolean;
@@ -42,12 +44,17 @@ const ConfirmationModal = ({ open, onOpenChange, onConfirm }: ConfirmationModalP
   const [triage, setTriage] = useState<SosTriageKey[]>([]);
   // Vídeo é o padrão; mensagem para quem não consegue falar agora.
   const [channel, setChannel] = useState<SosChannel>("video");
+  // Por vídeo, a chamada é gravada e transcrita: o paciente consente aqui,
+  // antes de chamar. Por mensagem não precisa (a conversa já é escrita).
+  const [transcriptionConsent, setTranscriptionConsent] = useState(false);
   useEffect(() => {
     if (!open) {
       setTriage([]);
       setChannel("video");
+      setTranscriptionConsent(false);
     }
   }, [open]);
+  const needsConsent = channel === "video" && !transcriptionConsent;
   const toggle = (key: SosTriageKey) =>
     setTriage((prev) => (prev.includes(key) ? prev.filter((k) => k !== key) : [...prev, key]));
   const selfHarm = hasSelfHarmRisk(triage);
@@ -166,11 +173,30 @@ const ConfirmationModal = ({ open, onOpenChange, onConfirm }: ConfirmationModalP
             )}
           </section>
 
+          {channel === "video" && (
+            <TranscriptionConsentCheckbox
+              id="sos-transcription-consent"
+              checked={transcriptionConsent}
+              onCheckedChange={setTranscriptionConsent}
+            />
+          )}
+
           <AlertDialogFooter className="flex-col gap-2 sm:flex-col sm:space-x-0">
+            {needsConsent && (
+              <p className="text-center text-xs text-muted-foreground" role="note">
+                Marque o consentimento acima para chamar por vídeo, ou escolha "Por mensagem".
+              </p>
+            )}
             <AlertDialogAction
-              onClick={() => {
+              disabled={needsConsent}
+              onClick={(event) => {
+                if (needsConsent) {
+                  event.preventDefault();
+                  return;
+                }
                 saveSosTriage(triage);
                 saveSosChannel(channel);
+                saveSosTranscriptionConsent(channel === "video" && transcriptionConsent);
                 onConfirm();
               }}
               className="h-12 w-full bg-sos-secondary text-base font-semibold text-white hover:bg-sos-secondary-hover"

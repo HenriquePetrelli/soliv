@@ -237,6 +237,8 @@ export type Database = {
           scheduled_at: string
           session_summary: string | null
           status: string
+          transcription_consent_at: string | null
+          transcription_consent_version: string | null
           updated_at: string
           video_room_id: string | null
         }
@@ -258,6 +260,8 @@ export type Database = {
           scheduled_at: string
           session_summary?: string | null
           status?: string
+          transcription_consent_at?: string | null
+          transcription_consent_version?: string | null
           updated_at?: string
           video_room_id?: string | null
         }
@@ -279,6 +283,8 @@ export type Database = {
           scheduled_at?: string
           session_summary?: string | null
           status?: string
+          transcription_consent_at?: string | null
+          transcription_consent_version?: string | null
           updated_at?: string
           video_room_id?: string | null
         }
@@ -400,6 +406,47 @@ export type Database = {
           uf_code?: number
         }
         Relationships: []
+      }
+      call_transcript_segments: {
+        Row: {
+          content: string
+          created_at: string
+          duration_ms: number
+          id: string
+          speaker_id: string
+          speaker_role: string
+          started_at: string
+          webrtc_session_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          duration_ms: number
+          id?: string
+          speaker_id: string
+          speaker_role: string
+          started_at: string
+          webrtc_session_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          duration_ms?: number
+          id?: string
+          speaker_id?: string
+          speaker_role?: string
+          started_at?: string
+          webrtc_session_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "call_transcript_segments_webrtc_session_id_fkey"
+            columns: ["webrtc_session_id"]
+            isOneToOne: false
+            referencedRelation: "webrtc_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       care_record_archive: {
         Row: {
@@ -604,6 +651,8 @@ export type Database = {
           started_at: string | null
           status: string
           time_limit_seconds: number
+          transcription_consent_at: string | null
+          transcription_consent_version: string | null
           triage: string[]
           updated_at: string
           video_room_id: string | null
@@ -629,6 +678,8 @@ export type Database = {
           started_at?: string | null
           status?: string
           time_limit_seconds?: number
+          transcription_consent_at?: string | null
+          transcription_consent_version?: string | null
           triage?: string[]
           updated_at?: string
           video_room_id?: string | null
@@ -654,6 +705,8 @@ export type Database = {
           started_at?: string | null
           status?: string
           time_limit_seconds?: number
+          transcription_consent_at?: string | null
+          transcription_consent_version?: string | null
           triage?: string[]
           updated_at?: string
           video_room_id?: string | null
@@ -3343,6 +3396,18 @@ export type Database = {
       }
       format_br_datetime: { Args: { p_at: string }; Returns: string }
       gerenciar_expiracao_conversas: { Args: never; Returns: undefined }
+      get_call_transcript: {
+        Args: { p_appointment_id?: string; p_emergency_request_id?: string }
+        Returns: {
+          content: string
+          speaker_role: string
+          started_at: string
+        }[]
+      }
+      get_call_transcription_status: {
+        Args: { p_session_id: string }
+        Returns: boolean
+      }
       get_admin_audit_log: {
         Args: { p_limit?: number; p_offset?: number }
         Returns: {
@@ -3525,6 +3590,10 @@ export type Database = {
           p_price_tier: string
           p_user_id: string
         }
+        Returns: string
+      }
+      give_appointment_transcription_consent: {
+        Args: { p_appointment_id: string; p_version: string }
         Returns: string
       }
       handle_psychologist_approval: {

@@ -5,6 +5,7 @@ import { END_REASONS } from '@/lib/emergencyEndReasons';
 import { useToast } from '@/hooks/use-toast';
 import { findPatientOpenRequest } from '@/lib/emergencyCallGuard';
 import { errorText } from '@/utils/errorMessage';
+import { TRANSCRIPTION_CONSENT_VERSION } from '@/lib/callTranscription';
 
 export interface EmergencyRequest {
   id: string;
@@ -33,7 +34,7 @@ export const useEmergencySOS = () => {
   const { toast } = useToast();
 
   /** `onDenied`: a tela mostra a recusa do jeito dela (sem o aviso flutuante). */
-  const createEmergencyRequest = async (options?: { onDenied?: (denial: SosDenial) => void; triage?: string[]; channel?: 'video' | 'text' }) => {
+  const createEmergencyRequest = async (options?: { onDenied?: (denial: SosDenial) => void; triage?: string[]; channel?: 'video' | 'text'; transcriptionConsent?: boolean }) => {
     if (loading) return; // Prevent multiple simultaneous requests
     
     try {
@@ -69,7 +70,14 @@ export const useEmergencySOS = () => {
       const { data, error } = await supabase.functions.invoke('emergency-sos', {
         method: 'POST',
         // Triagem opcional (o que o paciente marcou na tela de confirmação).
-        body: { patient_id: user.id, triage: options?.triage ?? [], channel: options?.channel ?? 'video' },
+        // Consentimento com a transcrição (só vale por vídeo; o servidor confere).
+        body: {
+          patient_id: user.id,
+          triage: options?.triage ?? [],
+          channel: options?.channel ?? 'video',
+          transcription_consent: options?.transcriptionConsent === true,
+          transcription_consent_version: TRANSCRIPTION_CONSENT_VERSION,
+        },
       });
 
       console.log('🆘 Emergency SOS raw response:', { data, error });
