@@ -16,6 +16,11 @@ export interface AdminPatient {
   blocked_until: string | null;
   blocked_reason: string | null;
   blocked_at: string | null;
+  identity_status: string | null;
+  identity_document_path: string | null;
+  identity_submitted_at: string | null;
+  identity_reviewed_at: string | null;
+  identity_rejection_reason: string | null;
 }
 
 export const usePatientManagement = () => {
@@ -29,7 +34,7 @@ export const usePatientManagement = () => {
     try {
       const { data, error: fetchError } = await supabase
         .from('patients')
-        .select('id, user_id, full_name, email, cpf, phone, state, city, created_at, is_blocked, blocked_until, blocked_reason, blocked_at')
+        .select('id, user_id, full_name, email, cpf, phone, state, city, created_at, is_blocked, blocked_until, blocked_reason, blocked_at, identity_status, identity_document_path, identity_submitted_at, identity_reviewed_at, identity_rejection_reason')
         .order('created_at', { ascending: false });
       if (fetchError) throw fetchError;
       setPatients((data || []) as AdminPatient[]);

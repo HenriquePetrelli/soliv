@@ -21,7 +21,7 @@ export interface EmergencyRequest {
 
 /** Por que o SOS foi recusado (plano, cota do mês, conta bloqueada). */
 export interface SosDenial {
-  code: 'SOS_NOT_ALLOWED' | 'PATIENT_BLOCKED';
+  code: 'SOS_NOT_ALLOWED' | 'PATIENT_BLOCKED' | 'IDENTITY_NOT_VERIFIED';
   message: string;
   planType: string | null;
 }
@@ -94,7 +94,7 @@ export const useEmergencySOS = () => {
             return null;
           }
           toast({
-            title: payload.code === 'PATIENT_BLOCKED' ? 'Conta bloqueada' : 'SOS indisponível',
+            title: payload.code === 'PATIENT_BLOCKED' ? 'Conta bloqueada' : payload.code === 'IDENTITY_NOT_VERIFIED' ? 'Identidade não confirmada' : 'SOS indisponível',
             description: payload.error || 'Seu plano não permite o uso do SOS neste momento.',
             variant: 'destructive',
             duration: 6000,
@@ -110,7 +110,7 @@ export const useEmergencySOS = () => {
 
       if (!data?.success) {
         const errorMsg = data?.error || data?.message || 'Não foi possível iniciar o SOS.';
-        const isBusinessDenial = data?.code === 'SOS_NOT_ALLOWED' || data?.code === 'PATIENT_BLOCKED';
+        const isBusinessDenial = data?.code === 'SOS_NOT_ALLOWED' || data?.code === 'PATIENT_BLOCKED' || data?.code === 'IDENTITY_NOT_VERIFIED';
 
         if (isBusinessDenial) {
           if (options?.onDenied) {
@@ -118,7 +118,7 @@ export const useEmergencySOS = () => {
             return null;
           }
           toast({
-            title: data.code === 'PATIENT_BLOCKED' ? 'Conta bloqueada' : 'SOS indisponível',
+            title: data.code === 'PATIENT_BLOCKED' ? 'Conta bloqueada' : data.code === 'IDENTITY_NOT_VERIFIED' ? 'Identidade não confirmada' : 'SOS indisponível',
             description: errorMsg,
             variant: 'destructive',
             duration: 6000,

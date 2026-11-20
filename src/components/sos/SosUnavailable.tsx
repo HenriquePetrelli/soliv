@@ -1,4 +1,4 @@
-import { CalendarDays, CreditCard, Phone, ShieldCheck, Sparkles, Wind } from 'lucide-react';
+import { CalendarDays, CreditCard, IdCard, Phone, ShieldCheck, Sparkles, Wind } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -12,10 +12,19 @@ interface SosUnavailableProps {
   /** Comprar um SOS avulso (com o preço já formatado, ex.: "R$ 54,90"). */
   onBuyExtra?: () => void;
   extraPriceLabel?: string;
+  /** Abre a modal de identidade (recusa por identidade não confirmada). */
+  onVerifyIdentity?: () => void;
 }
 
 /** Recusa por cota do mês, sem plano ou conta bloqueada: o texto muda, as saídas de ajuda ficam. */
 const describe = (denial: SosDenial) => {
+  if (denial.code === 'IDENTITY_NOT_VERIFIED') {
+    return {
+      title: 'Confirme sua identidade para usar o SOS',
+      text: 'O atendimento com psicólogo pelo SOS só fica disponível depois que sua identidade é confirmada (verificamos em até 24 horas). Agora mesmo, estas ajudas são gratuitas.',
+      kind: 'identity' as const,
+    };
+  }
   if (denial.code === 'PATIENT_BLOCKED') {
     return { title: 'O SOS está indisponível na sua conta', text: denial.message, kind: 'blocked' as const };
   }
@@ -61,7 +70,7 @@ const Option = ({ icon: Icon, title, description, onClick }: { icon: LucideIcon;
  * Tela da espera quando o SOS não pode ser usado. Antes aparecia só um aviso
  * flutuante e a tela continuava em "Buscando um psicólogo", sem pedido nenhum.
  */
-const SosUnavailable = ({ denial, onBreathe, onSafetyPlan, onNavigate, onBuyExtra, extraPriceLabel }: SosUnavailableProps) => {
+const SosUnavailable = ({ denial, onBreathe, onSafetyPlan, onNavigate, onBuyExtra, extraPriceLabel, onVerifyIdentity }: SosUnavailableProps) => {
   const { title, text, kind } = describe(denial);
 
   return (
@@ -88,7 +97,15 @@ const SosUnavailable = ({ denial, onBreathe, onSafetyPlan, onNavigate, onBuyExtr
       </Card>
 
       <div className="space-y-2">
-        {kind !== 'blocked' && onBuyExtra && (
+        {kind === 'identity' && onVerifyIdentity && (
+          <Option
+            icon={IdCard}
+            title="Verificar identidade"
+            description="Envie uma foto do seu documento; conferimos em até 24 horas"
+            onClick={onVerifyIdentity}
+          />
+        )}
+        {kind !== 'blocked' && kind !== 'identity' && onBuyExtra && (
           <Option
             icon={CreditCard}
             title={`Comprar um SOS avulso${extraPriceLabel ? ` (${extraPriceLabel})` : ''}`}

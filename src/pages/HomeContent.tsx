@@ -16,6 +16,7 @@ import { WeeklyGoalModal } from "@/components/goals/WeeklyGoalModal";
 import { GoalSelectionModal } from "@/components/goals/GoalSelectionModal";
 import { useEffect, useState } from "react";
 import { useLegalGateStatus } from "@/lib/legalGateStatus";
+import { useIdentityVerification } from "@/contexts/IdentityVerificationContext";
 import HomeHabitsCard from "@/components/habits/HomeHabitsCard";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -37,6 +38,8 @@ const HomeContent = () => {
   const [moodEnabled, setMoodEnabled] = useState(true);
   const [todayMoodValue, setTodayMoodValue] = useState<number | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  // A modal de identidade vem primeiro; a das metas espera ela fechar.
+  const { promptOpen: identityPromptOpen } = useIdentityVerification();
   const [showWeeklyGoalModal, setShowWeeklyGoalModal] = useState(false);
   const [showGoalSelection, setShowGoalSelection] = useState(false);
   // A janela das metas da semana espera o aceite dos Termos, para não abrir por cima dele.
@@ -325,7 +328,7 @@ const HomeContent = () => {
         {/* Modals */}
 
         <WeeklyGoalModal
-          open={showWeeklyGoalModal && legalGateStatus === "clear"}
+          open={showWeeklyGoalModal && legalGateStatus === "clear" && !identityPromptOpen}
           onOpenChange={handleCloseWeeklyGoalModal}
           onAddGoals={handleAddGoals}
           onDontShowAgain={handleDontShowAgain}

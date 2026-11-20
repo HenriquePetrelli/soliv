@@ -144,6 +144,23 @@ serve(monitored("emergency-sos", async (req) => {
         );
       }
 
+      // Identidade confirmada pelo admin é obrigatória para usar o SOS.
+      const { data: identityOk, error: identityError } = await supabase
+        .rpc('patient_identity_verified', { p_user_id: user.id });
+      if (identityError) {
+        console.error('❌ Error checking patient identity:', identityError);
+      }
+      if (identityOk !== true) {
+        return new Response(
+          JSON.stringify({
+            success: false,
+            code: 'IDENTITY_NOT_VERIFIED',
+            error: 'Para usar o SOS, sua identidade precisa estar confirmada.',
+          }),
+          { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
       // Subscription / monthly SOS quota is enforced server-side.
       const { data: quota, error: quotaError } = await supabase
         .rpc('can_use_sos', { p_user_id: user.id })

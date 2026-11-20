@@ -41,7 +41,7 @@ export const ADMIN_NAV_GROUPS: { title: string; items: AdminNavItem[] }[] = [
     title: 'Pessoas',
     items: [
       { value: 'psychologists', label: 'Psicólogos', icon: UserCheck, description: 'Aprovar cadastros, bloquear e editar profissionais' },
-      { value: 'patients', label: 'Pacientes', icon: Users, description: 'Dados, bloqueios e exclusão de contas' },
+      { value: 'patients', label: 'Pacientes', icon: Users, description: 'Verificação de identidade, dados, bloqueios e exclusão de contas' },
       { value: 'companies', label: 'Empresas', icon: Building2, description: 'Contratos B2B, vagas e códigos de convite' },
     ],
   },

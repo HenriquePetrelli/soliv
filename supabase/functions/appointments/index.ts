@@ -330,6 +330,13 @@ serve(monitored("appointments", async (req) => {
         throw new Error('Muitas tentativas de agendamento em pouco tempo. Aguarde um pouco antes de tentar novamente.');
       }
 
+      // Identidade confirmada pelo admin é obrigatória para agendar.
+      const { data: identityOk } = await supabase
+        .rpc('patient_identity_verified', { p_user_id: user.id });
+      if (identityOk !== true) {
+        throw new Error('Para agendar consultas, sua identidade precisa estar confirmada. Envie seu documento em Perfil.');
+      }
+
       if (!psychologist_id || !scheduled_at) {
         throw new Error('Psychologist ID and scheduled time are required');
       }

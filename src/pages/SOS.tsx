@@ -16,6 +16,7 @@ import { useEmergencySOS, type SosDenial } from "@/hooks/useEmergencySOS";
 import SosUnavailable from "@/components/sos/SosUnavailable";
 import ExtraPurchaseDialog from "@/components/ExtraPurchaseDialog";
 import { useSubscription } from "@/contexts/SubscriptionContext";
+import { useIdentityVerification } from "@/contexts/IdentityVerificationContext";
 import { formatCents } from "@/lib/plans";
 import { notifySosQueueChanged, subscribeSosQueue } from "@/lib/sosQueueChannel";
 import type { RealtimeChannel } from '@supabase/supabase-js';
@@ -47,6 +48,7 @@ const SosPage = () => {
   const [denial, setDenial] = useState<SosDenial | null>(null);
   const [buyOpen, setBuyOpen] = useState(false);
   const { extraPrices } = useSubscription();
+  const { openPrompt: openIdentityPrompt } = useIdentityVerification();
   const { cancelRequest, createEmergencyRequest } = useEmergencySOS();
   // Triagem marcada na confirmação: mantém os números certos em destaque na espera.
   const [triage, setTriage] = useState<SosTriageKey[]>([]);
@@ -186,6 +188,8 @@ const SosPage = () => {
             onDenied: (info) => {
               denied = true;
               setDenial(info);
+              // Sem identidade confirmada: a modal de identidade aparece de novo.
+              if (info.code === 'IDENTITY_NOT_VERIFIED') openIdentityPrompt('sos');
             },
           });
           if (denied) {
@@ -375,6 +379,7 @@ const SosPage = () => {
           onNavigate={navigate}
           onBuyExtra={() => setBuyOpen(true)}
           extraPriceLabel={formatCents(extraPrices.sos)}
+          onVerifyIdentity={() => openIdentityPrompt('sos')}
         />
         <ExtraPurchaseDialog
           kind="sos"
