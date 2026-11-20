@@ -23,6 +23,7 @@ import { format, isSameDay } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { toast } from 'sonner';
 import ChatImage from './ChatImage';
+import NoPrescriptionNotice from '@/components/calls/NoPrescriptionNotice';
 import { useMensagens, type Mensagem } from '@/hooks/useMensagens';
 import { useAuth } from '@/contexts/AuthContext';
 import { usePlanLimits } from '@/hooks/usePlanLimits';
@@ -306,6 +307,8 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ conversaId, onVolt
           </div>
         </div>
       </div>
+
+      <NoPrescriptionNotice variant="banner" userType={userType === 'psychologist' ? 'psychologist' : 'patient'} />
 
       {/* Mensagens */}
       <div className="relative min-h-0 flex-1">

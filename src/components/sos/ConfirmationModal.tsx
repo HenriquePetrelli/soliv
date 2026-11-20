@@ -17,6 +17,7 @@ import { SOS_TRIAGE_OPTIONS, hasDangerRisk, hasSelfHarmRisk, saveSosTriage, type
 import { saveSosChannel, type SosChannel } from "@/lib/sosChannel";
 import { saveSosTranscriptionConsent } from "@/lib/callTranscription";
 import TranscriptionConsentCheckbox from "@/components/calls/TranscriptionConsentCheckbox";
+import NoPrescriptionNotice from "@/components/calls/NoPrescriptionNotice";
 
 interface ConfirmationModalProps {
   open: boolean;
@@ -218,6 +219,8 @@ const ConfirmationModal = ({ open, onOpenChange, onConfirm }: ConfirmationModalP
               </li>
             ))}
           </ul>
+
+          <NoPrescriptionNotice userType="patient" className="justify-center text-center" />
 
           <p className="text-center text-xs text-muted-foreground">
             Em risco imediato de vida, ligue para o{" "}

@@ -20,6 +20,7 @@ import {
   X,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import NoPrescriptionNotice from '@/components/calls/NoPrescriptionNotice';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import {
   AlertDialog,
@@ -858,9 +859,13 @@ const VideoCallRoom = ({
               cameraOff={remoteCameraOff}
               muted={remoteMuted}
               placeholder={!isConnected ? (
-                <span className="inline-flex items-center gap-2">
-                  <Loader2 className="h-4 w-4 animate-spin motion-reduce:animate-none" aria-hidden="true" />
-                  {waitingText}
+                <span className="flex flex-col items-center gap-3">
+                  <span className="inline-flex items-center gap-2">
+                    <Loader2 className="h-4 w-4 animate-spin motion-reduce:animate-none" aria-hidden="true" />
+                    {waitingText}
+                  </span>
+                  {/* Antes de a chamada começar, o lembrete de que não há receita de remédios. */}
+                  <NoPrescriptionNotice userType={userType} className="max-w-xs text-left text-zinc-300" />
                 </span>
               ) : remoteCameraOff ? `${remoteLabel} desligou a câmera` : undefined}
               topRight={isConnected ? <QualityBadge quality={networkQuality} /> : null}

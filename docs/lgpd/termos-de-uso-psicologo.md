@@ -32,6 +32,7 @@ O Soliv é uma plataforma de tecnologia que conecta pacientes a psicólogos para
 
 - O atendimento é de **responsabilidade técnica exclusiva do psicólogo**, que deve seguir o **Código de Ética Profissional do Psicólogo** e as resoluções do CFP, em especial as Resoluções nº 11/2018 (serviços psicológicos por meios de tecnologia da informação) e nº 09/2024. ⚖️
 - **Sigilo profissional:** o psicólogo deve manter sigilo sobre tudo o que souber no atendimento, inclusive o conteúdo dos planos de segurança dos pacientes.
+- **Sem medicamentos:** o Soliv **não receita medicamentos**. O psicólogo não pode indicar, prescrever, ajustar ou suspender remédios pelo Soliv (no SOS, nas consultas ou no chat), nem emitir receitas. Se avaliar que o paciente precisa de avaliação medicamentosa, deve orientá-lo a procurar um médico, como um psiquiatra. O app lembra disso no chat e antes das chamadas. ⚖️
 - **Ambiente:** atender de um local reservado, que preserve a privacidade do paciente, com conexão adequada.
 - **Situações de risco:** diante de risco à vida do paciente ou de terceiros, o psicólogo pode usar os contatos de emergência e o plano de segurança do paciente e acionar os serviços de emergência, na forma do Código de Ética.
 - É proibido **gravar** os atendimentos por conta própria (fora da transcrição feita pelo Soliv, item 4A) ou usar os dados dos pacientes para qualquer finalidade alheia ao atendimento, inclusive contato fora da plataforma para oferecer serviços. ⚖️

@@ -25,6 +25,8 @@ Os psicólogos que atendem pelo Soliv têm registro ativo no Conselho Regional d
 
 Se você estiver em risco imediato de vida, ou se alguém estiver, ligue para o **SAMU (192)** ou vá ao pronto-socorro mais próximo. O **CVV (188)** atende 24 horas, gratuitamente.
 
+**O Soliv não receita medicamentos.** Os profissionais que atendem pelo Soliv são psicólogos e, por lei, psicólogos não prescrevem remédios. Nenhum atendimento do Soliv (SOS, consulta agendada ou chat) inclui indicação, receita ou ajuste de medicamentos. Se você precisar de avaliação sobre remédios, procure um médico, como um psiquiatra. Não comece, pare nem mude a dose de um medicamento por conta própria. ⚖️
+
 Os recursos de autocuidado e os grupos de apoio **não são atendimento psicológico**. Os depoimentos dos grupos refletem a experiência de outros usuários e não são orientação profissional.
 
 ## 3. Quem pode usar
