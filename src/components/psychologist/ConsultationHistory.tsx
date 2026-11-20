@@ -27,6 +27,7 @@ import {
 import { History, Search, Download, Eye, FileText, User, CalendarDays, AlertTriangle } from 'lucide-react';
 import { canReportConsultationProblem } from '@/lib/consultationProblem';
 import ReportConsultationProblemDialog from '@/components/appointments/ReportConsultationProblemDialog';
+import CallTranscriptSection from '@/components/calls/CallTranscriptSection';
 import { usePsychologistSchedule } from '@/hooks/usePsychologistSchedule';
 import { supabase } from '@/integrations/supabase/client';
 import { getSessionUser } from '@/lib/currentUser';
@@ -549,6 +550,13 @@ const ConsultationHistory = () => {
                 sourceType={selected.kind === 'emergency' ? 'sos' : 'appointment'}
                 sourceId={selected.id}
                 occurredAt={selected.occurred_at}
+              />
+
+              <CallTranscriptSection
+                key={`transcript-${selected.id}`}
+                kind={selected.kind === 'emergency' ? 'sos' : 'appointment'}
+                sourceId={selected.id}
+                viewer="psychologist"
               />
 
               {selected.kind === 'emergency' ? (

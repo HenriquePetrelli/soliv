@@ -67,6 +67,15 @@ O que precisa ser resolvido antes de o app ficar pronto. Ao resolver um item, mo
 
 ## Importantes
 
+### 32. Transcrição das chamadas do SOS e da consulta (registrada em 2026-11-20)
+
+- **Aplicado em 2026-11-20:** migration `20261120120000_transcricao_das_chamadas.sql` no Supabase (registrada no histórico) e edge functions `transcribe-call-chunk` (nova, versão 1) e `emergency-sos` (versão 261) publicadas pela CLI v3 com `--use-api`, `verify_jwt` mantido (sem login respondem 401).
+- **Situação:** Antes de entrar, o paciente marca o consentimento ("Concordo que o áudio da chamada seja gravado e transcrito em texto"): no SOS por vídeo, na tela de confirmação; na consulta, numa tela antes da sala. O SOS por mensagem não pede (já é texto). Durante a chamada, cada lado envia o próprio microfone em trechos de 30 s; a função `transcribe-call-chunk` só aceita com o consentimento gravado no atendimento e guarda só o texto (`call_transcript_segments`). O psicólogo vê a transcrição no Histórico de consultas.
+- **Falta:**
+  1. Transcrição: sem nada novo, usa a `LOVABLE_API_KEY` que já existe (modelo `google/gemini-2.5-flash`, com áudio WAV). **Ainda não testado com a chave real**: na primeira chamada de teste, conferir em Edge Functions → `transcribe-call-chunk` → Logs se não há erro do gateway. Se o gateway não aceitar áudio, criar o secret `OPENAI_API_KEY` (a função passa a usar a transcrição da OpenAI, `gpt-4o-mini-transcribe`).
+- **Revisão jurídica (pendência 16):** a Política de Privacidade e os Termos do psicólogo ainda não citam a gravação e a transcrição; incluir na revisão (mudar a versão pede novo aceite a todos).
+- **Como conferir:** consulta de teste com paciente e psicólogo conversando 1 minuto; o aviso "Chamada sendo transcrita" aparece nos dois lados e, depois, a transcrição aparece no Histórico de consultas do psicólogo.
+
 ### 31. Verificação do CRP no CFP (registrada em 2026-11-14)
 
 - **Situação:** o painel do admin confere o CRP no Cadastro Nacional do CFP antes de aprovar (precisa estar ATIVO numa consulta dos últimos 30 dias) e de rotina a cada 6 meses (aba **Verificar CRP** e botão **Verificação de rotina do CRP**, que passa por todos os pendentes um a um). O site do CFP tem reCAPTCHA: a busca é feita pelo admin e o atalho do navegador "Soliv: ler CFP" lê a tabela de resultados.

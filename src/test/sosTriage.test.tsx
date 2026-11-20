@@ -50,8 +50,9 @@ describe('triagem do SOS: tela de confirmação', () => {
     return onConfirm;
   };
 
-  it('chama o psicólogo sem marcar nada (não atrasa quem está mal)', () => {
+  it('chama o psicólogo sem marcar nenhuma triagem (só o consentimento do vídeo)', () => {
     const onConfirm = renderModal();
+    fireEvent.click(screen.getByRole('checkbox', { name: /transcrito/ }));
     fireEvent.click(screen.getByRole('button', { name: 'Sim, chamar um psicólogo' }));
     expect(onConfirm).toHaveBeenCalled();
     expect(takeSosTriage()).toEqual([]);
@@ -64,6 +65,7 @@ describe('triagem do SOS: tela de confirmação', () => {
     expect(within(alert).getByRole('link', { name: /SAMU 192/ })).toHaveAttribute('href', 'tel:192');
     expect(within(alert).getByRole('link', { name: /CVV 188/ })).toHaveAttribute('href', 'tel:188');
     fireEvent.click(screen.getByRole('button', { name: 'Crise de pânico' }));
+    fireEvent.click(screen.getByRole('checkbox', { name: /transcrito/ }));
     fireEvent.click(screen.getByRole('button', { name: 'Sim, chamar um psicólogo' }));
     expect(onConfirm).toHaveBeenCalled();
     expect(takeSosTriage()).toEqual(['suicidio', 'panico']);
