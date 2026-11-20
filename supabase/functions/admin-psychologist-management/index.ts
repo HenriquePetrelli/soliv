@@ -294,7 +294,7 @@ const handler = async (req: Request): Promise<Response> => {
       if (resend && psychologist.professional_email) {
         try {
           await resend.emails.send({
-            from: "Plataforma Saúde Mental <onboarding@resend.dev>",
+            from: "Soliv <nao-responda@solivsaude.com.br>",
             to: [psychologist.professional_email],
             subject: "Cadastro Aprovado - Bem-vindo à Plataforma!",
             html: generateApprovalEmailTemplate(psychologist.full_name),
@@ -370,7 +370,7 @@ const handler = async (req: Request): Promise<Response> => {
       if (resend && psychologist.professional_email) {
         try {
           await resend.emails.send({
-            from: "Plataforma Saúde Mental <onboarding@resend.dev>",
+            from: "Soliv <nao-responda@solivsaude.com.br>",
             to: [psychologist.professional_email],
             subject: "Informações sobre seu Cadastro",
             html: generateRejectionEmailTemplate(psychologist.full_name, reason),

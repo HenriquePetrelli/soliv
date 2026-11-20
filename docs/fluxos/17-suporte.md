@@ -47,7 +47,7 @@ select id, email_retorno, created_at from suporte_psicologo order by created_at 
 
 ## Pendências
 
-- **Domínio do Soliv** (pendência crítica 2): o e-mail do pedido sai de `noreply@soliv.app`, e o Resend só envia de domínio verificado. Até o domínio existir e ser verificado, o pedido não chega à equipe.
+- **Domínio do Soliv** (pendência crítica 2): o e-mail do pedido sai de `nao-responda@solivsaude.com.br`, e o Resend só envia de domínio verificado. Até o domínio ser verificado no Resend, o pedido não chega à equipe.
 
 ## Problemas comuns
 

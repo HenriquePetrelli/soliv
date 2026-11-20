@@ -256,7 +256,7 @@ const handler = async (req: Request): Promise<Response> => {
       }
 
       await resend.emails.send({
-        from: 'Soliv <onboarding@resend.dev>',
+        from: 'Soliv <nao-responda@solivsaude.com.br>',
         to: [user.email],
         subject: 'Cadastro recebido - Soliv',
         html: generatePendingEmail(insertData.full_name ?? ''),
@@ -414,7 +414,7 @@ const handler = async (req: Request): Promise<Response> => {
       // vira erro para o admin (antes ele via "erro" e tentava de novo).
       try {
         await resend.emails.send({
-          from: 'Soliv <onboarding@resend.dev>',
+          from: 'Soliv <nao-responda@solivsaude.com.br>',
           to: [psychologist.email],
           subject: 'Cadastro aprovado - Soliv',
           html: generateApprovalEmail(psychologist.full_name),
@@ -544,7 +544,7 @@ const handler = async (req: Request): Promise<Response> => {
       // Enviar email de rejeição (a recusa já valeu; falha no e-mail não vira erro).
       try {
         await resend.emails.send({
-          from: 'Soliv <onboarding@resend.dev>',
+          from: 'Soliv <nao-responda@solivsaude.com.br>',
           to: [psychologist.email],
           subject: 'Cadastro não aprovado - Soliv',
           html: generateRejectionEmail(psychologist.full_name, rejection_reason),

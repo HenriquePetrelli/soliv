@@ -27,15 +27,15 @@ A logo vem de `{{ .SiteURL }}/email/soliv-logo.png` (arquivo `public/email/soliv
 
 ## Passo a passo no painel do Supabase
 
-> **Depende do domínio do Soliv**, que ainda não existe (pendência crítica 2 em `docs/pendencias-antes-do-lancamento.md`). Até lá, só o passo 2 (modelos) pode ser feito, e os e-mails chegam apenas para a equipe do projeto.
+> **Domínio do Soliv:** `solivsaude.com.br` (comprado em 2026-11-20). O passo 1 só funciona depois que o domínio aparecer como **Verified** no Resend; até lá, os e-mails chegam apenas para a equipe do projeto.
 
 ### 1. Servidor de e-mail próprio (Resend)
 
 O app já usa o Resend para os e-mails de suporte e de consultas.
 
-1. No [Resend](https://resend.com/domains), confira que o domínio do Soliv (ex.: `soliv.app`) está **verificado** (registros DNS SPF e DKIM). Sem isso, os e-mails caem no spam ou não saem.
+1. No [Resend](https://resend.com/domains), confira que o domínio do Soliv (`solivsaude.com.br`) está **verificado** (registros DNS SPF e DKIM). Sem isso, os e-mails caem no spam ou não saem.
 2. Supabase → **Authentication → Emails → SMTP Settings** → ligar **Enable Custom SMTP**:
-   - **Sender email:** `nao-responda@soliv.app` (ou outro endereço do domínio verificado)
+   - **Sender email:** `nao-responda@solivsaude.com.br`
    - **Sender name:** `Soliv`
    - **Host:** `smtp.resend.com`
    - **Port:** `465`

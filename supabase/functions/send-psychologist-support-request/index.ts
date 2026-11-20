@@ -119,7 +119,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     // Send email to support team
     const emailResponse = await resend.emails.send({
-      from: "Soliv Support <noreply@soliv.app>",
+      from: "Soliv Suporte <nao-responda@solivsaude.com.br>",
       to: ["soliv.suporte@gmail.com"],
       subject: "Nova Solicitação de Suporte - Psicólogo - Ticket #" + ticket.id.substring(0, 8),
       html: `

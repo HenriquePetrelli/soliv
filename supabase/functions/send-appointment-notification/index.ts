@@ -245,7 +245,7 @@ serve(monitored("send-appointment-notification", async (req) => {
     console.warn('No recipient email; skipping email notification');
   } else {
   const { error: emailError } = await resend.emails.send({
-    from: 'Soliv <notifications@soliv.app>',
+    from: 'Soliv <nao-responda@solivsaude.com.br>',
     to: [recipientEmail],
     subject: emailSubject,
     html: emailContent,

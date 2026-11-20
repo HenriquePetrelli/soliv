@@ -36,10 +36,10 @@ Passo a passo do que precisa ser feito **fora do código** (nos painéis da Supa
 
 ## 2. Domínio e e-mails
 
-**Por quê:** sem domínio próprio, o Supabase só envia e-mail de login (redefinir senha, confirmar cadastro) para os e-mails da equipe, no máximo 30 por hora e em inglês. O Resend também recusa os e-mails de suporte e de aviso de consulta, porque o remetente `soliv.app` não está verificado.
+**Por quê:** sem domínio próprio, o Supabase só envia e-mail de login (redefinir senha, confirmar cadastro) para os e-mails da equipe, no máximo 30 por hora e em inglês. O Resend também recusa os e-mails de suporte e de aviso de consulta enquanto o domínio não está verificado.
 
 ### 2.1 Comprar o domínio
-Ex.: `soliv.com.br` (Registro.br) ou `soliv.app` (qualquer registrador). Guarde o acesso ao painel de DNS.
+**Feito em 2026-11-20:** `solivsaude.com.br`. Guarde o acesso ao painel de DNS.
 
 ### 2.2 Verificar o domínio no Resend
 1. [resend.com/domains](https://resend.com/domains) → **Add Domain** → digite o domínio.
@@ -47,20 +47,17 @@ Ex.: `soliv.com.br` (Registro.br) ou `soliv.app` (qualquer registrador). Guarde 
 3. Volte ao Resend e clique em **Verify**. Pode levar de minutos a algumas horas. Siga quando aparecer **Verified**.
 4. Confira que o secret `RESEND_API_KEY` existe nas edge functions. Se não existir: Resend → API Keys → Create → cadastre como secret.
 
-### 2.3 Avisar o Claude
-Diga apenas **qual é o domínio** (não é segredo). O Claude troca os remetentes das 5 edge functions que mandam e-mail:
-- `send-support-request` e `send-psychologist-support-request` (hoje usam `noreply@soliv.app`);
-- `send-appointment-notification` (hoje usa `notifications@soliv.app`);
-- `psychologist-management` e `admin-psychologist-management` (hoje usam `onboarding@resend.dev`, o endereço de teste do Resend, que só entrega para o dono da conta).
+### 2.3 Remetentes das edge functions
+**Feito no código em 2026-11-20:** as 5 edge functions que mandam e-mail (`send-support-request`, `send-psychologist-support-request`, `send-appointment-notification`, `psychologist-management` e `admin-psychologist-management`) usam `nao-responda@solivsaude.com.br`.
 
-Depois você faz o deploy dessas funções na Lovable.
+**Só publicar as funções depois que o Resend mostrar o domínio como Verified** (2.2): antes disso o Resend recusa o remetente, e os e-mails de aprovação de psicólogo, que hoje saem do endereço de teste `onboarding@resend.dev` para o dono da conta, deixariam de chegar. Peça ao Claude para publicar.
 
 ### 2.4 E-mails de login pelo Resend (SMTP)
 Supabase → **Authentication → Emails → SMTP Settings** → ligar **Enable Custom SMTP**:
 
 | Campo | Valor |
 |---|---|
-| Sender email | `nao-responda@SEU-DOMINIO` |
+| Sender email | `nao-responda@solivsaude.com.br` |
 | Sender name | `Soliv` |
 | Host | `smtp.resend.com` |
 | Port | `465` |
@@ -73,10 +70,11 @@ Depois, em **Authentication → Rate Limits**, suba o limite de e-mails por hora
 Supabase → **Authentication → Emails → Templates**. Para cada um dos 6 modelos, troque o assunto e cole o arquivo correspondente de `supabase/templates/`. A tabela com assunto e arquivo de cada modelo está em `docs/emails-de-autenticacao.md` (seção 2).
 
 ### 2.6 Endereço do app
-1. Lovable → **Project Settings → Domains** → ligar o domínio (ou um subdomínio como `app.SEU-DOMINIO`) ao app publicado.
-2. Supabase → **Authentication → URL Configuration**:
-   - **Site URL:** o endereço do app (ex.: `https://app.soliv.com.br`);
-   - **Redirect URLs:** adicione `https://app.soliv.com.br/reset-password` e `https://app.soliv.com.br/**`.
+1. Lovable → **Publish** (ou **Update**) para publicar a versão mais nova, depois **Project Settings → Domains → Connect domain** → `solivsaude.com.br`. Conectar também `www.solivsaude.com.br` e deixar o endereço principal sem `www`.
+2. No painel de DNS (Registro.br), criar exatamente os registros que a Lovable mostrar (normalmente um **A** e um **TXT** de verificação, para o domínio e para o `www`). Esperar ficar **Active** na Lovable.
+3. Supabase → **Authentication → URL Configuration**:
+   - **Site URL:** `https://solivsaude.com.br`;
+   - **Redirect URLs:** adicione `https://solivsaude.com.br/reset-password`, `https://solivsaude.com.br/**` e `https://www.solivsaude.com.br/**`. Mantenha os endereços da Lovable que já estão lá enquanto eles forem usados.
 
 **Teste:**
 - "Esqueci minha senha" com um e-mail que **não** é da equipe → o e-mail chega em português, com a logo e o remetente "Soliv", e o link abre a tela de nova senha;

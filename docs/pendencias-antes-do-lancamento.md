@@ -8,8 +8,8 @@ O que precisa ser resolvido antes de o app ficar pronto. Ao resolver um item, mo
 
 ### 2. Domínio do Soliv e envio de e-mails
 
-- **Situação:** o Soliv ainda não tem domínio próprio. Sem ele, não dá para enviar e-mail com remetente do Soliv para os usuários.
-- **Em espera (2026-10-13):** `soliv.com.br` está registrado por uma pessoa física, sem site, e vence em **03/12/2026** (foi renovado em 12/2025). `soliv.com` e `soliv.app` também estão ocupados. Decisão: aguardar o vencimento antes de escolher outro domínio. Lembretes agendados para 26/11/2026 (uma semana antes) e 10/12/2026 (para ver se foi renovado ou entrou no processo de liberação do Registro.br).
+- **Situação (2026-11-20):** domínio comprado: **`solivsaude.com.br`**. O site vai ficar em `https://solivsaude.com.br` (o `www` também abre). Os remetentes das 5 edge functions já foram trocados no código para `nao-responda@solivsaude.com.br`, mas **só devem ser publicados depois que o Resend verificar o domínio** (passo 2). Falta: passos 2, 3, 5 e a publicação das funções.
+- **Histórico (2026-10-13):** `soliv.com.br` está registrado por uma pessoa física, sem site, e vence em **03/12/2026** (foi renovado em 12/2025). `soliv.com` e `soliv.app` também estão ocupados. Decisão: aguardar o vencimento antes de escolher outro domínio. Lembretes agendados para 26/11/2026 (uma semana antes) e 10/12/2026 (para ver se foi renovado ou entrou no processo de liberação do Registro.br).
 - **O que depende do domínio:**
 
   | E-mail | Onde é enviado | Remetente hoje | O que acontece sem domínio |
@@ -21,11 +21,11 @@ O que precisa ser resolvido antes de o app ficar pronto. Ao resolver um item, mo
 
 - **Já pronto no código:** 6 modelos de e-mail de login em português, com a logo do Soliv (`supabase/templates/`), e o passo a passo em `docs/emails-de-autenticacao.md`.
 - **O que fazer quando houver domínio:**
-  1. Registrar o domínio (ex.: `soliv.com.br` ou `soliv.app`).
+  1. ~~Registrar o domínio~~ — feito em 2026-11-20: `solivsaude.com.br`.
   2. No [Resend](https://resend.com/domains), adicionar o domínio e criar os registros DNS que ele pedir (SPF e DKIM) até aparecer "Verified".
   3. Supabase → Authentication → SMTP Settings: SMTP do Resend com remetente do domínio (passo a passo em `docs/emails-de-autenticacao.md`).
-  4. Trocar os remetentes das 5 edge functions da tabela pelo domínio novo (pedir ao Claude; é uma troca de texto) e publicar as funções.
-  5. Ligar o domínio ao app publicado na Lovable e usar esse endereço como Site URL no Supabase (a logo do e-mail e os links vêm dele). Depois, as pendências 28 (monitoramento do site) e 29 (alertas no e-mail oficial).
+  4. Remetentes das 5 edge functions trocados no código em 2026-11-20 (`nao-responda@solivsaude.com.br`). Publicar as funções depois do passo 2 (pedir ao Claude).
+  5. Ligar o domínio ao app publicado na Lovable (passo a passo em `docs/guia-configuracoes-externas.md`, 2.6) e usar `https://solivsaude.com.br` como Site URL no Supabase (a logo do e-mail e os links vêm dele). Depois, as pendências 28 (monitoramento do site) e 29 (alertas no e-mail oficial).
 - **Enquanto isso:** dá para colar os modelos em português no Supabase (Authentication → Email Templates) para testar com os e-mails da equipe; para usuários de fora, nenhum e-mail chega. **Feito em 2026-11-08:** os 6 modelos em português (`supabase/templates/`) e os assuntos foram colados no Supabase pela API e conferidos iguais ao repositório (teste `s01-32`). Já valem para os e-mails da equipe; a logo vem do Site URL atual (`calmconnect-auth-flow.lovable.app/email/soliv-logo.png`).
 - **Limite atual:** sem SMTP próprio o Supabase manda no máximo **2 e-mails de login por hora** para o projeto inteiro (`rate_limit_email_sent = 2`). Depois do SMTP do Resend, subir esse limite em Authentication → Rate Limits.
 - **Como conferir:** pedir "Esqueci minha senha" com um e-mail que não é da equipe; o e-mail chega em português, com a logo e remetente "Soliv". Enviar um pedido de suporte e conferir que ele chega na caixa da equipe.
@@ -99,7 +99,7 @@ O que precisa ser resolvido antes de o app ficar pronto. Ao resolver um item, mo
 
 - **Situação (2026-11-12):** o site ainda não foi publicado em produção, então não dá para criar a checagem de "site no ar" nem liberar o endereço dele no coletor de erros. Os apps Android e iOS e o backend já estão cobertos (pendência 27).
 - **O que fazer, logo depois de publicar o site (ou ligar o domínio próprio, pendência 2):**
-  1. Grafana → **Observability → Frontend → Soliv → Settings** → em **CORS allowed origins**, adicionar o endereço publicado (ex.: `https://soliv.lovable.app` ou `https://app.SEU-DOMINIO`). Sem isso o navegador bloqueia o envio dos erros do site.
+  1. Grafana → **Observability → Frontend → Soliv → Settings** → em **CORS allowed origins**, adicionar o endereço publicado (`https://solivsaude.com.br` e `https://www.solivsaude.com.br`). Sem isso o navegador bloqueia o envio dos erros do site.
   2. Grafana → **Testing & synthetics → Synthetics → Add new check → API Endpoint**: job name `soliv-site`, `GET` no endereço publicado, status válido `2xx`, **um local só** (o mesmo das outras checagens), frequência **2 min**, alerta de falha ligado.
 - **Como conferir:** a checagem `soliv-site` verde em Synthetics → Checks; abrir o site publicado e ver a sessão aparecer em Frontend → Soliv em alguns minutos.
 - **Registrado em:** 2026-11-12.
