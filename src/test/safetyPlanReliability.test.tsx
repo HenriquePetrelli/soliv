@@ -90,7 +90,9 @@ describe('plano de segurança: editar sem perder nada', () => {
     first.unmount();
 
     renderAt('/safety-plan/novo');
-    expect(await screen.findByLabelText('Título do plano')).toHaveValue('Para as noites');
+    // O campo aparece quando termina o carregamento; o rascunho entra logo depois.
+    const restored = await screen.findByLabelText('Título do plano');
+    await waitFor(() => expect(restored).toHaveValue('Para as noites'));
     expect(toast).toHaveBeenCalledWith(expect.objectContaining({ title: 'Recuperamos o que você não tinha salvado' }));
   });
 

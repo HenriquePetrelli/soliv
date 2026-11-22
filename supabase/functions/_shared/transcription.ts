@@ -205,25 +205,43 @@ const chatContent = (content: unknown): string => {
   return "";
 };
 
+/**
+ * Sem raciocínio: transcrever não precisa dele e o Gemini 2.5 Flash raciocina
+ * por padrão, cobrando esses tokens como saída. Se o gateway recusar o
+ * parâmetro, repete o pedido sem ele (a transcrição não pode parar por isso).
+ */
+export const LOVABLE_REASONING_EFFORT = "none";
+
 export const lovableTranscriber = (apiKey: string, env: Env, fetchFn: Fetch = fetch): Transcriber => async ({ base64 }) => {
-  const response = await fetchFn(env("LOVABLE_AI_GATEWAY_URL") ?? "https://ai.gateway.lovable.dev/v1/chat/completions", {
-    method: "POST",
-    headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
-    body: JSON.stringify({
-      model: env("LOVABLE_TRANSCRIBE_MODEL") ?? "google/gemini-2.5-flash",
-      temperature: 0,
-      messages: [
-        { role: "system", content: TRANSCRIBE_PROMPT },
-        {
-          role: "user",
-          content: [
-            { type: "text", text: "Transcreva este trecho." },
-            { type: "input_audio", input_audio: { data: base64, format: "wav" } },
-          ],
-        },
-      ],
-    }),
-  });
+  const url = env("LOVABLE_AI_GATEWAY_URL") ?? "https://ai.gateway.lovable.dev/v1/chat/completions";
+  const payload = {
+    model: env("LOVABLE_TRANSCRIBE_MODEL") ?? "google/gemini-2.5-flash",
+    temperature: 0,
+    messages: [
+      { role: "system", content: TRANSCRIBE_PROMPT },
+      {
+        role: "user",
+        content: [
+          { type: "text", text: "Transcreva este trecho." },
+          { type: "input_audio", input_audio: { data: base64, format: "wav" } },
+        ],
+      },
+    ],
+  };
+  const send = (body: object) =>
+    fetchFn(url, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+
+  let response = await send({ ...payload, reasoning_effort: LOVABLE_REASONING_EFFORT });
+  if (response.status === 400) {
+    const errorText = await response.text();
+    if (!/reasoning/i.test(errorText)) throw new Error(`Lovable AI: 400 ${errorText.slice(0, 300)}`);
+    console.warn("Lovable AI recusou reasoning_effort; repetindo sem ele", errorText.slice(0, 300));
+    response = await send(payload);
+  }
   if (!response.ok) throw new Error(`Lovable AI: ${response.status} ${(await response.text()).slice(0, 300)}`);
   const body = await response.json();
   return chatContent(body?.choices?.[0]?.message?.content);

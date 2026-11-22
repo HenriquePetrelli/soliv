@@ -5,6 +5,8 @@ const baseURL = process.env.E2E_BASE_URL ?? `http://localhost:${PORT}`;
 
 export default defineConfig({
   testDir: "./e2e",
+  // Transcrição precisa do Supabase local: roda só por playwright.transcricao.config.ts.
+  testIgnore: ["transcricao/**"],
   timeout: 60_000,
   expect: { timeout: 10_000 },
   fullyParallel: true,
