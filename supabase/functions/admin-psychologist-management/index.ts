@@ -3,6 +3,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { Resend } from "https://esm.sh/resend@2.0.0";
 import { adminMfaSatisfied } from "../_shared/adminMfa.ts";
 import { monitored } from "../_shared/monitoring.ts";
+import { EMAIL_FROM } from "../_shared/email.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -294,7 +295,7 @@ const handler = async (req: Request): Promise<Response> => {
       if (resend && psychologist.professional_email) {
         try {
           await resend.emails.send({
-            from: "Plataforma Saúde Mental <onboarding@resend.dev>",
+            from: EMAIL_FROM,
             to: [psychologist.professional_email],
             subject: "Cadastro Aprovado - Bem-vindo à Plataforma!",
             html: generateApprovalEmailTemplate(psychologist.full_name),
@@ -370,7 +371,7 @@ const handler = async (req: Request): Promise<Response> => {
       if (resend && psychologist.professional_email) {
         try {
           await resend.emails.send({
-            from: "Plataforma Saúde Mental <onboarding@resend.dev>",
+            from: EMAIL_FROM,
             to: [psychologist.professional_email],
             subject: "Informações sobre seu Cadastro",
             html: generateRejectionEmailTemplate(psychologist.full_name, reason),

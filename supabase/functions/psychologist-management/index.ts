@@ -5,6 +5,7 @@ import { adminMfaSatisfied } from "../_shared/adminMfa.ts";
 import { errorMessage } from '../_shared/errors.ts';
 import { monitored } from "../_shared/monitoring.ts";
 import { canApproveWithCrp, CRP_APPROVAL_MAX_AGE_DAYS, crpStatusFromRow, rowMatchesCrp, sanitizeCfpRow } from "../_shared/crp.ts";
+import { EMAIL_FROM } from "../_shared/email.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -256,7 +257,7 @@ const handler = async (req: Request): Promise<Response> => {
       }
 
       await resend.emails.send({
-        from: 'Soliv <onboarding@resend.dev>',
+        from: EMAIL_FROM,
         to: [user.email],
         subject: 'Cadastro recebido - Soliv',
         html: generatePendingEmail(insertData.full_name ?? ''),
@@ -414,7 +415,7 @@ const handler = async (req: Request): Promise<Response> => {
       // vira erro para o admin (antes ele via "erro" e tentava de novo).
       try {
         await resend.emails.send({
-          from: 'Soliv <onboarding@resend.dev>',
+          from: EMAIL_FROM,
           to: [psychologist.email],
           subject: 'Cadastro aprovado - Soliv',
           html: generateApprovalEmail(psychologist.full_name),
@@ -544,7 +545,7 @@ const handler = async (req: Request): Promise<Response> => {
       // Enviar email de rejeição (a recusa já valeu; falha no e-mail não vira erro).
       try {
         await resend.emails.send({
-          from: 'Soliv <onboarding@resend.dev>',
+          from: EMAIL_FROM,
           to: [psychologist.email],
           subject: 'Cadastro não aprovado - Soliv',
           html: generateRejectionEmail(psychologist.full_name, rejection_reason),

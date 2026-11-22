@@ -10,6 +10,10 @@ O que precisa ser resolvido antes de o app ficar pronto. Ao resolver um item, mo
 
 - **Situação:** o Soliv ainda não tem domínio próprio. Sem ele, não dá para enviar e-mail com remetente do Soliv para os usuários.
 - **Em espera (2026-10-13):** `soliv.com.br` está registrado por uma pessoa física, sem site, e vence em **03/12/2026** (foi renovado em 12/2025). `soliv.com` e `soliv.app` também estão ocupados. Decisão: aguardar o vencimento antes de escolher outro domínio. Lembretes agendados para 26/11/2026 (uma semana antes) e 10/12/2026 (para ver se foi renovado ou entrou no processo de liberação do Registro.br).
+- **Domínio escolhido (2026-11-22): `solivsaude.com.br`.**
+  - Feito: as 5 edge functions passam a enviar de `Soliv <nao-responda@solivsaude.com.br>` (constante única em `supabase/functions/_shared/email.ts`); **publicar só depois do domínio "Verified" no Resend**, senão o Resend recusa o envio.
+  - Feito: `https://solivsaude.com.br/**` e `https://www.solivsaude.com.br/**` adicionados às Redirect URLs do Supabase (Authentication → URL Configuration). Os links dos e-mails de login podem voltar para o domínio.
+  - Falta: verificar o domínio no Resend (passo 2), SMTP no Supabase (passo 3), publicar as 5 funções, ligar o domínio na Lovable e trocar o Site URL (passo 5), subir o limite de e-mails e ligar "Confirm email" (pendência 6).
 - **O que depende do domínio:**
 
   | E-mail | Onde é enviado | Remetente hoje | O que acontece sem domínio |
