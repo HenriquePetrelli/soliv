@@ -14,7 +14,10 @@ O que precisa ser resolvido antes de o app ficar pronto. Ao resolver um item, mo
   - Feito: domínio **Verified no Resend** em 2026-11-22 (região São Paulo; DKIM `resend._domainkey`, CNAMEs `send` e `rsend`, DMARC `_dmarc` no DNS do Registro.br).
   - Feito: as 5 edge functions enviam de `Soliv <nao-responda@solivsaude.com.br>` (constante única em `supabase/functions/_shared/email.ts`), publicadas em 2026-11-22 pela CLI com `--use-api`, mesmo `verify_jwt`: `psychologist-management` (v244), `admin-psychologist-management` (v214), `send-support-request` (v105), `send-psychologist-support-request` (v104), `send-appointment-notification` (v145). Sem login respondem 401/403.
   - Feito: `https://solivsaude.com.br/**` e `https://www.solivsaude.com.br/**` adicionados às Redirect URLs do Supabase (Authentication → URL Configuration). Os links dos e-mails de login podem voltar para o domínio.
-  - Falta: SMTP no Supabase (passo 3), ligar o domínio na Lovable e trocar o Site URL (passo 5), subir o limite de e-mails e ligar "Confirm email" (pendência 6).
+  - Feito (conferido pela API em 2026-11-22): SMTP do Resend no Supabase (`smtp.resend.com:465`, usuário `resend`, remetente `Soliv <nao-responda@solivsaude.com.br>`), limite de e-mails de login subido de 2 para **100 por hora** e Site URL trocado para `https://solivsaude.com.br`.
+  - Feito (2026-11-22): domínio ligado ao app publicado na Lovable; `https://solivsaude.com.br/home` abre o app logado.
+  - Feito (2026-11-22): "Confirm email" ligado (`mailer_autoconfirm = false`, conferido pela API; pendência 6).
+  - Falta: fazer o teste do "Como conferir" com um e-mail de fora da equipe (logo do e-mail vindo de `solivsaude.com.br/email/soliv-logo.png`). Com o site no domínio, a pendência 28 (monitoramento do site) já pode ser feita.
 - **O que depende do domínio:**
 
   | E-mail | Onde é enviado | Remetente hoje | O que acontece sem domínio |
@@ -32,7 +35,7 @@ O que precisa ser resolvido antes de o app ficar pronto. Ao resolver um item, mo
   4. Trocar os remetentes das 5 edge functions da tabela pelo domínio novo (pedir ao Claude; é uma troca de texto) e publicar as funções.
   5. Ligar o domínio ao app publicado na Lovable e usar esse endereço como Site URL no Supabase (a logo do e-mail e os links vêm dele). Depois, as pendências 28 (monitoramento do site) e 29 (alertas no e-mail oficial).
 - **Enquanto isso:** dá para colar os modelos em português no Supabase (Authentication → Email Templates) para testar com os e-mails da equipe; para usuários de fora, nenhum e-mail chega. **Feito em 2026-11-08:** os 6 modelos em português (`supabase/templates/`) e os assuntos foram colados no Supabase pela API e conferidos iguais ao repositório (teste `s01-32`). Já valem para os e-mails da equipe; a logo vem do Site URL atual (`calmconnect-auth-flow.lovable.app/email/soliv-logo.png`).
-- **Limite atual:** sem SMTP próprio o Supabase manda no máximo **2 e-mails de login por hora** para o projeto inteiro (`rate_limit_email_sent = 2`). Depois do SMTP do Resend, subir esse limite em Authentication → Rate Limits.
+- **Limite atual:** **100 e-mails de login por hora** (`rate_limit_email_sent = 100`, conferido em 2026-11-22, com o SMTP do Resend). Antes eram 2.
 - **Como conferir:** pedir "Esqueci minha senha" com um e-mail que não é da equipe; o e-mail chega em português, com a logo e remetente "Soliv". Enviar um pedido de suporte e conferir que ele chega na caixa da equipe.
 - **Registrado em:** 2026-10-05.
 
@@ -55,7 +58,7 @@ O que precisa ser resolvido antes de o app ficar pronto. Ao resolver um item, mo
 
 - **Situação (2026-11-09):** o projeto está pronto para gerar os dois apps pelo GitHub Actions, sem Android Studio nem Mac. **Android:** assinatura de release lida de fora do repositório, `versionCode` automático, `targetSdkVersion 36` (exigido pelo Play desde 31/08/2026), workflow `Android (AAB)`. **iOS:** plataforma adicionada ao Capacitor (`ios/`, Swift Package Manager, iOS 15+, só iPhone), textos de câmera, microfone e fotos, push pelo Firebase (o `AppDelegate` troca o token da Apple pelo do FCM), workflow `iOS (TestFlight)`.
 - **Sons fora do app (2026-11-09):** o primeiro AAB saiu com 432 MB por causa dos sons (limite do Play: 200 MB). Os 16 sons foram enviados ao bucket público `sounds` do Supabase Storage e os apps tocam de lá; o build dos apps caiu para ~4,5 MB. Cada vez que alguém ouve um som no app conta no tráfego mensal do Supabase (o player baixa aos poucos, só o que toca).
-- **Ícones do Android e som do push no iPhone (2026-11-12):** o app Android ainda saía com o ícone e a tela de abertura padrão do Capacitor (um "X" azul). Agora usa o logo do Soliv: ícone normal, redondo, adaptativo e monocromático (Android 13+), ícone da barra de avisos e abertura, gerados por `scripts/gerar-icones-android.py`. No iPhone o push chegava sem som; o servidor passou a pedir o som padrão (`_shared/fcm.ts`). **Falta publicar** as edge functions `notification-push`, `firebase-notifications` e `habit-reminders` para o som valer.
+- **Ícones do Android e som do push no iPhone (2026-11-12):** o app Android ainda saía com o ícone e a tela de abertura padrão do Capacitor (um "X" azul). Agora usa o logo do Soliv: ícone normal, redondo, adaptativo e monocromático (Android 13+), ícone da barra de avisos e abertura, gerados por `scripts/gerar-icones-android.py`. No iPhone o push chegava sem som; o servidor passou a pedir o som padrão (`_shared/fcm.ts`). ~~Falta publicar as edge functions `notification-push`, `firebase-notifications` e `habit-reminders` para o som valer.~~ **Publicadas** (conferido em 2026-11-22: as versões no ar, de 2026-11-20 — `notification-push` v63, `firebase-notifications` v253, `habit-reminders` v70 — já mandam `aps.sound = 'default'`).
 - **O que falta (só o dono da conta faz):** passo a passo em `docs/publicacao-lojas.md`.
   1. Android: gerar a chave de upload, cadastrar os 4 secrets `ANDROID_*`, criar o app no Play Console (Play App Signing), enviar o primeiro AAB para o teste interno.
   2. iOS: conta Apple Developer (com D-U-N-S, pode levar semanas: começar já), App ID com push, chave APNs enviada ao Firebase, app iOS no Firebase (`GoogleService-Info.plist`), app e chave de API na App Store Connect, 5 secrets, enviar ao TestFlight.
@@ -111,6 +114,7 @@ O que precisa ser resolvido antes de o app ficar pronto. Ao resolver um item, mo
 
 ### 28. Monitorar o site no dia da publicação
 
+- **Desbloqueada em 2026-11-22:** o site está publicado em `https://solivsaude.com.br` (pendência 2); usar esse endereço nos passos abaixo.
 - **Situação (2026-11-12):** o site ainda não foi publicado em produção, então não dá para criar a checagem de "site no ar" nem liberar o endereço dele no coletor de erros. Os apps Android e iOS e o backend já estão cobertos (pendência 27).
 - **O que fazer, logo depois de publicar o site (ou ligar o domínio próprio, pendência 2):**
   1. Grafana → **Observability → Frontend → Soliv → Settings** → em **CORS allowed origins**, adicionar o endereço publicado (ex.: `https://soliv.lovable.app` ou `https://app.SEU-DOMINIO`). Sem isso o navegador bloqueia o envio dos erros do site.
@@ -166,7 +170,7 @@ O que precisa ser resolvido antes de o app ficar pronto. Ao resolver um item, mo
 - **O que fazer:**
   1. ~~Tamanho mínimo de senha: 8, com letras e números ("Letters and digits"), e validade do link/código de e-mail em 1 hora (`3600`).~~ **Feito em 2026-10-13.**
   2. ~~Ativar "Prevent use of leaked passwords" (recusa senhas que já vazaram na internet). Só existe no plano Pro do Supabase.~~ **Ligado (conferido pela API em 2026-11-22, com o plano Pro).** Falta testar no cadastro com uma senha comum de letras e números (ex.: `senha123`): tem que ser recusada.
-  3. "Confirm email": ligar depois do domínio (pendência 2), para o e-mail de confirmação chegar. O app já está pronto (desde 2026-10-21 o paciente é criado pelo banco e o psicólogo conclui o cadastro no primeiro acesso).
+  3. ~~"Confirm email": ligar depois do domínio (pendência 2), para o e-mail de confirmação chegar.~~ **Ligado em 2026-11-22 (conferido pela API).** O app já estava pronto (desde 2026-10-21 o paciente é criado pelo banco e o psicólogo conclui o cadastro no primeiro acesso). Falta testar: cadastrar um paciente e um psicólogo com e-mails de fora da equipe, receber o link em português, confirmar e entrar.
 - **Registrado em:** 2026-10-04.
 
 ### 16. Revisão jurídica dos documentos
