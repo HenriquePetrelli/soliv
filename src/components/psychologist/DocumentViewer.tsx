@@ -6,6 +6,7 @@ import { useSignedDocumentUrl } from '@/hooks/useSignedDocumentUrl';
 import { useState, useEffect } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { openSafeUrl } from '@/lib/safeUrl';
+import { getFriendlyErrorMessage } from '@/utils/errorMessage';
 
 interface DocumentViewerProps {
   documentPath?: string;
@@ -81,13 +82,8 @@ export const DocumentViewer = ({ documentPath, bucket, fallbackUrl }: DocumentVi
         <div className="text-center">
           <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
            <p className="text-sm text-muted-foreground mb-2">
-             {error?.message || 'Erro ao carregar documento'}
+             {getFriendlyErrorMessage(error, 'Não foi possível carregar o documento. Tente novamente.')}
            </p>
-           {error?.message?.includes('403') && (
-             <p className="text-xs text-destructive mb-4">
-               Erro de permissão - verifique se você tem acesso
-             </p>
-           )}
           <Button 
             variant="outline" 
             size="sm" 

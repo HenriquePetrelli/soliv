@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { Loader2 } from 'lucide-react';
+import { getAuthErrorMessage } from '@/utils/errorMessage';
 
 interface PasswordResetModalProps {
   open: boolean;
@@ -41,12 +42,11 @@ const PasswordResetModal: React.FC<PasswordResetModalProps> = ({ open, onOpenCha
       });
 
       if (error) {
-        if (error.message.includes('rate limit')) {
-          toast.error('Muitas tentativas. Tente novamente em alguns minutos.');
-        } else if (error.message.includes('invalid email')) {
-          setErrors({ email: 'Email não encontrado' });
+        const message = getAuthErrorMessage(error, 'Não foi possível enviar o e-mail de recuperação agora. Tente novamente em alguns instantes.');
+        if (error.code === 'email_address_invalid' || error.code === 'validation_failed') {
+          setErrors({ email: message });
         } else {
-          toast.error('Erro ao enviar email de recuperação. Tente novamente.');
+          toast.error(message);
         }
         console.error('Reset password error:', error);
       } else {
@@ -56,7 +56,7 @@ const PasswordResetModal: React.FC<PasswordResetModalProps> = ({ open, onOpenCha
       }
     } catch (error) {
       console.error('Unexpected error:', error);
-      toast.error('Erro inesperado. Tente novamente.');
+      toast.error(getAuthErrorMessage(error));
     } finally {
       setIsLoading(false);
     }

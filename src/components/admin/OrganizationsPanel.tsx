@@ -12,6 +12,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Textarea } from '@/components/ui/textarea';
 import { supabase } from '@/integrations/supabase/client';
 import type { Tables } from '@/integrations/supabase/types';
+import { getFriendlyErrorMessage } from '@/utils/errorMessage';
 
 type Organization = Tables<'organizations'>;
 
@@ -152,7 +153,7 @@ export const OrganizationsPanel = () => {
         : await supabase.from('organizations').update(payload).eq('id', (editing as Organization).id);
     setSaving(false);
     if (error) {
-      toast.error(`Não foi possível salvar: ${error.message}`);
+      toast.error(getFriendlyErrorMessage(error, 'Não foi possível salvar a empresa. Tente novamente.'));
       return;
     }
     toast.success(editing === 'new' ? 'Empresa cadastrada' : 'Empresa atualizada');
