@@ -10,6 +10,11 @@ O que precisa ser resolvido antes de o app ficar pronto. Ao resolver um item, mo
 
 - **Situação:** o Soliv ainda não tem domínio próprio. Sem ele, não dá para enviar e-mail com remetente do Soliv para os usuários.
 - **Em espera (2026-10-13):** `soliv.com.br` está registrado por uma pessoa física, sem site, e vence em **03/12/2026** (foi renovado em 12/2025). `soliv.com` e `soliv.app` também estão ocupados. Decisão: aguardar o vencimento antes de escolher outro domínio. Lembretes agendados para 26/11/2026 (uma semana antes) e 10/12/2026 (para ver se foi renovado ou entrou no processo de liberação do Registro.br).
+- **Domínio escolhido (2026-11-22): `solivsaude.com.br`.**
+  - Feito: domínio **Verified no Resend** em 2026-11-22 (região São Paulo; DKIM `resend._domainkey`, CNAMEs `send` e `rsend`, DMARC `_dmarc` no DNS do Registro.br).
+  - Feito: as 5 edge functions enviam de `Soliv <nao-responda@solivsaude.com.br>` (constante única em `supabase/functions/_shared/email.ts`), publicadas em 2026-11-22 pela CLI com `--use-api`, mesmo `verify_jwt`: `psychologist-management` (v244), `admin-psychologist-management` (v214), `send-support-request` (v105), `send-psychologist-support-request` (v104), `send-appointment-notification` (v145). Sem login respondem 401/403.
+  - Feito: `https://solivsaude.com.br/**` e `https://www.solivsaude.com.br/**` adicionados às Redirect URLs do Supabase (Authentication → URL Configuration). Os links dos e-mails de login podem voltar para o domínio.
+  - Falta: SMTP no Supabase (passo 3), ligar o domínio na Lovable e trocar o Site URL (passo 5), subir o limite de e-mails e ligar "Confirm email" (pendência 6).
 - **O que depende do domínio:**
 
   | E-mail | Onde é enviado | Remetente hoje | O que acontece sem domínio |
@@ -131,6 +136,7 @@ O que precisa ser resolvido antes de o app ficar pronto. Ao resolver um item, mo
   2. **Se o swap seguir acima de 80% ou a CPU ficar perto de 100%:** aumentar a instância antes do lançamento em Supabase → Project Settings → **Compute and Disk** (tem custo; conferir o valor antes).
   3. **Synthetics → Checks:** `soliv-backend` e `soliv-login` verdes, cada uma rodando de **um local só** (não Calgary nem vários).
   4. **Cost management → Usage** depois de 1 dia: *Metrics active series* abaixo de 5 mil (o Free tem 10 mil); sessões, logs e execuções das checagens dentro das cotas grátis (`docs/monitoramento-grafana.md`, seção 7).
+- **Feito em 2026-11-22 (plano Pro do Supabase):** banco passou de **Nano (0,5 GB)** para **Micro (1 GB de RAM, 2 CPUs compartilhadas)**, pago pelo crédito de compute do Pro, sem custo a mais; Postgres atualizado de 17.11 para **17.12**. Conferido pela API: projeto `ACTIVE_HEALTHY`, `shared_buffers` 256 MB, 60 conexões diretas (200 pelo pooler). Falta olhar o swap no Grafana com o Micro (passo 1); se seguir acima de 80%, o próximo é o Small (~US$ 15/mês, cobrado à parte).
 - **Como conferir:** swap abaixo de 80% e CPU folgada no painel; as duas checagens verdes; uso dentro do plano gratuito.
 - **Registrado em:** 2026-11-12.
 
@@ -159,7 +165,7 @@ O que precisa ser resolvido antes de o app ficar pronto. Ao resolver um item, mo
 - **Onde:** Supabase → Authentication → Policies/Settings (não dá para configurar pelo código).
 - **O que fazer:**
   1. ~~Tamanho mínimo de senha: 8, com letras e números ("Letters and digits"), e validade do link/código de e-mail em 1 hora (`3600`).~~ **Feito em 2026-10-13.**
-  2. Ativar "Prevent use of leaked passwords" (recusa senhas que já vazaram na internet). Só existe no plano Pro do Supabase: fica para quando assinar o Pro.
+  2. ~~Ativar "Prevent use of leaked passwords" (recusa senhas que já vazaram na internet). Só existe no plano Pro do Supabase.~~ **Ligado (conferido pela API em 2026-11-22, com o plano Pro).** Falta testar no cadastro com uma senha comum de letras e números (ex.: `senha123`): tem que ser recusada.
   3. "Confirm email": ligar depois do domínio (pendência 2), para o e-mail de confirmação chegar. O app já está pronto (desde 2026-10-21 o paciente é criado pelo banco e o psicólogo conclui o cadastro no primeiro acesso).
 - **Registrado em:** 2026-10-04.
 

@@ -91,7 +91,7 @@ Supabase → **Authentication → Providers → Email** (e **Policies**/**Settin
 
 1. **Minimum password length:** `8`. O app já exige 8 com letras e números; o servidor ainda aceita 6 de quem chama a API direto.
 2. **Password requirements:** "Letters and digits" (letras e números), como o app já exige.
-3. **Prevent use of leaked passwords:** só existe no plano Pro do Supabase. No plano gratuito, fica desligado; ligar quando assinar o Pro.
+3. **Prevent use of leaked passwords:** ligado (só existe no plano Pro do Supabase, assinado em 2026-11).
    - **Require current password when updating:** deixe **desligado**. O app já pede a senha atual nas próprias telas, e ligar isso quebraria a troca de senha e o "Esqueci minha senha".
    - **Email OTP expiration:** `3600` (1 hora), o prazo escrito nos e-mails.
 4. **Confirm email:** ligar, **só depois do passo 2** (o e-mail de confirmação precisa chegar). O app já está pronto para isso:
