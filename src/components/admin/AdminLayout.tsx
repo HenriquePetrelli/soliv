@@ -66,9 +66,7 @@ const AdminLayout = ({ active, badges = {}, children }: AdminLayoutProps) => {
       {/* Computador: menu lateral */}
       <aside className="hidden md:fixed md:inset-y-0 md:z-30 md:flex md:w-64 md:flex-col md:border-r md:border-sidebar-border md:bg-sidebar">
         <div className="flex flex-col items-center gap-2 border-b border-sidebar-border p-5">
-          <div className="flex items-center justify-center rounded-full border-2 border-primary/15 bg-card p-2.5 shadow-md">
-            <img src={logoImg} alt="Soliv" className="h-12 w-12 select-none object-contain" draggable={false} />
-          </div>
+          <img src={logoImg} alt="Soliv" className="h-12 w-12 select-none object-contain" draggable={false} />
           <p className="flex items-center gap-1 text-xs font-medium text-sidebar-foreground/70">
             <Shield className="h-3 w-3" aria-hidden="true" /> Painel administrativo
           </p>

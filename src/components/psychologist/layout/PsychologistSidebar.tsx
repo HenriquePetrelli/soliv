@@ -49,9 +49,7 @@ const PsychologistSidebar = () => {
   return (
     <aside className="hidden md:fixed md:inset-y-0 md:flex md:w-64 md:flex-col md:border-r md:border-sidebar-border md:bg-sidebar md:text-sidebar-foreground">
       <div className="flex items-center justify-center border-b border-secondary-foreground/15 p-6">
-        <div className="flex items-center justify-center rounded-full border-2 border-primary/15 bg-card p-3 shadow-md">
-          <img src={logoImg} alt="Soliv" style={{ width: '64px', height: '64px' }} className="select-none object-contain" draggable={false} />
-        </div>
+        <img src={logoImg} alt="Soliv" style={{ width: '64px', height: '64px' }} className="select-none object-contain" draggable={false} />
       </div>
 
       <div className="px-4 pt-4">
