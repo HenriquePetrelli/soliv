@@ -39,17 +39,13 @@ export const DesktopSidebar: React.FC<DesktopSidebarProps> = ({ onSOSClick }) =>
     <aside className="hidden md:flex md:flex-col md:w-64 md:fixed md:inset-y-0 md:bg-sidebar md:text-sidebar-foreground md:border-r md:border-sidebar-border">
       {/* Logo Section */}
       <div className="flex items-center justify-center p-6 border-b border-secondary-foreground/15">
-        <div
-          className="rounded-full border-2 border-primary/15 bg-card p-3 flex items-center justify-center shadow-md"
-        >
-          <img
-            src={logoImg}
-            alt="Soliv"
-            style={{ width: '80px', height: '80px' }}
-            className="object-contain select-none"
-            draggable={false}
-          />
-        </div>
+        <img
+          src={logoImg}
+          alt="Soliv"
+          style={{ width: '80px', height: '80px' }}
+          className="object-contain select-none"
+          draggable={false}
+        />
       </div>
 
       {/* Navigation */}
