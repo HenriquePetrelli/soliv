@@ -246,6 +246,21 @@ describe('transcrição: provedores', () => {
     const sent = JSON.parse(init.body as string);
     expect(sent.model).toBe('google/gemini-2.5-flash');
     expect(sent.messages[1].content[1]).toEqual({ type: 'input_audio', input_audio: { data: wavBase64, format: 'wav' } });
+    expect(sent.reasoning_effort).toBe('none');
+  });
+
+  it('Lovable: se o gateway recusar reasoning_effort, repete sem ele', async () => {
+    const fetchFn = vi
+      .fn()
+      .mockResolvedValueOnce(new Response('Unsupported parameter: reasoning_effort', { status: 400 }))
+      .mockResolvedValueOnce(new Response(JSON.stringify({ choices: [{ message: { content: 'Tudo certo.' } }] })));
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    expect(await lovableTranscriber('k', env({}), fetchFn as unknown as typeof fetch)(audio)).toBe('Tudo certo.');
+    expect(fetchFn).toHaveBeenCalledTimes(2);
+    const retry = JSON.parse((fetchFn.mock.calls[1] as unknown as [string, RequestInit])[1].body as string);
+    expect(retry).not.toHaveProperty('reasoning_effort');
+    expect(retry.model).toBe('google/gemini-2.5-flash');
+    warn.mockRestore();
   });
 
   it('Lovable: resposta em partes também é lida', async () => {
@@ -256,6 +271,7 @@ describe('transcrição: provedores', () => {
   it('Lovable: erro HTTP vira exceção com o status', async () => {
     const fetchFn = vi.fn(async () => new Response('formato não suportado', { status: 400 }));
     await expect(lovableTranscriber('k', env({}), fetchFn as unknown as typeof fetch)(audio)).rejects.toThrow(/Lovable AI: 400/);
+    expect(fetchFn).toHaveBeenCalledTimes(1);
   });
 
   it('OpenAI: envia multipart com o arquivo e o idioma', async () => {
