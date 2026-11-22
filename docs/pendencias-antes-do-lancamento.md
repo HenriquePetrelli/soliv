@@ -16,7 +16,8 @@ O que precisa ser resolvido antes de o app ficar pronto. Ao resolver um item, mo
   - Feito: `https://solivsaude.com.br/**` e `https://www.solivsaude.com.br/**` adicionados às Redirect URLs do Supabase (Authentication → URL Configuration). Os links dos e-mails de login podem voltar para o domínio.
   - Feito (conferido pela API em 2026-11-22): SMTP do Resend no Supabase (`smtp.resend.com:465`, usuário `resend`, remetente `Soliv <nao-responda@solivsaude.com.br>`), limite de e-mails de login subido de 2 para **100 por hora** e Site URL trocado para `https://solivsaude.com.br`.
   - Feito (2026-11-22): domínio ligado ao app publicado na Lovable; `https://solivsaude.com.br/home` abre o app logado.
-  - Falta: ligar "Confirm email" (pendência 6, hoje desligado) e fazer o teste do "Como conferir" com um e-mail de fora da equipe (logo do e-mail vindo de `solivsaude.com.br/email/soliv-logo.png`). Com o site no domínio, a pendência 28 (monitoramento do site) já pode ser feita.
+  - Feito (2026-11-22): "Confirm email" ligado (`mailer_autoconfirm = false`, conferido pela API; pendência 6).
+  - Falta: fazer o teste do "Como conferir" com um e-mail de fora da equipe (logo do e-mail vindo de `solivsaude.com.br/email/soliv-logo.png`). Com o site no domínio, a pendência 28 (monitoramento do site) já pode ser feita.
 - **O que depende do domínio:**
 
   | E-mail | Onde é enviado | Remetente hoje | O que acontece sem domínio |
@@ -169,7 +170,7 @@ O que precisa ser resolvido antes de o app ficar pronto. Ao resolver um item, mo
 - **O que fazer:**
   1. ~~Tamanho mínimo de senha: 8, com letras e números ("Letters and digits"), e validade do link/código de e-mail em 1 hora (`3600`).~~ **Feito em 2026-10-13.**
   2. ~~Ativar "Prevent use of leaked passwords" (recusa senhas que já vazaram na internet). Só existe no plano Pro do Supabase.~~ **Ligado (conferido pela API em 2026-11-22, com o plano Pro).** Falta testar no cadastro com uma senha comum de letras e números (ex.: `senha123`): tem que ser recusada.
-  3. "Confirm email": ligar depois do domínio (pendência 2), para o e-mail de confirmação chegar. O app já está pronto (desde 2026-10-21 o paciente é criado pelo banco e o psicólogo conclui o cadastro no primeiro acesso).
+  3. ~~"Confirm email": ligar depois do domínio (pendência 2), para o e-mail de confirmação chegar.~~ **Ligado em 2026-11-22 (conferido pela API).** O app já estava pronto (desde 2026-10-21 o paciente é criado pelo banco e o psicólogo conclui o cadastro no primeiro acesso). Falta testar: cadastrar um paciente e um psicólogo com e-mails de fora da equipe, receber o link em português, confirmar e entrar.
 - **Registrado em:** 2026-10-04.
 
 ### 16. Revisão jurídica dos documentos
