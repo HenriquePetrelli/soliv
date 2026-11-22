@@ -15,7 +15,8 @@ O que precisa ser resolvido antes de o app ficar pronto. Ao resolver um item, mo
   - Feito: as 5 edge functions enviam de `Soliv <nao-responda@solivsaude.com.br>` (constante única em `supabase/functions/_shared/email.ts`), publicadas em 2026-11-22 pela CLI com `--use-api`, mesmo `verify_jwt`: `psychologist-management` (v244), `admin-psychologist-management` (v214), `send-support-request` (v105), `send-psychologist-support-request` (v104), `send-appointment-notification` (v145). Sem login respondem 401/403.
   - Feito: `https://solivsaude.com.br/**` e `https://www.solivsaude.com.br/**` adicionados às Redirect URLs do Supabase (Authentication → URL Configuration). Os links dos e-mails de login podem voltar para o domínio.
   - Feito (conferido pela API em 2026-11-22): SMTP do Resend no Supabase (`smtp.resend.com:465`, usuário `resend`, remetente `Soliv <nao-responda@solivsaude.com.br>`), limite de e-mails de login subido de 2 para **100 por hora** e Site URL trocado para `https://solivsaude.com.br`.
-  - Falta: ligar o domínio ao app publicado na Lovable (passo 5; a logo dos e-mails de login vem do Site URL, então até lá aparece quebrada), ligar "Confirm email" (pendência 6, hoje desligado) e fazer o teste do "Como conferir" com um e-mail de fora da equipe.
+  - Feito (2026-11-22): domínio ligado ao app publicado na Lovable; `https://solivsaude.com.br/home` abre o app logado.
+  - Falta: ligar "Confirm email" (pendência 6, hoje desligado) e fazer o teste do "Como conferir" com um e-mail de fora da equipe (logo do e-mail vindo de `solivsaude.com.br/email/soliv-logo.png`). Com o site no domínio, a pendência 28 (monitoramento do site) já pode ser feita.
 - **O que depende do domínio:**
 
   | E-mail | Onde é enviado | Remetente hoje | O que acontece sem domínio |
@@ -112,6 +113,7 @@ O que precisa ser resolvido antes de o app ficar pronto. Ao resolver um item, mo
 
 ### 28. Monitorar o site no dia da publicação
 
+- **Desbloqueada em 2026-11-22:** o site está publicado em `https://solivsaude.com.br` (pendência 2); usar esse endereço nos passos abaixo.
 - **Situação (2026-11-12):** o site ainda não foi publicado em produção, então não dá para criar a checagem de "site no ar" nem liberar o endereço dele no coletor de erros. Os apps Android e iOS e o backend já estão cobertos (pendência 27).
 - **O que fazer, logo depois de publicar o site (ou ligar o domínio próprio, pendência 2):**
   1. Grafana → **Observability → Frontend → Soliv → Settings** → em **CORS allowed origins**, adicionar o endereço publicado (ex.: `https://soliv.lovable.app` ou `https://app.SEU-DOMINIO`). Sem isso o navegador bloqueia o envio dos erros do site.
