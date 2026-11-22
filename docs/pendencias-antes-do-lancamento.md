@@ -14,7 +14,8 @@ O que precisa ser resolvido antes de o app ficar pronto. Ao resolver um item, mo
   - Feito: domínio **Verified no Resend** em 2026-11-22 (região São Paulo; DKIM `resend._domainkey`, CNAMEs `send` e `rsend`, DMARC `_dmarc` no DNS do Registro.br).
   - Feito: as 5 edge functions enviam de `Soliv <nao-responda@solivsaude.com.br>` (constante única em `supabase/functions/_shared/email.ts`), publicadas em 2026-11-22 pela CLI com `--use-api`, mesmo `verify_jwt`: `psychologist-management` (v244), `admin-psychologist-management` (v214), `send-support-request` (v105), `send-psychologist-support-request` (v104), `send-appointment-notification` (v145). Sem login respondem 401/403.
   - Feito: `https://solivsaude.com.br/**` e `https://www.solivsaude.com.br/**` adicionados às Redirect URLs do Supabase (Authentication → URL Configuration). Os links dos e-mails de login podem voltar para o domínio.
-  - Falta: SMTP no Supabase (passo 3), ligar o domínio na Lovable e trocar o Site URL (passo 5), subir o limite de e-mails e ligar "Confirm email" (pendência 6).
+  - Feito (conferido pela API em 2026-11-22): SMTP do Resend no Supabase (`smtp.resend.com:465`, usuário `resend`, remetente `Soliv <nao-responda@solivsaude.com.br>`), limite de e-mails de login subido de 2 para **100 por hora** e Site URL trocado para `https://solivsaude.com.br`.
+  - Falta: ligar o domínio ao app publicado na Lovable (passo 5; a logo dos e-mails de login vem do Site URL, então até lá aparece quebrada), ligar "Confirm email" (pendência 6, hoje desligado) e fazer o teste do "Como conferir" com um e-mail de fora da equipe.
 - **O que depende do domínio:**
 
   | E-mail | Onde é enviado | Remetente hoje | O que acontece sem domínio |
@@ -32,7 +33,7 @@ O que precisa ser resolvido antes de o app ficar pronto. Ao resolver um item, mo
   4. Trocar os remetentes das 5 edge functions da tabela pelo domínio novo (pedir ao Claude; é uma troca de texto) e publicar as funções.
   5. Ligar o domínio ao app publicado na Lovable e usar esse endereço como Site URL no Supabase (a logo do e-mail e os links vêm dele). Depois, as pendências 28 (monitoramento do site) e 29 (alertas no e-mail oficial).
 - **Enquanto isso:** dá para colar os modelos em português no Supabase (Authentication → Email Templates) para testar com os e-mails da equipe; para usuários de fora, nenhum e-mail chega. **Feito em 2026-11-08:** os 6 modelos em português (`supabase/templates/`) e os assuntos foram colados no Supabase pela API e conferidos iguais ao repositório (teste `s01-32`). Já valem para os e-mails da equipe; a logo vem do Site URL atual (`calmconnect-auth-flow.lovable.app/email/soliv-logo.png`).
-- **Limite atual:** sem SMTP próprio o Supabase manda no máximo **2 e-mails de login por hora** para o projeto inteiro (`rate_limit_email_sent = 2`). Depois do SMTP do Resend, subir esse limite em Authentication → Rate Limits.
+- **Limite atual:** **100 e-mails de login por hora** (`rate_limit_email_sent = 100`, conferido em 2026-11-22, com o SMTP do Resend). Antes eram 2.
 - **Como conferir:** pedir "Esqueci minha senha" com um e-mail que não é da equipe; o e-mail chega em português, com a logo e remetente "Soliv". Enviar um pedido de suporte e conferir que ele chega na caixa da equipe.
 - **Registrado em:** 2026-10-05.
 
