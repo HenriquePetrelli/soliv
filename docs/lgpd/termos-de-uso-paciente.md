@@ -95,7 +95,7 @@ Se a sua empresa oferece o Soliv, você pode usar o código de convite do RH (no
 
 - Com o seu consentimento, o Soliv transcreve em texto o que é falado nas chamadas de vídeo do SOS e das consultas, a sua voz e a do psicólogo. Os dois veem na tela o aviso **"Chamada sendo transcrita"**.
 - **O vídeo nunca é gravado.** O áudio é usado só para gerar o texto e **não fica guardado**.
-- A transcrição faz parte do registro do seu atendimento: só você e o psicólogo que participou da chamada podem lê-la, e ela é guardada pelo mesmo prazo dos registros de atendimento (5 anos). A equipe do Soliv não tem acesso.
+- A transcrição faz parte do registro do seu atendimento: você e o psicólogo que participou da chamada podem lê-la, e ela é guardada pelo mesmo prazo dos registros de atendimento (5 anos). A equipe do Soliv pode ler a transcrição para acompanhar a qualidade e a segurança dos atendimentos e apurar reclamações; cada leitura fica registrada (veja a **Política de Privacidade**).
 - O consentimento vale só para o atendimento em que foi dado. Detalhes, como o serviço que faz a transcrição, estão na **Política de Privacidade**.
 
 ## 8. Grupos de apoio

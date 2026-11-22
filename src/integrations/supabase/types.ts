@@ -3058,6 +3058,29 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_appointment_metrics: { Args: { p_days?: number }; Returns: Json }
+      admin_get_call_transcript: {
+        Args: { p_kind: string; p_id: string }
+        Returns: {
+          content: string
+          speaker_role: string
+          started_at: string
+        }[]
+      }
+      admin_get_care_detail: { Args: { p_kind: string; p_id: string }; Returns: Json }
+      admin_get_care_safety_plan: { Args: { p_kind: string; p_id: string }; Returns: Json }
+      admin_list_appointments: {
+        Args: { p_psychologist_id?: string | null; p_patient_id?: string | null; p_limit?: number; p_offset?: number }
+        Returns: Json
+      }
+      admin_list_care_people: {
+        Args: { p_role: string; p_kind: string; p_search?: string | null; p_limit?: number; p_offset?: number }
+        Returns: Json
+      }
+      admin_list_sos: {
+        Args: { p_psychologist_id?: string | null; p_patient_id?: string | null; p_limit?: number; p_offset?: number }
+        Returns: Json
+      }
       patient_identity_verified: {
         Args: { p_user_id: string }
         Returns: boolean

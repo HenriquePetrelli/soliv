@@ -462,6 +462,11 @@ _Cartão de teste `4242 4242 4242 4242`; para pedir autenticação, `4000 0025 0
 - [ ] `s17-33` Admin → Psicólogos → pendente → "Visualizar" e o ícone de baixar ⇒ abrem o documento numa aba nova (link assinado, que expira em 5 min); o navegador não bloqueia como pop-up
 - [ ] `s17-34` Admin → Pacientes/Psicólogos → Editar psicólogo → documento → Visualizar e Substituir ⇒ abre e troca o arquivo
 - [ ] `s17-25` Admin no computador ⇒ menu lateral fixo; cada seção com título e descrição no topo, sem título repetido
+- [ ] `s17-35` Admin → Atendimento → Consultas agendadas ⇒ números dos 30 dias e a lista com paciente, psicólogo, duração e as estrelas dos dois lados
+- [ ] `s17-36` Admin → Consultas agendadas (ou SOS) → clicar numa linha ⇒ detalhes: pessoas, horários, duração, avaliação do paciente e do psicólogo; recarregar a página mantém o detalhe aberto
+- [ ] `s17-37` Detalhe de uma consulta transcrita → "Ver plano de segurança" e "Abrir transcrição do paciente e do psicólogo" ⇒ abrem; na transcrição, as abas Paciente/Psicólogo mostram só aquele lado
+- [ ] `s17-38` Admin → Pessoas → Psicólogos → SOS (e Pacientes → Consultas agendadas) ⇒ lista de pessoas com a contagem; buscar pelo nome; clicar ⇒ só os atendimentos daquela pessoa; "Voltar para a lista"
+- [ ] `s17-39` Depois de s17-36 e s17-37 → Auditoria ⇒ "Abriu detalhes do atendimento", "Leu o plano de segurança" e "Leu a transcrição da chamada", com o nome do paciente
 
 ## 18. Segurança (ficha 20)
 

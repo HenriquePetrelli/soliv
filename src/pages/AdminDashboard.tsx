@@ -24,7 +24,7 @@ import AdminProfile from '@/components/AdminProfile';
 import { PsychologistApprovalPanel } from '@/components/psychologist/PsychologistApprovalPanel';
 import { PatientsPanel } from '@/components/admin/PatientsPanel';
 import { PaymentsPanel } from '@/components/payments/PaymentsPanel';
-import { SosHistoryPanel } from '@/components/sos/SosHistoryPanel';
+import { AdminAppointmentsPanel, AdminCarePeoplePanel, AdminSosPanel } from '@/components/admin/care/AdminCarePanels';
 import { ChatModerationPanel } from '@/components/admin/ChatModerationPanel';
 import { GroupTestimonialModerationPanel } from '@/components/admin/GroupTestimonialModerationPanel';
 import { AuditLogPanel } from '@/components/admin/AuditLogPanel';
@@ -241,7 +241,7 @@ const AdminDashboard = () => {
 
   return (
     <AdminLayout active={activeTab} badges={badges}>
-        <PageTitle title={activeNav.label} description={activeNav.description} />
+        <PageTitle title={activeNav.pageTitle ?? activeNav.label} description={activeNav.description} />
         <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as AdminSection)} className="space-y-4 sm:space-y-6">
 
 
@@ -420,12 +420,32 @@ const AdminDashboard = () => {
             <PsychologistApprovalPanel adminUserId={user?.id} onDataChange={fetchMetrics} />
           </TabsContent>
 
+          <TabsContent value="psychologist_appointments" className="mt-0">
+            {activeTab === 'psychologist_appointments' && <AdminCarePeoplePanel role="psychologist" kind="appointment" />}
+          </TabsContent>
+
+          <TabsContent value="psychologist_sos" className="mt-0">
+            {activeTab === 'psychologist_sos' && <AdminCarePeoplePanel role="psychologist" kind="sos" />}
+          </TabsContent>
+
           <TabsContent value="patients" className="mt-0">
             <PatientsPanel onDataChange={fetchMetrics} />
           </TabsContent>
 
+          <TabsContent value="patient_appointments" className="mt-0">
+            {activeTab === 'patient_appointments' && <AdminCarePeoplePanel role="patient" kind="appointment" />}
+          </TabsContent>
+
+          <TabsContent value="patient_sos" className="mt-0">
+            {activeTab === 'patient_sos' && <AdminCarePeoplePanel role="patient" kind="sos" />}
+          </TabsContent>
+
+          <TabsContent value="appointments" className="mt-0">
+            {activeTab === 'appointments' && <AdminAppointmentsPanel />}
+          </TabsContent>
+
           <TabsContent value="sos" className="mt-0">
-            <SosHistoryPanel withMetrics title="Todas as solicitações SOS" />
+            {activeTab === 'sos' && <AdminSosPanel />}
           </TabsContent>
 
           <TabsContent value="chat" className="mt-0">
