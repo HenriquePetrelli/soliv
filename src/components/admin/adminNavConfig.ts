@@ -1,5 +1,6 @@
 import {
   Building2,
+  CalendarClock,
   CreditCard,
   Fingerprint,
   History,
@@ -16,8 +17,13 @@ import LifeRingIcon from '@/components/icons/LifeRingIcon';
 export type AdminSection =
   | 'overview'
   | 'psychologists'
+  | 'psychologist_appointments'
+  | 'psychologist_sos'
   | 'patients'
+  | 'patient_appointments'
+  | 'patient_sos'
   | 'companies'
+  | 'appointments'
   | 'sos'
   | 'chat'
   | 'groups'
@@ -32,22 +38,64 @@ export interface AdminNavItem {
   icon: LucideIcon;
   /** Frase curta embaixo do título da seção. */
   description: string;
+  /** Subitem: aparece recuado embaixo desta seção no menu. */
+  parent?: AdminSection;
+  /** Título da página, quando o rótulo curto do menu não basta. */
+  pageTitle?: string;
 }
 
-/** Menu do admin em grupos: 10 seções soltas eram difíceis de achar. */
+/** Menu do admin em grupos: 10 seções soltas eram difíceis de achar. Subitens (parent) ficam recuados embaixo da seção. */
 export const ADMIN_NAV_GROUPS: { title: string; items: AdminNavItem[] }[] = [
   { title: 'Geral', items: [{ value: 'overview', label: 'Visão geral', icon: LayoutDashboard, description: 'Números do app e o que precisa da sua atenção' }] },
   {
     title: 'Pessoas',
     items: [
       { value: 'psychologists', label: 'Psicólogos', icon: UserCheck, description: 'Aprovar cadastros, bloquear e editar profissionais' },
+      {
+        value: 'psychologist_appointments',
+        label: 'Consultas agendadas',
+        pageTitle: 'Consultas agendadas por psicólogo',
+        icon: CalendarClock,
+        parent: 'psychologists',
+        description: 'Escolha um psicólogo para ver todas as consultas dele',
+      },
+      {
+        value: 'psychologist_sos',
+        label: 'SOS',
+        pageTitle: 'SOS por psicólogo',
+        icon: LifeRingIcon,
+        parent: 'psychologists',
+        description: 'Escolha um psicólogo para ver todos os SOS que ele atendeu',
+      },
       { value: 'patients', label: 'Pacientes', icon: Users, description: 'Verificação de identidade, dados, bloqueios e exclusão de contas' },
+      {
+        value: 'patient_appointments',
+        label: 'Consultas agendadas',
+        pageTitle: 'Consultas agendadas por paciente',
+        icon: CalendarClock,
+        parent: 'patients',
+        description: 'Escolha um paciente para ver todas as consultas dele',
+      },
+      {
+        value: 'patient_sos',
+        label: 'SOS',
+        pageTitle: 'SOS por paciente',
+        icon: LifeRingIcon,
+        parent: 'patients',
+        description: 'Escolha um paciente para ver todos os SOS que ele pediu',
+      },
       { value: 'companies', label: 'Empresas', icon: Building2, description: 'Contratos B2B, vagas e códigos de convite' },
     ],
   },
   {
     title: 'Atendimento',
     items: [
+      {
+        value: 'appointments',
+        label: 'Consultas agendadas',
+        icon: CalendarClock,
+        description: 'Todas as consultas: quem atendeu, duração, avaliações e transcrição',
+      },
       { value: 'sos', label: 'SOS', icon: LifeRingIcon, description: 'Pedidos de emergência, quem atendeu e como terminaram' },
       { value: 'chat', label: 'Chat', icon: MessageSquare, description: 'Volume de conversas, sem ler o conteúdo' },
     ],

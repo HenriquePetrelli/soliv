@@ -21,14 +21,17 @@ export const AdminNav = ({ active, onSelect, onLogout, badges = {} }: AdminNavPr
             const Icon = item.icon;
             const isActive = active === item.value;
             const badge = badges[item.value] ?? 0;
+            const isChild = !!item.parent;
             return (
-              <li key={item.value}>
+              <li key={item.value} className={isChild ? 'pl-6' : undefined}>
                 <button
                   type="button"
                   onClick={() => onSelect(item.value)}
                   aria-current={isActive ? 'page' : undefined}
+                  aria-label={item.pageTitle}
                   className={cn(
                     'flex min-h-11 w-full items-center gap-3 rounded-lg px-3 text-left text-sm font-medium transition-colors',
+                    isChild && 'min-h-10 text-[13px]',
                     isActive
                       ? 'bg-sidebar-accent text-sidebar-primary'
                       : 'text-sidebar-foreground hover:bg-sidebar-accent/60',

@@ -34,6 +34,9 @@ const ACTION_LABELS: Record<string, string> = {
   delete_organization_member: 'Removeu vínculo com empresa',
   view_access_logs: 'Consultou registros de acesso',
   export_access_logs: 'Exportou registros de acesso',
+  view_care_detail: 'Abriu detalhes do atendimento',
+  view_safety_plan: 'Leu o plano de segurança',
+  view_call_transcript: 'Leu a transcrição da chamada',
 };
 
 const ACTION_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
@@ -62,6 +65,9 @@ const ACTION_ICONS: Record<string, React.ComponentType<{ className?: string }>> 
   delete_organization_member: Trash2,
   view_access_logs: Eye,
   export_access_logs: Download,
+  view_care_detail: Eye,
+  view_safety_plan: Eye,
+  view_call_transcript: Eye,
 };
 
 const ACTION_BADGE_CLASS: Record<string, string> = {
@@ -82,6 +88,8 @@ const ACTION_BADGE_CLASS: Record<string, string> = {
   delete_organization: 'bg-destructive/10 text-destructive border-destructive/20',
   delete_organization_member: 'bg-destructive/10 text-destructive border-destructive/20',
   export_access_logs: 'bg-warning/10 text-warning border-warning/20',
+  view_safety_plan: 'bg-warning/10 text-warning border-warning/20',
+  view_call_transcript: 'bg-warning/10 text-warning border-warning/20',
 };
 
 const formatDate = (value: string) =>

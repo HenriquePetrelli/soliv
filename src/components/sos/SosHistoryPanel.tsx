@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { EmptyState } from '@/components/EmptyState';
 import { SkeletonList } from '@/components/skeletons/Skeletons';
-import { useSosHistory } from '@/hooks/useSosHistory';
+import { useSosHistory, type SosMetrics } from '@/hooks/useSosHistory';
 import {
   SOS_TONE_CLASS,
   describeEndReason,
@@ -35,20 +35,9 @@ const Metric: React.FC<{ label: string; value: string }> = ({ label, value }) =>
   </div>
 );
 
-/** SOS request history — reused by the patient view and the admin dashboard. */
-export const SosHistoryPanel: React.FC<SosHistoryPanelProps> = ({
-  patientId,
-  withMetrics = false,
-  title = 'Histórico de solicitações SOS',
-}) => {
-  const { rows, loading, page, setPage, totalPages, total, metrics } = useSosHistory({
-    patientId,
-    withMetrics,
-  });
-
-  return (
-    <div className="space-y-4">
-      {withMetrics && metrics && (
+/** Números do SOS (admin): totais, tempos, taxas e motivos de encerramento. */
+export const SosMetricsSummary: React.FC<{ metrics: SosMetrics }> = ({ metrics }) => (
+  <>
         <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-6">
           <Metric label="Solicitações (30d)" value={String(metrics.total)} />
           <Metric label="Atendidas" value={String(metrics.attended)} />
@@ -61,9 +50,8 @@ export const SosHistoryPanel: React.FC<SosHistoryPanelProps> = ({
           <Metric label="Crise resolvida" value={formatPercent(metrics.crisis_resolved_rate)} />
           <Metric label="Avaliação média" value={formatRating(metrics.avg_rating)} />
         </div>
-      )}
 
-      {withMetrics && metrics && Object.keys(metrics.end_reasons ?? {}).length > 0 && (
+      {Object.keys(metrics.end_reasons ?? {}).length > 0 && (
         <Card>
           <CardHeader className="pb-2">
             <CardTitle>Motivos de encerramento (30 dias)</CardTitle>
@@ -77,6 +65,23 @@ export const SosHistoryPanel: React.FC<SosHistoryPanelProps> = ({
           </CardContent>
         </Card>
       )}
+  </>
+);
+
+/** SOS request history — reused by the patient view and the admin dashboard. */
+export const SosHistoryPanel: React.FC<SosHistoryPanelProps> = ({
+  patientId,
+  withMetrics = false,
+  title = 'Histórico de solicitações SOS',
+}) => {
+  const { rows, loading, page, setPage, totalPages, total, metrics } = useSosHistory({
+    patientId,
+    withMetrics,
+  });
+
+  return (
+    <div className="space-y-4">
+      {withMetrics && metrics && <SosMetricsSummary metrics={metrics} />}
 
       <Card>
         <CardHeader className="pb-2">

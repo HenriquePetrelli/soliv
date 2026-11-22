@@ -42,7 +42,7 @@ O Soliv é uma plataforma de tecnologia que conecta pacientes a psicólogos para
 - Quando o paciente consente, antes de entrar no SOS por vídeo ou na consulta, o Soliv **grava o áudio e transcreve em texto** o que é falado na chamada, inclusive **a voz do psicólogo**. Ao aceitar estes Termos, o psicólogo concorda com a transcrição da própria fala nesses atendimentos.
 - O psicólogo vê na tela o aviso **"Chamada sendo transcrita"** sempre que a transcrição estiver ativa. Sem o consentimento do paciente, nada é transcrito.
 - **O vídeo nunca é gravado.** O áudio é usado só para gerar o texto e **não fica guardado**.
-- A transcrição faz parte do registro do atendimento: só o paciente e o psicólogo que participou da chamada podem lê-la, no Histórico de consultas. O psicólogo deve tratá-la com o mesmo **sigilo profissional** das próprias anotações e não pode copiá-la, divulgá-la ou usá-la fora do atendimento.
+- A transcrição faz parte do registro do atendimento: o paciente e o psicólogo que participou da chamada podem lê-la, no Histórico de consultas. A equipe do Soliv também pode lê-la, junto com as avaliações e as anotações do atendimento, para acompanhar a qualidade e a segurança dos atendimentos e apurar reclamações; cada leitura fica registrada. O psicólogo deve tratá-la com o mesmo **sigilo profissional** das próprias anotações e não pode copiá-la, divulgá-la ou usá-la fora do atendimento.
 - A transcrição é automática e pode conter erros. Ela **não substitui** as anotações clínicas nem o registro documental que cabem ao psicólogo pela Resolução CFP nº 01/2009. ⚖️
 
 ## 5. Atendimentos de emergência (SOS)
