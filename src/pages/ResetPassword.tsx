@@ -10,6 +10,7 @@ import Logo from '@/components/Logo';
 import PasswordResetModal from '@/components/PasswordResetModal';
 import { supabase } from '@/integrations/supabase/client';
 import { passwordProblem, PASSWORD_HINT } from '@/lib/password';
+import { getAuthErrorMessage } from '@/utils/errorMessage';
 
 
 /**
@@ -75,11 +76,7 @@ const ResetPassword = () => {
     try {
       const { error: updateError } = await supabase.auth.updateUser({ password });
       if (updateError) {
-        setError(
-          updateError.message.toLowerCase().includes('different')
-            ? 'A nova senha precisa ser diferente da anterior.'
-            : 'Não foi possível trocar a senha. Peça um novo link e tente de novo.',
-        );
+        setError(getAuthErrorMessage(updateError, 'Não foi possível trocar a senha. Peça um novo link e tente de novo.'));
         return;
       }
       setState('done');

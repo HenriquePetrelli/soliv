@@ -1,6 +1,7 @@
 import { supabase } from '@/integrations/supabase/client';
 import { v4 as uuidv4 } from 'uuid';
 import { signupAcceptanceMetadata } from '@/lib/legal';
+import { errorText, getAuthErrorMessage } from '@/utils/errorMessage';
 
 export interface PsychologistFormData {
   email: string;
@@ -72,7 +73,7 @@ export class PsychologistService {
       });
 
       if (authError || !authData.user) {
-        throw new Error(authError?.message || 'Falha ao criar usuário');
+        throw authError ?? new Error('Falha ao criar usuário');
       }
 
       userId = authData.user.id;
@@ -183,7 +184,7 @@ export class PsychologistService {
 
       if (dbError) {
         console.error('Erro na função create_psychologist_profile:', dbError);
-        throw new Error(`Erro ao criar perfil: ${dbError.message}`);
+        throw dbError;
       }
 
       // Type assertion for the stored procedure result
@@ -300,40 +301,11 @@ export class PsychologistService {
   }
 
   private static getUserFriendlyError(error: unknown): string {
-    const defaultMessage = 'Ocorreu um erro durante o cadastro. Tente novamente.';
-    
-    if (error instanceof Error) {
-      const message = error.message.toLowerCase();
-      
-      if (message.includes('406')) {
-        return 'Erro de comunicação com o servidor. Atualize a página e tente novamente.';
-      }
-      if (message.includes('400')) {
-        return 'Dados inválidos. Verifique as informações fornecidas.';
-      }
-      if (message.includes('document')) {
-        return 'Erro ao enviar documento. O arquivo deve ser PDF, JPG ou PNG (máx. 5MB).';
-      }
-      if (message.includes('already registered') || message.includes('duplicate')) {
-        return 'Este email ou CRP já está cadastrado.';
-      }
-      if (message.includes('rate limit')) {
-        return 'Muitas tentativas. Aguarde alguns minutos.';
-      }
-      if (message.includes('violates row-level security')) {
-        return 'Erro de permissão. Tente novamente em alguns segundos.';
-      }
-      if (message.includes('valid_cpf_format')) {
-        return 'CPF inválido. Verifique os números digitados.';
-      }
-
-      // Return the original error message if it's user-friendly
-      if (error.message && error.message.length < 100) {
-        return error.message;
-      }
-    }
-    
-    return defaultMessage;
+    const message = errorText(error).toLowerCase();
+    const code = (error as { code?: string } | null)?.code;
+    if (message.includes('valid_cpf_format')) return 'CPF inválido. Verifique os números digitados.';
+    if (code === '23505' || message.includes('duplicate key')) return 'Este e-mail, CPF ou CRP já está cadastrado.';
+    return getAuthErrorMessage(error, 'Não foi possível concluir o cadastro agora. Tente novamente em alguns instantes.');
   }
 
   static validateFile(file: File): { valid: boolean; error?: string } {
@@ -355,30 +327,5 @@ export class PsychologistService {
     }
     
     return { valid: true };
-  }
-
-  private static handleSupabaseError(error: { message?: string; code?: string } | null | undefined): string {
-    if (!error) return 'Erro desconhecido';
-    
-    // Erros de autenticação
-    if (error.message?.includes('Email rate limit exceeded')) {
-      return 'Muitas tentativas. Aguarde alguns minutos.';
-    }
-    
-    // Erros de storage
-    if (error.message?.includes('The resource already exists')) {
-      return 'Documento já enviado anteriormente.';
-    }
-    
-    if (error.message?.includes('not found')) {
-      return 'Serviço de armazenamento indisponível.';
-    }
-    
-    // Erros de banco de dados
-    if (error.code === '23505') {
-      return 'CRP ou email já cadastrado.';
-    }
-    
-    return error.message || 'Erro durante a operação.';
   }
 }

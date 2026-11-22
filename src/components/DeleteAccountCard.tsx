@@ -16,6 +16,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { getFriendlyErrorMessage, getFunctionErrorMessage } from '@/utils/errorMessage';
 
 const CONFIRMATION_WORD = 'EXCLUIR';
 
@@ -70,14 +71,12 @@ export const DeleteAccountCard = ({ email }: { email: string }) => {
         body: { confirmation: confirmation.trim().toUpperCase() },
       });
       if (fnError || !data?.success) {
-        let message = 'Não foi possível excluir a conta agora. Tente de novo em instantes.';
-        try {
-          const body = await (fnError as { context?: Response })?.context?.json();
-          if (body?.error) message = body.error;
-        } catch {
-          // keep the generic message
-        }
-        setError(data?.error ?? message);
+        const fallback = 'Não foi possível excluir a conta agora. Tente de novo em instantes.';
+        setError(
+          fnError
+            ? await getFunctionErrorMessage(fnError, fallback)
+            : getFriendlyErrorMessage(data?.error, fallback),
+        );
         return;
       }
 

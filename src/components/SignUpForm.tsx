@@ -19,6 +19,7 @@ import { joinErrorMessage, normalizeInviteCode, type JoinErrorCode } from "@/lib
 import { passwordProblem, PASSWORD_HINT } from '@/lib/password';
 import { findCity, findStateAbbreviation } from '@/lib/placeMatch';
 import AddressAutofillInputs from '@/components/AddressAutofillInputs';
+import { getAuthErrorMessage } from '@/utils/errorMessage';
 
 interface SignUpFormProps {
   userType: "patient" | "psychologist";
@@ -314,14 +315,8 @@ const [formData, setFormData] = useState({
       if (error) {
         if (/database error saving new user/i.test(error.message)) {
           toast.error("Não foi possível criar a conta. Se este CPF já tem cadastro, entre com o e-mail dele ou recupere a senha.");
-        } else if (error.message.includes("User already registered")) {
-          toast.error("Este email já está cadastrado. Tente fazer login.");
-        } else if (error.message.includes("Password should be at least")) {
-          toast.error(PASSWORD_HINT);
-        } else if (error.message.includes("Unable to validate email address")) {
-          toast.error("Email inválido. Verifique o endereço informado.");
         } else {
-          toast.error("Erro ao criar conta. Tente novamente.");
+          toast.error(getAuthErrorMessage(error, "Não foi possível criar sua conta agora. Tente novamente em alguns instantes."));
         }
         console.error("SignUp error:", error);
         return;

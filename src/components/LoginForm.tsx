@@ -12,6 +12,7 @@ import { fetchLoginState } from '@/lib/loginState';
 import { prefetchPatientHomeRow } from '@/lib/patientHomeRow';
 import { preloadRoute } from '@/lib/routePreload';
 import type { BlockInfo } from "@/utils/psychologistBlock";
+import { getAuthErrorMessage } from '@/utils/errorMessage';
 
 /** Motivo e prazo do bloqueio de quem não consegue entrar (confere a senha no servidor). */
 const fetchBlockForLogin = async (email: string, password: string): Promise<BlockInfo | null> => {
@@ -72,12 +73,8 @@ const LoginForm = ({ onForgotPassword, onSignUp }: LoginFormProps) => {
           } else {
             toast.error("Sua conta está bloqueada no momento. Se achar que é um engano, fale com o suporte.");
           }
-        } else if (error.message.includes("Invalid login credentials")) {
-          toast.error("Email ou senha incorretos");
-        } else if (error.message.includes("Email not confirmed")) {
-          toast.error("Confirme seu email antes de fazer login");
         } else {
-          toast.error("Erro ao fazer login. Tente novamente.");
+          toast.error(getAuthErrorMessage(error, "Não foi possível entrar agora. Tente novamente em alguns instantes."));
         }
         console.error("Login error:", error);
         return;
