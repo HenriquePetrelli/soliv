@@ -26,6 +26,7 @@ describe('conferência de assinatura', () => {
     getSession.mockReset();
     toastFn.mockReset();
     sessionStorage.clear();
+    localStorage.clear();
   });
 
   it('psicólogo em análise (tipo desconhecido) não consulta a assinatura', async () => {
@@ -63,5 +64,29 @@ describe('conferência de assinatura', () => {
     getSession.mockResolvedValue({ data: { session: { user: { id: 'u4' } } } });
     mount();
     await waitFor(() => expect(toastFn).toHaveBeenCalledWith(expect.objectContaining({ description: 'Erro ao verificar assinatura' })), { timeout: 4000 });
+  });
+
+  it('primeiro login (sem plano guardado) confere na hora, sem esperar o navegador ficar ocioso', () => {
+    auth.user = { id: 'u5' };
+    auth.userType = 'patient';
+    invoke.mockReturnValue(new Promise(() => {}));
+    mount();
+    expect(invoke).toHaveBeenCalledWith('check-subscription', { body: { force: false } });
+  });
+
+  it('guarda o último plano no aparelho e, no login seguinte, mostra antes de conferir', async () => {
+    auth.user = { id: 'u6' };
+    auth.userType = 'patient';
+    invoke.mockResolvedValue({ data: { subscribed: true, subscription_tier: 'essencial' }, error: null });
+    const first = mount();
+    await waitFor(() => expect(localStorage.getItem('soliv:subscription:u6')).toContain('"subscribed":true'));
+    first.unmount();
+
+    invoke.mockClear();
+    invoke.mockReturnValue(new Promise(() => {}));
+    mount();
+    // Com o plano guardado, a conferência espera o navegador ficar ocioso.
+    expect(invoke).not.toHaveBeenCalled();
+    await waitFor(() => expect(invoke).toHaveBeenCalled(), { timeout: 4000 });
   });
 });

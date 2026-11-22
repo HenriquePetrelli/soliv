@@ -11,6 +11,7 @@ import { DesktopSidebar } from "@/components/DesktopSidebar";
 import { useAuth } from "@/contexts/AuthContext";
 import { useIdentityVerification } from "@/contexts/IdentityVerificationContext";
 import { supabase } from "@/integrations/supabase/client";
+import { getPatientHomeRow } from "@/lib/patientHomeRow";
 import { useNotifications } from "@/hooks/useNotifications";
 import RouteSkeleton from "@/components/skeletons/RouteSkeleton";
 
@@ -41,11 +42,8 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
     let cancelled = false;
     const loadMoodEnabled = async () => {
       if (!user?.id || !isPatient) return;
-      const { data } = await supabase
-        .from('patients')
-        .select('daily_mood_enabled')
-        .eq('user_id', user.id)
-        .maybeSingle();
+      // Mesma consulta da tela inicial, já pedida no login (patientHomeRow).
+      const { data } = await getPatientHomeRow(user.id);
       if (!cancelled) setMoodEnabled(data?.daily_mood_enabled !== false);
     };
     loadMoodEnabled();

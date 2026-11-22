@@ -19,6 +19,7 @@ import { useLegalGateStatus } from "@/lib/legalGateStatus";
 import { useIdentityVerification } from "@/contexts/IdentityVerificationContext";
 import HomeHabitsCard from "@/components/habits/HomeHabitsCard";
 import { supabase } from "@/integrations/supabase/client";
+import { forgetPatientHomeRow, getPatientHomeRow } from '@/lib/patientHomeRow';
 import { useAuth } from "@/contexts/AuthContext";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { toast } from 'sonner';
@@ -72,11 +73,8 @@ const HomeContent = () => {
       if (!user) return;
 
       const today = new Date().toISOString().split('T')[0];
-      const { data: patientData } = await supabase
-        .from('patients')
-        .select('last_mood_date, last_mood_value, daily_mood_enabled, show_weekly_goal_modal, show_goal_modal')
-        .eq('user_id', user.id)
-        .single();
+      // Já pedida na tela de login, junto com o tipo da conta (patientHomeRow).
+      const { data: patientData } = await getPatientHomeRow(user.id);
 
       // Check if mood tracking is enabled
       setMoodEnabled(patientData?.daily_mood_enabled !== false);
@@ -107,6 +105,7 @@ const HomeContent = () => {
     // Atualizar a flag no banco para não mostrar mais nesta semana
     if (userProfile?.id) {
       try {
+        forgetPatientHomeRow();
         await supabase
           .from('patients')
           .update({ show_weekly_goal_modal: false })
@@ -126,6 +125,7 @@ const HomeContent = () => {
     setShowWeeklyGoalModal(false);
     if (userProfile?.id) {
       try {
+        forgetPatientHomeRow();
         await supabase
           .from('patients')
           .update({ show_goal_modal: false, show_weekly_goal_modal: false })
@@ -143,6 +143,7 @@ const HomeContent = () => {
     // Atualizar show_weekly_goal_modal para false após escolher as metas
     if (userProfile?.id) {
       try {
+        forgetPatientHomeRow();
         await supabase
           .from('patients')
           .update({ show_weekly_goal_modal: false })

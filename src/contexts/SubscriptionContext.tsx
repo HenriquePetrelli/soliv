@@ -62,9 +62,13 @@ export const useOptionalSubscription = () => useContext(SubscriptionContext);
 
 const CACHE_PREFIX = 'soliv:subscription:';
 
+// O último plano conhecido fica no aparelho (localStorage), e não só nesta aba:
+// antes cada login novo (ou aba nova) abria sem plano e esperava a conferência
+// no servidor. Só exibição (o servidor confere o plano em cada uso) e apagado
+// ao sair da conta (cleanupAuthState).
 const readCachedSubscription = (userId: string): unknown | null => {
   try {
-    const raw = sessionStorage.getItem(CACHE_PREFIX + userId);
+    const raw = localStorage.getItem(CACHE_PREFIX + userId) ?? sessionStorage.getItem(CACHE_PREFIX + userId);
     return raw ? JSON.parse(raw) : null;
   } catch {
     return null;
@@ -73,7 +77,7 @@ const readCachedSubscription = (userId: string): unknown | null => {
 
 const writeCachedSubscription = (userId: string, data: unknown) => {
   try {
-    sessionStorage.setItem(CACHE_PREFIX + userId, JSON.stringify(data));
+    localStorage.setItem(CACHE_PREFIX + userId, JSON.stringify(data));
   } catch {
     // armazenamento bloqueado (modo privado): segue sem cache
   }
@@ -209,6 +213,14 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
     if (cached) {
       applySubscriptionData(cached);
       setLoading(false);
+    }
+
+    // Sem plano guardado (primeiro login neste aparelho): confere já, porque a
+    // tela inicial espera por isso. Antes esperava o navegador ficar ocioso
+    // (até 1,5 s a mais). Com o plano guardado na tela, pode esperar.
+    if (!cached) {
+      void checkSubscription();
+      return;
     }
 
     const scheduleCheck = () => checkSubscription();

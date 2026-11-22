@@ -9,6 +9,8 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { isCurrentlyBlocked, notifyBlockedAccess } from "@/utils/psychologistBlock";
 import { fetchLoginState } from '@/lib/loginState';
+import { prefetchPatientHomeRow } from '@/lib/patientHomeRow';
+import { preloadRoute } from '@/lib/routePreload';
 import type { BlockInfo } from "@/utils/psychologistBlock";
 
 /** Motivo e prazo do bloqueio de quem não consegue entrar (confere a senha no servidor). */
@@ -84,6 +86,16 @@ const LoginForm = ({ onForgotPassword, onSignUp }: LoginFormProps) => {
       if (!data.user) {
         toast.error("Erro ao fazer login. Tente novamente.");
         return;
+      }
+
+      // Paciente (pelo cadastro): o código e os dados da tela inicial começam a
+      // baixar já, junto com a consulta abaixo. Antes só começavam depois dela
+      // e da troca de tela, uma etapa esperando a outra. Se o tipo for outro, a
+      // consulta abaixo manda para a tela certa e isto só foi um download a mais.
+      const meta = data.user.user_metadata ?? {};
+      if (meta.user_type === 'patient' && meta.is_super_admin !== true) {
+        preloadRoute('/home');
+        prefetchPatientHomeRow(data.user.id);
       }
 
       // Tudo o que o login precisa saber numa consulta só (antes eram de 3 a 5

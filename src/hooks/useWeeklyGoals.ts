@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { forgetPatientHomeRow } from '@/lib/patientHomeRow';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 
@@ -175,6 +176,7 @@ export const useWeeklyGoals = () => {
     if (!user?.id) return;
 
     try {
+      forgetPatientHomeRow();
       const { error } = await supabase
         .from('patients')
         .update({ show_weekly_goal_modal: value })
@@ -191,6 +193,7 @@ export const useWeeklyGoals = () => {
     if (!user?.id) return;
 
     try {
+      forgetPatientHomeRow();
       const { error } = await supabase
         .from('patients')
         .update({ show_goal_modal: value })
