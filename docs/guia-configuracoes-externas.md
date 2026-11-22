@@ -42,10 +42,34 @@ Passo a passo do que precisa ser feito **fora do código** (nos painéis da Supa
 **Feito em 2026-11-20:** `solivsaude.com.br`. Guarde o acesso ao painel de DNS.
 
 ### 2.2 Verificar o domínio no Resend
-1. [resend.com/domains](https://resend.com/domains) → **Add Domain** → digite o domínio.
-2. O Resend mostra 3 ou 4 registros DNS (MX/TXT do SPF e TXT do DKIM). Copie cada um para o painel de DNS do registrador, exatamente como aparece.
-3. Volte ao Resend e clique em **Verify**. Pode levar de minutos a algumas horas. Siga quando aparecer **Verified**.
-4. Confira que o secret `RESEND_API_KEY` existe nas edge functions. Se não existir: Resend → API Keys → Create → cadastre como secret.
+
+Serve para os e-mails do Soliv saírem de `nao-responda@solivsaude.com.br`. Os registros abaixo são só para **enviar**; receber e-mails no domínio (ex.: `contato@solivsaude.com.br`) é outra configuração.
+
+**No Resend:**
+1. [resend.com/domains](https://resend.com/domains), com a mesma conta da chave que está no Supabase (`RESEND_API_KEY`) → **Add Domain**.
+2. **Name:** `solivsaude.com.br`. **Region:** São Paulo (`sa-east-1`), se aparecer (mesma região do Supabase). → **Add**.
+3. O Resend mostra 3 ou 4 registros. Deixe a aba aberta. Normalmente (copie os valores da sua tela, não destes exemplos):
+
+   | Para que serve | Tipo | Nome | Valor |
+   |---|---|---|---|
+   | DKIM (assinatura) | TXT | `resend._domainkey` | texto longo começando com `p=...` |
+   | SPF (envio) | MX | `send` | `feedback-smtp.sa-east-1.amazonses.com`, prioridade `10` |
+   | SPF (envio) | TXT | `send` | `v=spf1 include:amazonses.com ~all` |
+   | DMARC (opcional, recomendado) | TXT | `_dmarc` | `v=DMARC1; p=none;` |
+
+**No Registro.br** (só depois que a zona sair de "em transição"):
+1. registro.br → **solivsaude.com.br** → **DNS** → **Configurar zona DNS**.
+2. Para cada linha do Resend, **Nova entrada**:
+   - **Tipo:** o mesmo do Resend (TXT ou MX).
+   - **Nome:** só a parte da frente (`resend._domainkey`, `send`, `_dmarc`). O Registro.br completa com `.solivsaude.com.br`; se o Resend mostrar o nome completo, use só o começo.
+   - **Dados:** cole exatamente o valor do Resend (TXT sem aspas). No MX, prioridade `10` no campo próprio e o servidor no outro.
+3. **Salvar alterações.** Os registros da Lovable e os do Resend convivem na mesma zona.
+
+**Verificar:**
+1. Resend → **Verify DNS Records**. Cada linha passa para **Verified** (minutos a 1 hora).
+2. Se alguma ficar **Failed** depois de 1 hora, o erro mais comum é o nome digitado em dobro (`send.solivsaude.com.br.solivsaude.com.br`). Mande print do Resend e da zona para o Claude.
+3. Confira que o secret `RESEND_API_KEY` existe nas edge functions. Se não existir: Resend → API Keys → Create → cadastre como secret.
+4. Avise o Claude: ele publica as 5 funções de e-mail (2.3) e guia o SMTP (2.4).
 
 ### 2.3 Remetentes das edge functions
 **Feito no código em 2026-11-20:** as 5 edge functions que mandam e-mail (`send-support-request`, `send-psychologist-support-request`, `send-appointment-notification`, `psychologist-management` e `admin-psychologist-management`) usam `nao-responda@solivsaude.com.br`.

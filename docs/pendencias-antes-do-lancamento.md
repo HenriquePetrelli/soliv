@@ -9,6 +9,10 @@ O que precisa ser resolvido antes de o app ficar pronto. Ao resolver um item, mo
 ### 2. Domínio do Soliv e envio de e-mails
 
 - **Situação (2026-11-20):** domínio comprado: **`solivsaude.com.br`**. O site vai ficar em `https://solivsaude.com.br` (o `www` também abre). Os remetentes das 5 edge functions já foram trocados no código para `nao-responda@solivsaude.com.br`, mas **só devem ser publicados depois que o Resend verificar o domínio** (passo 2). Falta: passos 2, 3, 5 e a publicação das funções.
+- **Andamento (2026-11-22):**
+  - Domínio pago e **ativo** no Registro.br (até 20/11/2027), com os servidores DNS do Registro.br (`a.auto.dns.br` e `b.auto.dns.br`) e o **modo avançado** ligado. A zona ficou "em transição" por cerca de 2 horas depois da ativação; enquanto isso nem a Lovable nem o painel conseguem criar registros.
+  - Lovable: `solivsaude.com.br` (com `www` redirecionando) já cadastrado em **Domains**, esperando os registros DNS. **Falta:** em Domains → **Configurar DNS** → **Continue with registro.br** (ou "Connect a different way" e criar os registros à mão no Registro.br), até ficar **Active**.
+  - Resend: **ainda não feito** (adiado). Passo a passo completo em `docs/guia-configuracoes-externas.md`, seção 2.2.
 - **`soliv.com.br` continua sendo o domínio desejado (2026-11-20):** o `solivsaude.com.br` é para lançar já; as 3 tarefas agendadas que acompanham o `soliv.com.br` continuam ligadas. Se ele for conseguido: ligar na Lovable como endereço principal (o `solivsaude.com.br` passa a redirecionar para ele), verificar no Resend, trocar Site URL e Redirect URLs no Supabase, o CORS do Grafana e, se quiser, os remetentes das 5 funções (troca de texto).
 - **Histórico (2026-10-13):** `soliv.com.br` está registrado por uma pessoa física, sem site, e vence em **03/12/2026** (foi renovado em 12/2025). `soliv.com` e `soliv.app` também estão ocupados. Decisão: aguardar o vencimento antes de escolher outro domínio. Lembretes agendados para 26/11/2026 (uma semana antes) e 10/12/2026 (para ver se foi renovado ou entrou no processo de liberação do Registro.br).
 - **O que depende do domínio:**
@@ -16,14 +20,14 @@ O que precisa ser resolvido antes de o app ficar pronto. Ao resolver um item, mo
   | E-mail | Onde é enviado | Remetente hoje | O que acontece sem domínio |
   |---|---|---|---|
   | Redefinir senha, confirmar cadastro, trocar e-mail, convite, link e código | Supabase (Authentication) | "Supabase Auth" | Só chega para os e-mails da equipe do projeto (no máximo 30 por hora), em inglês e com "powered by Supabase". **Paciente que esquece a senha não consegue entrar.** |
-  | Pedido de suporte (paciente e psicólogo) | `send-support-request`, `send-psychologist-support-request` | `noreply@soliv.app` | O Resend recusa remetente de domínio não verificado: o e-mail não sai |
-  | Aviso de consulta por e-mail | `send-appointment-notification` | `notifications@soliv.app` | Idem (o aviso no app e o push continuam funcionando) |
-  | Aprovação, recusa e bloqueio de psicólogo | `psychologist-management`, `admin-psychologist-management` | `onboarding@resend.dev` | O endereço de teste do Resend só entrega para o dono da conta do Resend |
+  | Pedido de suporte (paciente e psicólogo) | `send-support-request`, `send-psychologist-support-request` | `nao-responda@solivsaude.com.br` (no código, ainda não publicado) | O Resend recusa remetente de domínio não verificado: o e-mail não sai |
+  | Aviso de consulta por e-mail | `send-appointment-notification` | `nao-responda@solivsaude.com.br` (no código, ainda não publicado) | Idem (o aviso no app e o push continuam funcionando) |
+  | Aprovação, recusa e bloqueio de psicólogo | `psychologist-management`, `admin-psychologist-management` | `onboarding@resend.dev` na produção; `nao-responda@solivsaude.com.br` no código, ainda não publicado | O endereço de teste do Resend só entrega para o dono da conta do Resend |
 
 - **Já pronto no código:** 6 modelos de e-mail de login em português, com a logo do Soliv (`supabase/templates/`), e o passo a passo em `docs/emails-de-autenticacao.md`.
 - **O que fazer quando houver domínio:**
   1. ~~Registrar o domínio~~ — feito em 2026-11-20: `solivsaude.com.br`.
-  2. No [Resend](https://resend.com/domains), adicionar o domínio e criar os registros DNS que ele pedir (SPF e DKIM) até aparecer "Verified".
+  2. No [Resend](https://resend.com/domains), adicionar o domínio e criar no Registro.br os registros DNS que ele pedir (DKIM, SPF e DMARC) até aparecer "Verified". Passo a passo: `docs/guia-configuracoes-externas.md`, seção 2.2.
   3. Supabase → Authentication → SMTP Settings: SMTP do Resend com remetente do domínio (passo a passo em `docs/emails-de-autenticacao.md`).
   4. Remetentes das 5 edge functions trocados no código em 2026-11-20 (`nao-responda@solivsaude.com.br`). Publicar as funções depois do passo 2 (pedir ao Claude).
   5. Ligar o domínio ao app publicado na Lovable (passo a passo em `docs/guia-configuracoes-externas.md`, 2.6) e usar `https://solivsaude.com.br` como Site URL no Supabase (a logo do e-mail e os links vêm dele). Depois, as pendências 28 (monitoramento do site) e 29 (alertas no e-mail oficial).
