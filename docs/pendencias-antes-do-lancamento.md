@@ -14,7 +14,9 @@ O que precisa ser resolvido antes de o app ficar pronto. Ao resolver um item, mo
   - Feito: domínio **Verified no Resend** em 2026-11-22 (região São Paulo; DKIM `resend._domainkey`, CNAMEs `send` e `rsend`, DMARC `_dmarc` no DNS do Registro.br).
   - Feito: as 5 edge functions enviam de `Soliv <nao-responda@solivsaude.com.br>` (constante única em `supabase/functions/_shared/email.ts`), publicadas em 2026-11-22 pela CLI com `--use-api`, mesmo `verify_jwt`: `psychologist-management` (v244), `admin-psychologist-management` (v214), `send-support-request` (v105), `send-psychologist-support-request` (v104), `send-appointment-notification` (v145). Sem login respondem 401/403.
   - Feito: `https://solivsaude.com.br/**` e `https://www.solivsaude.com.br/**` adicionados às Redirect URLs do Supabase (Authentication → URL Configuration). Os links dos e-mails de login podem voltar para o domínio.
-  - Falta: SMTP no Supabase (passo 3), ligar o domínio na Lovable e trocar o Site URL (passo 5), subir o limite de e-mails e ligar "Confirm email" (pendência 6).
+  - Feito em 2026-11-22: **SMTP do Resend no Supabase** (`smtp.resend.com:465`, usuário `resend`, remetente `Soliv <nao-responda@solivsaude.com.br>`, chave própria só para o SMTP); limite de e-mails de login subiu de 2 para **100 por hora**; site publicado em `https://solivsaude.com.br` (registros A e TXT `_lovable` no Registro.br) e **Site URL** do Supabase trocado para ele (as URLs antigas da Lovable seguem nas Redirect URLs).
+  - Falta: testar "Esqueci minha senha" com um e-mail de fora da equipe (chega em português, remetente Soliv, logo de `solivsaude.com.br/email/soliv-logo.png`, link abre a tela de nova senha) e ligar "Confirm email" (pendência 6, item 3).
+  - Custos: o Resend está no plano gratuito (cerca de 3.000 e-mails/mês e 100/dia, somando login e edge functions). Acompanhamento de todos os serviços pagos na planilha "Soliv - Custos e monitoramento de serviços" no Google Drive.
 - **O que depende do domínio:**
 
   | E-mail | Onde é enviado | Remetente hoje | O que acontece sem domínio |
@@ -166,7 +168,7 @@ O que precisa ser resolvido antes de o app ficar pronto. Ao resolver um item, mo
 - **O que fazer:**
   1. ~~Tamanho mínimo de senha: 8, com letras e números ("Letters and digits"), e validade do link/código de e-mail em 1 hora (`3600`).~~ **Feito em 2026-10-13.**
   2. ~~Ativar "Prevent use of leaked passwords" (recusa senhas que já vazaram na internet). Só existe no plano Pro do Supabase.~~ **Ligado (conferido pela API em 2026-11-22, com o plano Pro).** Falta testar no cadastro com uma senha comum de letras e números (ex.: `senha123`): tem que ser recusada.
-  3. "Confirm email": ligar depois do domínio (pendência 2), para o e-mail de confirmação chegar. O app já está pronto (desde 2026-10-21 o paciente é criado pelo banco e o psicólogo conclui o cadastro no primeiro acesso).
+  3. **Pendente:** ligar "Confirm email" (Authentication → Sign In / Providers → Email). O domínio e o SMTP já estão prontos desde 2026-11-22 (pendência 2); decidido deixar para depois do teste do "Esqueci minha senha". Cada cadastro novo passa a gastar 1 e-mail do Resend (limite gratuito de 100/dia). Contas existentes não são afetadas. O app já está pronto (desde 2026-10-21 o paciente é criado pelo banco e o psicólogo conclui o cadastro no primeiro acesso).
 - **Registrado em:** 2026-10-04.
 
 ### 16. Revisão jurídica dos documentos
