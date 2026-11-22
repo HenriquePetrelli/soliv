@@ -47,6 +47,13 @@ serve(monitored("check-subscription", async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  // Aquecimento (rotina check-subscription-warm, a cada 5 min): mantém a
+  // função ligada para o primeiro login não esperar ela iniciar. Não lê
+  // login, não grava nada e não chama o Stripe. O app sempre usa POST.
+  if (req.method === "GET") {
+    return new Response(null, { status: 204, headers: corsHeaders });
+  }
+
   try {
     logStep("Function started");
 

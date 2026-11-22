@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Switch } from "@/components/ui/switch";
 import { supabase } from "@/integrations/supabase/client";
+import { forgetPatientHomeRow } from '@/lib/patientHomeRow';
 import { getSessionUser } from '@/lib/currentUser';
 import { useToast } from "@/hooks/use-toast";
 import { Smile } from "lucide-react";
@@ -54,6 +55,7 @@ export const DailyMoodToggle: React.FC<DailyMoodToggleProps> = ({ initialEnabled
       const { data: { user } } = await getSessionUser();
       if (!user) return;
 
+      forgetPatientHomeRow();
       const { error } = await supabase
         .from('patients')
         .update({ daily_mood_enabled: checked })

@@ -1,6 +1,7 @@
 import React, { createContext, lazy, Suspense, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
+import { forgetPatientHomeRow, getPatientHomeRow } from '@/lib/patientHomeRow';
 import { useAuth } from '@/contexts/AuthContext';
 import { useOptionalSubscription } from '@/contexts/SubscriptionContext';
 import { useLegalGateStatus } from '@/lib/legalGateStatus';
@@ -48,9 +49,6 @@ const NOOP_CONTEXT: IdentityVerificationContextType = {
 /** Sem provider (testes, telas isoladas): não bloqueia nada; o servidor confere. */
 export const useIdentityVerification = () => useContext(IdentityVerificationContext) ?? NOOP_CONTEXT;
 
-const SELECT_FIELDS =
-  'identity_status, identity_rejection_reason, identity_submitted_at, identity_reviewed_at, identity_prompt_seen_at, identity_prompt_after_plan_at';
-
 /** Telas em que a modal automática não abre por cima (chamadas, fila do SOS). */
 const isBusyPath = (path: string) =>
   path === '/sos' ||
@@ -70,22 +68,21 @@ export const IdentityVerificationProvider: React.FC<{ children: React.ReactNode 
   const [promptReason, setPromptReason] = useState<IdentityPromptReason | null>(null);
   const autoShownRef = useRef<string | null>(null);
 
-  const load = useCallback(async () => {
+  // A primeira leitura reaproveita a da tela inicial, já pedida no login
+  // (patientHomeRow); o aviso de mudança no banco pede uma nova (`fresh`).
+  const load = useCallback(async (options?: { fresh?: boolean }) => {
     if (!patientUserId) {
       setFields(null);
       return;
     }
-    const { data, error } = await supabase
-      .from('patients')
-      .select(SELECT_FIELDS)
-      .eq('user_id', patientUserId)
-      .maybeSingle();
+    const { data, error } = await getPatientHomeRow(patientUserId, options);
     if (error) {
       console.error('[identidade] erro ao carregar situação:', error);
       return;
     }
     setFields(data ?? null);
   }, [patientUserId]);
+  const reload = useCallback(() => load({ fresh: true }), [load]);
 
   useEffect(() => {
     setFields(null);
@@ -102,7 +99,7 @@ export const IdentityVerificationProvider: React.FC<{ children: React.ReactNode 
       .on(
         'postgres_changes',
         { event: 'UPDATE', schema: 'public', table: 'patients', filter: `user_id=eq.${patientUserId}` },
-        () => void load(),
+        () => void load({ fresh: true }),
       )
       .subscribe();
     return () => {
@@ -128,6 +125,7 @@ export const IdentityVerificationProvider: React.FC<{ children: React.ReactNode 
     setPromptReason(reason);
     const marks = promptMarksFor(reason, hasPaidPlan);
     setFields((prev) => (prev ? { ...prev, ...marks } : prev));
+    forgetPatientHomeRow();
     void supabase
       .from('patients')
       .update(marks)
@@ -170,9 +168,9 @@ export const IdentityVerificationProvider: React.FC<{ children: React.ReactNode 
       promptOpen: promptReason !== null,
       openPrompt,
       requireVerified,
-      refresh: load,
+      refresh: reload,
     }),
-    [status, fields?.identity_rejection_reason, promptReason, openPrompt, requireVerified, load],
+    [status, fields?.identity_rejection_reason, promptReason, openPrompt, requireVerified, reload],
   );
 
   return (
@@ -186,7 +184,7 @@ export const IdentityVerificationProvider: React.FC<{ children: React.ReactNode 
             status={status}
             rejectionReason={fields?.identity_rejection_reason ?? null}
             userId={patientUserId}
-            onSubmitted={load}
+            onSubmitted={reload}
             onClose={() => setPromptReason(null)}
           />
         </Suspense>

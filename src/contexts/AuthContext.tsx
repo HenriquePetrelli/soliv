@@ -39,7 +39,9 @@ const cleanupAuthState = () => {
       key.startsWith('questionarios:rascunho:') ||
       key.startsWith('diario:rascunho:') ||
       key.startsWith('chat:pendentes:') ||
-      key.startsWith('chat:rascunho:')
+      key.startsWith('chat:rascunho:') ||
+      // Último plano conhecido (SubscriptionContext).
+      key.startsWith('soliv:subscription:')
     ) {
       localStorage.removeItem(key);
     }

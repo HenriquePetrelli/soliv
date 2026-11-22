@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { forgetPatientHomeRow } from '@/lib/patientHomeRow';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { usePatientStatistics } from '@/hooks/usePatientStatistics';
@@ -29,6 +30,7 @@ export const useMoodLog = () => {
         p_local_date: toISODate(new Date()),
       } as never);
       if (error) throw error;
+      forgetPatientHomeRow();
 
       // Conta para a meta "humor" e entra no histórico só no primeiro do dia.
       if ((data as { first_today?: boolean } | null)?.first_today !== false) {

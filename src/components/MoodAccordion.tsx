@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Check } from 'lucide-react';
 import ExpandableCard from '@/components/ExpandableCard';
 import { supabase } from '@/integrations/supabase/client';
+import { forgetPatientHomeRow } from '@/lib/patientHomeRow';
 import { getSessionUser } from '@/lib/currentUser';
 import { useToast } from '@/hooks/use-toast';
 import { useMoodLog } from '@/hooks/useMoodLog';
@@ -38,6 +39,7 @@ export const MoodAccordion: React.FC<MoodAccordionProps> = ({ currentValue, onMo
     try {
       const { data: { user } } = await getSessionUser();
       if (!user) return;
+      forgetPatientHomeRow();
       const { error } = await supabase
         .from('patients')
         .update({ daily_mood_enabled: false })
