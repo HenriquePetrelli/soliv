@@ -131,6 +131,7 @@ O que precisa ser resolvido antes de o app ficar pronto. Ao resolver um item, mo
   2. **Se o swap seguir acima de 80% ou a CPU ficar perto de 100%:** aumentar a instância antes do lançamento em Supabase → Project Settings → **Compute and Disk** (tem custo; conferir o valor antes).
   3. **Synthetics → Checks:** `soliv-backend` e `soliv-login` verdes, cada uma rodando de **um local só** (não Calgary nem vários).
   4. **Cost management → Usage** depois de 1 dia: *Metrics active series* abaixo de 5 mil (o Free tem 10 mil); sessões, logs e execuções das checagens dentro das cotas grátis (`docs/monitoramento-grafana.md`, seção 7).
+- **Feito em 2026-11-22 (plano Pro do Supabase):** banco passou de **Nano (0,5 GB)** para **Micro (1 GB de RAM, 2 CPUs compartilhadas)**, pago pelo crédito de compute do Pro, sem custo a mais; Postgres atualizado de 17.11 para **17.12**. Conferido pela API: projeto `ACTIVE_HEALTHY`, `shared_buffers` 256 MB, 60 conexões diretas (200 pelo pooler). Falta olhar o swap no Grafana com o Micro (passo 1); se seguir acima de 80%, o próximo é o Small (~US$ 15/mês, cobrado à parte).
 - **Como conferir:** swap abaixo de 80% e CPU folgada no painel; as duas checagens verdes; uso dentro do plano gratuito.
 - **Registrado em:** 2026-11-12.
 
@@ -159,7 +160,7 @@ O que precisa ser resolvido antes de o app ficar pronto. Ao resolver um item, mo
 - **Onde:** Supabase → Authentication → Policies/Settings (não dá para configurar pelo código).
 - **O que fazer:**
   1. ~~Tamanho mínimo de senha: 8, com letras e números ("Letters and digits"), e validade do link/código de e-mail em 1 hora (`3600`).~~ **Feito em 2026-10-13.**
-  2. Ativar "Prevent use of leaked passwords" (recusa senhas que já vazaram na internet). Só existe no plano Pro do Supabase: fica para quando assinar o Pro.
+  2. ~~Ativar "Prevent use of leaked passwords" (recusa senhas que já vazaram na internet). Só existe no plano Pro do Supabase.~~ **Ligado (conferido pela API em 2026-11-22, com o plano Pro).** Falta testar no cadastro com uma senha comum de letras e números (ex.: `senha123`): tem que ser recusada.
   3. "Confirm email": ligar depois do domínio (pendência 2), para o e-mail de confirmação chegar. O app já está pronto (desde 2026-10-21 o paciente é criado pelo banco e o psicólogo conclui o cadastro no primeiro acesso).
 - **Registrado em:** 2026-10-04.
 
