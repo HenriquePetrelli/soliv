@@ -51,16 +51,64 @@
       @media (prefers-reduced-motion: reduce) { #app-shell .bar::after { animation: none; transform: translateX(50%); } }
     </style>
 
-    <!-- Open Graph -->
-    <meta property="og:title" content="Soliv — Bem-estar Emocional" />
-    <meta property="og:description" content="Cuide do seu bem-estar emocional com a Soliv: psicólogos, sons relaxantes, respiração guiada e SOS." />
+    <!-- SEO: o endereço oficial é solivsaude.com.br (as cópias em lovable.app
+         apontam para ele). As telas com login trocam robots para noindex
+         (src/lib/seo.ts). -->
+    <link rel="canonical" href="https://solivsaude.com.br/" />
+    <meta name="robots" content="index, follow" />
+
+    <!-- Open Graph (WhatsApp, Facebook, LinkedIn): esses leitores não rodam
+         JavaScript, então valem os valores daqui. -->
+    <meta property="og:site_name" content="Soliv" />
+    <meta property="og:locale" content="pt_BR" />
     <meta property="og:type" content="website" />
-    <meta property="og:image" content="/og-image.png" />
+    <meta property="og:url" content="https://solivsaude.com.br/" />
+    <meta property="og:title" content="Soliv — Bem-estar Emocional" />
+    <meta property="og:description" content="Cuide do seu bem-estar emocional com a Soliv: psicólogos online, SOS emocional, sons relaxantes e respiração guiada." />
+    <meta property="og:image" content="https://solivsaude.com.br/og-image.png" />
+    <meta property="og:image:type" content="image/png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="Soliv — Bem-estar Emocional" />
 
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="Soliv — Bem-estar Emocional" />
-    <meta name="twitter:description" content="Cuide do seu bem-estar emocional com a Soliv." />
-    <meta name="twitter:image" content="/og-image.png" />
+    <meta name="twitter:description" content="Cuide do seu bem-estar emocional com a Soliv: psicólogos online, SOS emocional, sons relaxantes e respiração guiada." />
+    <meta name="twitter:image" content="https://solivsaude.com.br/og-image.png" />
+
+    <!-- Dados estruturados (Google) -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@graph": [
+          {
+            "@type": "Organization",
+            "@id": "https://solivsaude.com.br/#organization",
+            "name": "Soliv",
+            "url": "https://solivsaude.com.br/",
+            "logo": "https://solivsaude.com.br/apple-touch-icon.png"
+          },
+          {
+            "@type": "WebSite",
+            "@id": "https://solivsaude.com.br/#website",
+            "name": "Soliv",
+            "url": "https://solivsaude.com.br/",
+            "inLanguage": "pt-BR",
+            "publisher": { "@id": "https://solivsaude.com.br/#organization" }
+          },
+          {
+            "@type": "WebApplication",
+            "name": "Soliv",
+            "url": "https://solivsaude.com.br/",
+            "applicationCategory": "HealthApplication",
+            "operatingSystem": "Web, Android, iOS",
+            "inLanguage": "pt-BR",
+            "description": "Soliv conecta pacientes e psicólogos para cuidar do bem-estar emocional com atendimentos online, sons, respiração guiada e SOS.",
+            "publisher": { "@id": "https://solivsaude.com.br/#organization" }
+          }
+        ]
+      }
+    </script>
   </head>
 
   <body>

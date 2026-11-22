@@ -15,6 +15,7 @@ import AppErrorBoundary from "@/components/AppErrorBoundary";
 import DeferredMount from "@/components/DeferredMount";
 import BlockedAccountNoticeHost from "@/components/BlockedAccountNoticeHost";
 import { IdentityVerificationProvider } from "@/contexts/IdentityVerificationContext";
+import RouteSeo from "@/components/RouteSeo";
 
 // Persistent layout: MainLayout stays mounted across nested routes,
 // so sidebar/bottom nav never re-render when switching between them.
@@ -141,6 +142,7 @@ const App = () => {
               <Toaster />
               <Sonner />
               <BrowserRouter>
+                <RouteSeo />
                 <IdentityVerificationProvider>
                 <BackgroundWrapper>
                   <Suspense fallback={<RouteSkeleton />}>
