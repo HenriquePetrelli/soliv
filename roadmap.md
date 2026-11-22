@@ -6,3 +6,7 @@
 - [x] Substituir o cinza do BottomNavigation e DesktopSidebar por superfícies neutras alinhadas ao tema.
 - [x] Atualizar a documentação visual e a visão geral do produto.
 - [x] Validar cores, testes relevantes e aparência disponível sem sessão autenticada.
+
+## Pendências
+
+- [ ] Melhorar o SEO e a visibilidade do app (meta tags, Open Graph, sitemap, robots.txt, dados estruturados e presença nas lojas de apps).
