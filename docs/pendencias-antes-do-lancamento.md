@@ -26,7 +26,7 @@ Ao resolver um item, marque o quadradinho, atualize o detalhe da pendência e, q
 - [ ] **Advogado (pendências 16 e 26):** revisão da Política de Privacidade, dos Termos (paciente e psicólogo) e do registro de tratamento, com os pontos listados na pendência 16; confirmar a venda do avulso dentro do app (pendência 26).
 - [ ] **CNPJ e conta do Stripe (pendência 17):** abrir a empresa (MEI ou outra) e ativar a conta do Stripe para o modo real (Configurações → Ativar pagamentos). Só a ativação; os planos reais ficam para a lista B.
 - [ ] **Contas das lojas (pendência 25):** conta Apple Developer (o D-U-N-S pode levar semanas) e Play Console; gerar os apps e testar no aparelho pelo **teste interno** do Play e pelo **TestFlight** (seção 4 de `docs/publicacao-lojas.md`).
-- [ ] **TURN das chamadas (pendência 5):** criar a chave do TURN na Cloudflare e cadastrar os 2 secrets. Dá para deixar para a lista B, mas testar antes evita surpresa com usuários no 4G.
+- [ ] **TURN das chamadas (pendência 5):** criar a chave do TURN na Cloudflare e cadastrar os 2 secrets. **Esperando o cartão de crédito da empresa (Nubank PJ)** em 2026-11-23: a ativação do Cloudflare Realtime pede cartão (cobra $0/mês; 1.000 GB grátis, depois US$ 0,05/GB). Dá para deixar para a lista B, mas testar antes evita surpresa com usuários no 4G.
 - [ ] **SEO (`roadmap.md`):** Search Console com o sitemap; decidir sobre uma página de apresentação.
 
 ## Lista B — No lançamento (virar produção)
