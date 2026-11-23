@@ -11,6 +11,8 @@ Ao resolver um item, marque o quadradinho, atualize o detalhe da pendência e, q
 
 > **Passo a passo das configurações externas:** `docs/guia-configuracoes-externas.md`.
 
+> **Esperando o cartão ou a conta da empresa** (TURN, lojas, Stripe real, trocar o cartão dos serviços pagos): `docs/pendencias-cartao-da-empresa.md`.
+
 ## Lista A — Agora, no ambiente de teste
 
 ### Monitoramento
