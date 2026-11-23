@@ -15,9 +15,10 @@ Ao resolver um item, marque o quadradinho, atualize o detalhe da pendência e, q
 
 ### Monitoramento
 
-- [ ] **Site no Grafana (pendência 28):** adicionar `https://solivsaude.com.br` em CORS allowed origins e criar a checagem `soliv-site`.
+- [x] **Site no Grafana (pendência 28):** feito em 2026-11-23: `https://solivsaude.com.br` em Allowed origins do Frontend → Soliv e checagem `soliv-site` (2 min, São Paulo) em 100%.
 - [x] **Memória do banco (pendência 30):** medido em 2026-11-23 com o Micro: swap em 14% (antes ~98%), 62% da RAM livre, CPU ~97% ociosa. Medir de novo antes do lançamento (lista B).
-- [ ] **Grafana (pendência 30):** checagens `soliv-backend` e `soliv-login` verdes, rodando de um local só; uso dentro das cotas grátis (Cost management → Usage).
+- [x] **Checagens do Grafana (pendência 30):** feito em 2026-11-23: `soliv-backend` (2 min; estava DOWN por falta do Invert na regra de corpo, corrigido), `soliv-login` (5 min, cabeçalho `apikey` com a publishable key) e `soliv-site` (2 min), todas só em São Paulo: ~53.600 execuções/mês de 100 mil grátis.
+- [ ] **Cotas do Grafana (pendência 30):** em 2026-11-24, Cost management → Usage: *Metrics active series* abaixo de 5 mil e logs/sessões dentro do grátis; `soliv-backend` subindo para perto de 100%.
 - [ ] **Alertas (pendência 29):** criar um e-mail da equipe no domínio (ex.: `contato@solivsaude.com.br`) e ligar os alertas do Grafana nele.
 
 ### Preparar o que demora (para não travar o lançamento)
@@ -145,6 +146,7 @@ Em 2026-11-22 o banco tinha 20 contas (13 pacientes, 6 psicólogos), 27 consulta
   1. Grafana → **Observability → Frontend → Soliv → Settings** → em **CORS allowed origins**, adicionar o endereço publicado (ex.: `https://soliv.lovable.app` ou `https://app.SEU-DOMINIO`). Sem isso o navegador bloqueia o envio dos erros do site.
   2. Grafana → **Testing & synthetics → Synthetics → Add new check → API Endpoint**: job name `soliv-site`, `GET` no endereço publicado, status válido `2xx`, **um local só** (o mesmo das outras checagens), frequência **2 min**, alerta de falha ligado.
 - **Como conferir:** a checagem `soliv-site` verde em Synthetics → Checks; abrir o site publicado e ver a sessão aparecer em Frontend → Soliv em alguns minutos.
+- **Feito em 2026-11-23:** passos 1 e 2 (Allowed origins com `https://solivsaude.com.br`; checagem `soliv-site`, GET, 2xx, 2 min, São Paulo, em 100%). Falta só ver a primeira sessão do site em Frontend → Soliv depois do próximo Publish na Lovable.
 - **Registrado em:** 2026-11-12.
 
 #### 30. Memória do banco e conferências do monitoramento
