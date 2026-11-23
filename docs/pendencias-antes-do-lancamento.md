@@ -1,12 +1,73 @@
 # Pendências antes do lançamento
 
-O que precisa ser resolvido antes de o app ficar pronto. Ao resolver um item, mova-o para "Resolvidas" com a data e o que foi feito.
+O que falta para o app ficar pronto, em duas listas:
 
-> **Passo a passo das configurações externas** (pendências 2, 5, 6 e 17; a 1, a 3 e o webhook do Stripe já foram resolvidos): `docs/guia-configuracoes-externas.md`.
+- **Lista A — Agora, no ambiente de teste:** o que dá para fazer já, sem afetar ninguém. Os testes ficam em `docs/roteiro-de-testes.md`, não aqui.
+- **Lista B — No lançamento (virar produção):** o que só se liga no dia de abrir o app ao público: Stripe real, Supabase em produção, lojas etc.
 
-## Críticas
+Ao resolver um item, marque o quadradinho, atualize o detalhe da pendência e, quando ela acabar inteira, mova-a para "Resolvidas" com a data e o que foi feito.
 
-### 2. Domínio do Soliv e envio de e-mails
+> **Atenção: teste e produção são o mesmo projeto.** Há um único Supabase (`ihrrgmmsfuvlasmzdmwf`), um único site (`solivsaude.com.br`) e um único projeto do Firebase. "Ir para produção" é trocar chaves e configurações deste mesmo ambiente (lista B), não publicar em outro lugar. Por isso a lista B inclui limpar os dados de teste.
+
+> **Passo a passo das configurações externas:** `docs/guia-configuracoes-externas.md`.
+
+## Lista A — Agora, no ambiente de teste
+
+### Monitoramento
+
+- [ ] **Site no Grafana (pendência 28):** adicionar `https://solivsaude.com.br` em CORS allowed origins e criar a checagem `soliv-site`.
+- [ ] **Memória do banco (pendência 30):** olhar o swap no Grafana com o Micro; checagens `soliv-backend` e `soliv-login` verdes; uso dentro das cotas grátis.
+- [ ] **Alertas (pendência 29):** criar um e-mail da equipe no domínio (ex.: `contato@solivsaude.com.br`) e ligar os alertas do Grafana nele.
+
+### Preparar o que demora (para não travar o lançamento)
+
+- [ ] **Advogado (pendências 16 e 26):** revisão da Política de Privacidade, dos Termos (paciente e psicólogo) e do registro de tratamento, com os pontos listados na pendência 16; confirmar a venda do avulso dentro do app (pendência 26).
+- [ ] **CNPJ e conta do Stripe (pendência 17):** abrir a empresa (MEI ou outra) e ativar a conta do Stripe para o modo real (Configurações → Ativar pagamentos). Só a ativação; os planos reais ficam para a lista B.
+- [ ] **Contas das lojas (pendência 25):** conta Apple Developer (o D-U-N-S pode levar semanas) e Play Console; gerar os apps e testar no aparelho pelo **teste interno** do Play e pelo **TestFlight** (seção 4 de `docs/publicacao-lojas.md`).
+- [ ] **TURN das chamadas (pendência 5):** criar a chave do TURN na Cloudflare e cadastrar os 2 secrets. Dá para deixar para a lista B, mas testar antes evita surpresa com usuários no 4G.
+- [ ] **SEO (`roadmap.md`):** Search Console com o sitemap; decidir sobre uma página de apresentação.
+
+## Lista B — No lançamento (virar produção)
+
+Na ordem. Fazer num horário calmo e com a lista A concluída.
+
+### 1. Antes do dia
+
+- [ ] Lista A concluída, principalmente o advogado (16 e 26) e a conta do Stripe ativada (17).
+- [ ] **Documentos legais finais (pendência 16):** pedir ao Claude para aplicar as correções do advogado e subir a versão dos documentos (o app pede o aceite de novo).
+- [ ] **Resend:** conferir o plano. O gratuito manda poucos e-mails por dia; com cadastros abertos, os e-mails de confirmação e senha podem esgotar a cota.
+- [ ] **Supabase:** conferir o swap no Grafana (pendência 30); se estiver acima de 80%, passar o banco para o Small antes de abrir.
+
+### 2. Stripe em modo real (pendência 17)
+
+- [ ] Criar os 3 planos (Essencial R$ 69,90, Flex R$ 120,00, Completo R$ 159,90) e os 4 avulsos (R$ 79,90, R$ 54,90, R$ 149,90, R$ 109,90) em BRL no modo real.
+- [ ] Supabase → Edge Functions → Secrets: trocar `STRIPE_SECRET_KEY` (chave `sk_live_`) e os 7 `STRIPE_PRICE_*` pelos IDs reais.
+- [ ] Criar o webhook no modo real (mesmo destino e os 8 eventos) e trocar `STRIPE_WEBHOOK_SECRET`.
+- [ ] Portal do cliente no modo real (troca de plano desligada, cancelamento no fim do período).
+- [ ] Se ligar Pix ou boleto: antes, pedir ao Claude para tratar os eventos de pagamento assíncrono.
+
+### 3. Limpar os dados de teste
+
+Em 2026-11-22 o banco tinha 20 contas (13 pacientes, 6 psicólogos), 27 consultas e **3 assinaturas ativas do Stripe de teste**. Os clientes e assinaturas do modo de teste não existem no modo real: essas contas dariam erro ao abrir o portal ou sincronizar o pagamento.
+
+- [ ] Decidir quais contas da equipe ficam (admin, psicólogos reais já aprovados) e quais saem.
+- [ ] Pedir ao Claude para limpar as assinaturas de teste (`subscribers`) e apagar as contas e atendimentos de teste, com backup antes.
+
+### 4. Supabase em produção
+
+- [ ] **Código do admin (pendência 24):** no SQL Editor, `UPDATE public.app_settings SET environment = 'production', updated_at = now();` e conferir que o painel pede o código do autenticador.
+- [ ] **TURN (pendência 5),** se não foi feito na lista A.
+- [ ] Conferir Authentication: "Confirm email" ligado, SMTP do Resend, limite de e-mails (100/h) e Site URL `https://solivsaude.com.br` (já estão assim desde 2026-11-22).
+
+### 5. Lojas (pendência 25)
+
+- [ ] Enviar Android (produção no Play) e iOS (App Store) para revisão, com a ficha da loja (descrição, capturas, política de privacidade em `https://solivsaude.com.br/privacidade`).
+
+## Detalhes das pendências
+
+### Do ambiente de teste (lista A)
+
+#### 2. Domínio do Soliv e envio de e-mails
 
 - **Situação:** o Soliv ainda não tem domínio próprio. Sem ele, não dá para enviar e-mail com remetente do Soliv para os usuários.
 - **Em espera (2026-10-13):** `soliv.com.br` está registrado por uma pessoa física, sem site, e vence em **03/12/2026** (foi renovado em 12/2025). `soliv.com` e `soliv.app` também estão ocupados. Decisão: aguardar o vencimento antes de escolher outro domínio. Lembretes agendados para 26/11/2026 (uma semana antes) e 10/12/2026 (para ver se foi renovado ou entrou no processo de liberação do Registro.br).
@@ -39,7 +100,127 @@ O que precisa ser resolvido antes de o app ficar pronto. Ao resolver um item, mo
 - **Como conferir:** pedir "Esqueci minha senha" com um e-mail que não é da equipe; o e-mail chega em português, com a logo e remetente "Soliv". Enviar um pedido de suporte e conferir que ele chega na caixa da equipe.
 - **Registrado em:** 2026-10-05.
 
-### 17. Planos e preços no Stripe em modo real
+#### 6. Ajustes de segurança no painel do Supabase (Authentication)
+
+- **Onde:** Supabase → Authentication → Policies/Settings (não dá para configurar pelo código).
+- **O que fazer:**
+  1. ~~Tamanho mínimo de senha: 8, com letras e números ("Letters and digits"), e validade do link/código de e-mail em 1 hora (`3600`).~~ **Feito em 2026-10-13.**
+  2. ~~Ativar "Prevent use of leaked passwords" (recusa senhas que já vazaram na internet). Só existe no plano Pro do Supabase.~~ **Ligado (conferido pela API em 2026-11-22, com o plano Pro).** Falta testar no cadastro com uma senha comum de letras e números (ex.: `senha123`): tem que ser recusada.
+  3. ~~"Confirm email": ligar depois do domínio (pendência 2), para o e-mail de confirmação chegar.~~ **Ligado em 2026-11-22 (conferido pela API).** O app já estava pronto (desde 2026-10-21 o paciente é criado pelo banco e o psicólogo conclui o cadastro no primeiro acesso). Falta testar: cadastrar um paciente e um psicólogo com e-mails de fora da equipe, receber o link em português, confirmar e entrar.
+- **Registrado em:** 2026-10-04.
+
+#### 32. Transcrição das chamadas do SOS e da consulta (registrada em 2026-11-20)
+
+- **Aplicado em 2026-11-20:** migration `20261120120000_transcricao_das_chamadas.sql` no Supabase (registrada no histórico) e edge functions `transcribe-call-chunk` (nova, versão 1) e `emergency-sos` (versão 261) publicadas pela CLI v3 com `--use-api`, `verify_jwt` mantido (sem login respondem 401).
+- **Situação:** Antes de entrar, o paciente marca o consentimento ("Concordo que o áudio da chamada seja gravado e transcrito em texto"): no SOS por vídeo, na tela de confirmação; na consulta, numa tela antes da sala. O SOS por mensagem não pede (já é texto). Durante a chamada, cada lado envia o próprio microfone em trechos de 30 s; a função `transcribe-call-chunk` só aceita com o consentimento gravado no atendimento e guarda só o texto (`call_transcript_segments`). O psicólogo vê a transcrição no Histórico de consultas.
+- **Falta:**
+  1. Transcrição: sem nada novo, usa a `LOVABLE_API_KEY` que já existe (modelo `google/gemini-2.5-flash`, com áudio WAV). **Ainda não testado com a chave real**: na primeira chamada de teste, conferir em Edge Functions → `transcribe-call-chunk` → Logs se não há erro do gateway. Se o gateway não aceitar áudio, criar o secret `OPENAI_API_KEY` (a função passa a usar a transcrição da OpenAI, `gpt-4o-mini-transcribe`).
+- **Revisão jurídica (pendência 16):** a Política de Privacidade passou a descrever a transcrição em 2026-11-20 (itens 3.1, 3.2, 3.4, 4, 5, 6, 7 e 8), assim como o registro de tratamento, e continua na versão 1.0 porque ainda não foi publicada. Os Termos do paciente (itens 6, 7, 7A e 9) e do psicólogo (itens 4 e 4A) também passaram a citar a transcrição, na versão 1.0.
+- **Publicado em 2026-11-20:** `transcribe-call-chunk` versão 2 (regras em `_shared/transcription.ts`, mesmo comportamento), `verify_jwt` mantido (sem login responde 401). O corte dos trechos numa pausa da fala vale quando o app da `main` for publicado.
+- **Validado em 2026-11-20 (local, sem tocar na produção):** `e2e/transcricao/rodar.sh` sobe o Supabase local com todas as migrations (esquema igual ao da produção), as edge functions do repositório e um serviço de transcrição falso, e roda 7 testes de ponta a ponta, 4 no servidor e 3 com dois navegadores numa chamada de vídeo real, cada um com uma fala sintetizada como microfone. Passam: consentimento (consulta e SOS), recusas, a voz certa chegando em WAV 16 kHz com a frase inteira, texto gravado com o papel certo, microfone desligado fora da transcrição e a transcrição no histórico da psicóloga. Além disso, 65 testes de unidade (função, captura do áudio, sala e histórico). Falta só o **serviço de transcrição real**, que não dá para testar fora da produção (roteiro s03-70 a s03-75).
+- **Publicado em 2026-11-22:** `transcribe-call-chunk` versão 4, com `reasoning_effort: "none"` na chamada da Lovable (o Gemini não cobra tokens de raciocínio). Se o gateway recusar o parâmetro (400 citando "reasoning"), a função repete sem ele e registra o aviso "recusou reasoning_effort" no log. `verify_jwt` mantido (sem login responde 401). Na primeira chamada de teste: conferir em More → AI da Lovable o custo por requisição e, nos Logs da função, se não aparece esse aviso.
+- **Como conferir:** consulta de teste com paciente e psicólogo conversando 1 minuto; o aviso "Chamada sendo transcrita" aparece nos dois lados e, depois, a transcrição aparece no Histórico de consultas do psicólogo.
+
+#### 33. Atendimentos no painel do admin (registrada em 2026-11-22)
+
+- **Situação:** Admin → Atendimento → **Consultas agendadas** (nova, parecida com a de SOS) e **SOS** listam os atendimentos com paciente, psicólogo, duração e as avaliações; clicando, abrem os detalhes (pessoas, horários, duração, avaliação do paciente e do psicólogo, plano de segurança se houver e o botão da transcrição do paciente e do psicólogo). Em Pessoas, **Psicólogos** e **Pacientes** ganharam os subitens **Consultas agendadas** e **SOS**: a lista das pessoas com quantos atendimentos têm; clicando numa pessoa, todos os atendimentos dela, com os mesmos detalhes.
+- **Decisão de 2026-11-22:** o admin passa a ler o plano de segurança e a transcrição (antes nunca lia). Cada abertura do detalhe, do plano e da transcrição fica na **Auditoria** (`view_care_detail`, `view_safety_plan`, `view_call_transcript`). Política de Privacidade (item 5), Termos do paciente (item 7A), Termos do psicólogo (item 4A) e registro de tratamento atualizados, ainda na versão 1.0 (não publicados). Entra na revisão jurídica (pendência 16).
+- **Aplicado em 2026-11-22:** migration `20261122120000_admin_atendimentos.sql` no Supabase (registrada no histórico), numa transação só. Conferido na produção, numa transação desfeita (nada ficou gravado): as 7 funções existem; o admin lista 27 consultas e 41 SOS, abre detalhe, plano e transcrição, e cada leitura entra na Auditoria; psicólogo é recusado; a função auxiliar não é chamável pelo app. Com `app_settings.environment = 'test'`, o admin sem o código (aal1) também entra, como no resto do painel (pendência do lançamento: mudar para `production`).
+- **Validado em 2026-11-22 (local):** migration aplicada no Supabase local (`e2e/transcricao/rodar.sh`): listas, filtros por psicólogo e paciente, busca, números, detalhe, plano e transcrição respondem para o admin e gravam a Auditoria; as 7 funções recusam quem não é admin; as auxiliares não são chamáveis pelo app. 9 testes de unidade das telas (`src/test/adminCare.test.tsx`).
+- **Como conferir:** roteiro `s17-35` a `s17-39`.
+
+#### 31. Verificação do CRP no CFP (registrada em 2026-11-14)
+
+- **Situação:** o painel do admin confere o CRP no Cadastro Nacional do CFP antes de aprovar (precisa estar ATIVO numa consulta dos últimos 30 dias) e de rotina a cada 6 meses (aba **Verificar CRP** e botão **Verificação de rotina do CRP**, que passa por todos os pendentes um a um). O site do CFP tem reCAPTCHA: a busca é feita pelo admin e o atalho do navegador "Soliv: ler CFP" lê a tabela de resultados.
+- **Aplicado em 2026-11-14:** migration `20261113120000_verificacao_crp_cfp.sql` no Supabase (registrada no histórico). Conferido no banco, em transação desfeita: psicólogo não marca o próprio CRP como verificado e trocar o número do CRP apaga a verificação.
+- **Publicado em 2026-11-14:** edge function `psychologist-management` (ação `crp-verify` e trava na aprovação) pela CLI v3 com `--use-api`, `verify_jwt` mantido (versão 242; sem login responde 401).
+- **Falta:** testar o atalho no site real do CFP; conferir os 5 psicólogos aprovados (todos "Não verificado").
+
+#### 28. Monitorar o site no dia da publicação
+
+- **Desbloqueada em 2026-11-22:** o site está publicado em `https://solivsaude.com.br` (pendência 2); usar esse endereço nos passos abaixo.
+- **Situação (2026-11-12):** o site ainda não foi publicado em produção, então não dá para criar a checagem de "site no ar" nem liberar o endereço dele no coletor de erros. Os apps Android e iOS e o backend já estão cobertos (pendência 27).
+- **O que fazer, logo depois de publicar o site (ou ligar o domínio próprio, pendência 2):**
+  1. Grafana → **Observability → Frontend → Soliv → Settings** → em **CORS allowed origins**, adicionar o endereço publicado (ex.: `https://soliv.lovable.app` ou `https://app.SEU-DOMINIO`). Sem isso o navegador bloqueia o envio dos erros do site.
+  2. Grafana → **Testing & synthetics → Synthetics → Add new check → API Endpoint**: job name `soliv-site`, `GET` no endereço publicado, status válido `2xx`, **um local só** (o mesmo das outras checagens), frequência **2 min**, alerta de falha ligado.
+- **Como conferir:** a checagem `soliv-site` verde em Synthetics → Checks; abrir o site publicado e ver a sessão aparecer em Frontend → Soliv em alguns minutos.
+- **Registrado em:** 2026-11-12.
+
+#### 30. Memória do banco e conferências do monitoramento
+
+- **Situação (2026-11-12):** na primeira leitura do Grafana, o banco do Supabase tem cerca de **768 MiB de RAM** e o **swap está em ~98%**. É sinal de falta de memória: com vários usuários ao mesmo tempo, as consultas ficam lentas. A CPU em 100% na mesma leitura pode ser falsa (a primeira medida não tem com o que comparar).
+- **O que fazer:**
+  1. **Algumas horas depois (ou no dia seguinte):** Grafana → Dashboards → *Integration - Supabase → Supabase Project*, últimas 6 h. Olhar *Memory Basic* (swap) e *CPU Basic*.
+  2. **Se o swap seguir acima de 80% ou a CPU ficar perto de 100%:** aumentar a instância antes do lançamento em Supabase → Project Settings → **Compute and Disk** (tem custo; conferir o valor antes).
+  3. **Synthetics → Checks:** `soliv-backend` e `soliv-login` verdes, cada uma rodando de **um local só** (não Calgary nem vários).
+  4. **Cost management → Usage** depois de 1 dia: *Metrics active series* abaixo de 5 mil (o Free tem 10 mil); sessões, logs e execuções das checagens dentro das cotas grátis (`docs/monitoramento-grafana.md`, seção 7).
+- **Feito em 2026-11-22 (plano Pro do Supabase):** banco passou de **Nano (0,5 GB)** para **Micro (1 GB de RAM, 2 CPUs compartilhadas)**, pago pelo crédito de compute do Pro, sem custo a mais; Postgres atualizado de 17.11 para **17.12**. Conferido pela API: projeto `ACTIVE_HEALTHY`, `shared_buffers` 256 MB, 60 conexões diretas (200 pelo pooler). Falta olhar o swap no Grafana com o Micro (passo 1); se seguir acima de 80%, o próximo é o Small (~US$ 15/mês, cobrado à parte).
+- **Como conferir:** swap abaixo de 80% e CPU folgada no painel; as duas checagens verdes; uso dentro do plano gratuito.
+- **Registrado em:** 2026-11-12.
+
+#### 29. Alertas do monitoramento (esperando o e-mail oficial)
+
+- **Situação (2026-11-12):** as checagens e o Loki já coletam, mas nenhum aviso sai do Grafana: falta para onde mandar. O Soliv ainda não tem e-mail oficial, que depende do domínio (pendência 2).
+- **O que fazer quando houver o e-mail:** passo a passo em `docs/monitoramento-grafana.md`, seção 6:
+  1. Contact point `soliv-equipe` com o e-mail oficial (opcional: Telegram) e torná-lo o padrão da Default policy.
+  2. Regras do Loki `Soliv - erros nas edge functions` (mais de 5 em 10 min) e `Soliv - ERRO NO SOS` (qualquer erro em 5 min), com **"no data" = Normal**.
+  3. Ligar o alerta de falha nas checagens `soliv-backend` e `soliv-login` (e `soliv-site`, pendência 28).
+- **Como conferir:** **Send test notification** chega no e-mail oficial; as regras aparecem como *Normal* em Alert rules.
+- **Registrado em:** 2026-11-12.
+
+#### 27. Ligar o monitoramento (Grafana Cloud, plano gratuito)
+
+- **Situação (2026-11-09):** o código está pronto e fica desligado até receber as configurações. O app envia erros (site, Android e iOS) pelo SDK Faro, limpos de dados pessoais (`src/lib/monitoring/`). As 41 edge functions enviam ao Loki os erros 5xx (`supabase/functions/_shared/monitoring.ts`). A nova função `health` responde se o backend e o banco estão de pé.
+- **Feito em 2026-11-12:** conta Free criada e app **Soliv** no Frontend Observability (região São Paulo); o endereço do coletor já está no código e liga na próxima publicação do site e dos apps.
+- **Feito em 2026-11-12 (Loki):** os 3 secrets `GRAFANA_LOKI_*` estão no Supabase (token só com `logs:write`) e todas as edge functions foram publicadas de novo. A `health` responde `{"status":"ok","db":"ok"}`.
+- **Feito em 2026-11-12 (banco):** integração Supabase → Grafana ligada (job `soliv-supabase`, painel *Supabase Project*). **Atenção:** a primeira leitura mostrou a instância com ~768 MiB de RAM e swap ~98% (pendência 30).
+- **O que falta:** as conferências da pendência 30 (memória do banco, checagens e cotas), o site (pendência 28) e os alertas (pendência 29). O que depende do site publicado está na pendência 28. Os alertas estão na pendência 29.
+- **Como conferir:** derrubar uma tela de propósito no app publicado e ver o erro em Frontend → Errors; a checagem da `health` verde; a consulta `{app="soliv", source="edge-function"}` no Explore sem erro de autenticação.
+- **Registrado em:** 2026-11-09.
+
+#### 16. Revisão jurídica dos documentos
+
+- **Situação:** política de privacidade, termos de uso (paciente e psicólogo) e registro de tratamento (`docs/lgpd/`) estão em versão para revisão. Os registros de acesso do Marco Civil já são guardados por 7 meses na tabela `access_logs` (migration `20261109210000_registros_de_acesso_marco_civil.sql`, aba **Registros de acesso** do admin; aplicada no Supabase em 2026-11-09 e registrada no histórico, com o gatilho de login em `auth.sessions` e a rotina `purge-access-logs` criados. Conferido no banco, numa transação desfeita: login e uso do app gravados com o IP certo, repetição ignorada, paciente sem leitura da tabela nem da consulta do admin, admin busca e exporta e as duas ações entram na Auditoria); falta o advogado avaliar a ausência da porta de origem (LEIA-ME, item 10). O registro ainda tem itens **[DECIDIR]** (prazo dos demais logs de segurança e auditoria) e **[CONFIRMAR]** (hospedagem do front-end pela Lovable, regiões e cláusulas da transferência internacional de dados).
+- **Atualizado em 2026-11-22:** o admin passou a ler, a partir do detalhe de uma consulta ou SOS, o plano de segurança e a transcrição, com registro de cada leitura na Auditoria (pendência 33). Política (item 5), Termos do paciente (7A) e do psicólogo (4A) e registro de tratamento atualizados, ainda na versão 1.0. Pontos para o advogado: base legal para a equipe ler dado de saúde (qualidade, segurança e apuração de reclamações; art. 11, II, "f"?); se o consentimento da transcrição precisa citar a leitura pela equipe; quem da equipe pode ler (hoje, qualquer admin).
+- **Atualizado em 2026-11-20:** a Política de Privacidade e os Termos do paciente e do psicólogo descrevem a transcrição das chamadas (consentimento, fornecedor, quem lê, guarda) e continuam na versão 1.0; incluir na revisão. Pontos para o advogado: base legal do consentimento por atendimento; consentimento obrigatório para o SOS por vídeo e para a consulta (o SOS por mensagem é a alternativa); concordância do psicólogo pela aceitação dos Termos; transferência internacional do áudio para o fornecedor.
+- **Atualizado em 2026-11-07:** os Termos do paciente (planos Grátis, Essencial, Flex e Completo) e do psicólogo (repasse R$ 85,00 e R$ 40,00) mudaram e continuam na versão 1.0, porque ainda não foram publicados; incluir na revisão.
+- **O que fazer:** revisão por um advogado de proteção de dados antes do lançamento; depois, pedir ao Claude para atualizar os textos e a versão dos documentos (o app pede o aceite de novo quando a versão muda).
+- **Registrado em:** 2026-10-13 (estava só na ficha 18).
+
+#### 26. Pagamento dentro dos apps das lojas
+
+- **Situação:** a assinatura é vendida pelo checkout do Stripe também dentro do app instalado. Apple e Google exigem o sistema de pagamento deles para bens e serviços digitais. A exceção da Apple (diretriz 3.1.3(d)) cobre serviço ao vivo entre duas pessoas, como consulta; grupos e recursos do app não entram. No Brasil, desde junho de 2026 (acordo com o CADE), a Apple aceita pagamento alternativo ou link para o site ao lado da compra pela Apple, com comissão menor.
+- **Decidido em 2026-11-09 (opção A):** nos apps Android e iOS a assinatura não é vendida nem trocada (`src/lib/storePolicy.ts`). A tela de planos mostra o que cada plano inclui, sem preço e sem botão de pagar, com o aviso "A contratação e a troca de planos não estão disponíveis neste app"; quem já assina (pelo site) usa normalmente e pode cancelar. Nenhum texto do app aponta para comprar fora (regra das lojas). O site continua vendendo como antes. O atendimento avulso (SOS ou consulta com psicólogo) segue à venda no app, pela exceção de serviço ao vivo entre duas pessoas (Apple 3.1.3(d)).
+- **Falta:** confirmar com o advogado a venda do avulso dentro do app. Risco que sobra: a Apple pode questionar um app de assinatura que libera recursos comprados fora (regra 3.1.3(b)); a resposta na revisão é que o plano é principalmente atendimento com psicólogo. Se as vendas pelo app fizerem falta, evoluir para a compra pela loja (opção B).
+- **Registrado em:** 2026-11-09.
+
+#### 25. Publicar o app Android e iOS nas lojas
+
+- **Situação (2026-11-09):** o projeto está pronto para gerar os dois apps pelo GitHub Actions, sem Android Studio nem Mac. **Android:** assinatura de release lida de fora do repositório, `versionCode` automático, `targetSdkVersion 36` (exigido pelo Play desde 31/08/2026), workflow `Android (AAB)`. **iOS:** plataforma adicionada ao Capacitor (`ios/`, Swift Package Manager, iOS 15+, só iPhone), textos de câmera, microfone e fotos, push pelo Firebase (o `AppDelegate` troca o token da Apple pelo do FCM), workflow `iOS (TestFlight)`.
+- **Sons fora do app (2026-11-09):** o primeiro AAB saiu com 432 MB por causa dos sons (limite do Play: 200 MB). Os 16 sons foram enviados ao bucket público `sounds` do Supabase Storage e os apps tocam de lá; o build dos apps caiu para ~4,5 MB. Cada vez que alguém ouve um som no app conta no tráfego mensal do Supabase (o player baixa aos poucos, só o que toca).
+- **Ícones do Android e som do push no iPhone (2026-11-12):** o app Android ainda saía com o ícone e a tela de abertura padrão do Capacitor (um "X" azul). Agora usa o logo do Soliv: ícone normal, redondo, adaptativo e monocromático (Android 13+), ícone da barra de avisos e abertura, gerados por `scripts/gerar-icones-android.py`. No iPhone o push chegava sem som; o servidor passou a pedir o som padrão (`_shared/fcm.ts`). ~~Falta publicar as edge functions `notification-push`, `firebase-notifications` e `habit-reminders` para o som valer.~~ **Publicadas** (conferido em 2026-11-22: as versões no ar, de 2026-11-20 — `notification-push` v63, `firebase-notifications` v253, `habit-reminders` v70 — já mandam `aps.sound = 'default'`).
+- **O que falta (só o dono da conta faz):** passo a passo em `docs/publicacao-lojas.md`.
+  1. Android: gerar a chave de upload, cadastrar os 4 secrets `ANDROID_*`, criar o app no Play Console (Play App Signing), enviar o primeiro AAB para o teste interno.
+  2. iOS: conta Apple Developer (com D-U-N-S, pode levar semanas: começar já), App ID com push, chave APNs enviada ao Firebase, app iOS no Firebase (`GoogleService-Info.plist`), app e chave de API na App Store Connect, 5 secrets, enviar ao TestFlight.
+  3. Fazer o roteiro de testes no aparelho (seção 4 do guia) nos dois.
+- **Bloqueado pela pendência 26** (pagamento dentro dos apps) para a revisão das lojas.
+- **Registrado em:** 2026-11-09.
+
+#### 5. Configurar o TURN das chamadas de vídeo
+
+- **Adiado para perto do lançamento (2026-10-13):** a Cloudflare pede cartão para liberar o TURN, mesmo dentro dos 1.000 GB grátis por mês (depois, US$ 0,05 por GB). Sem TURN o app funciona; a diferença aparece com usuários reais em 4G e redes de empresa. Ao configurar, ligar o aviso de cobrança em Manage Account → Billing → Notifications.
+
+- **Onde:** secrets das edge functions (função `ice-servers`).
+- **Por quê:** sem TURN, a chamada de vídeo (SOS e consulta) não conecta quando um dos lados está em rede que bloqueia conexão direta: muitas redes 4G/5G (NAT da operadora) e redes corporativas. Estimativa comum: 10% a 20% das chamadas. O app já está pronto; falta a conta.
+- **O que fazer:** uma das opções:
+  1. Cloudflare Realtime TURN (recomendado, tem cota gratuita): criar uma chave TURN no painel da Cloudflare e cadastrar `CLOUDFLARE_TURN_KEY_ID` e `CLOUDFLARE_TURN_API_TOKEN`.
+  2. Outro provedor (Twilio, Metered, coturn próprio): cadastrar `TURN_URLS` (separadas por vírgula), `TURN_USERNAME` e `TURN_CREDENTIAL`.
+- **Como testar:** fazer uma chamada com um lado no 4G e o outro numa rede corporativa ou de outra operadora e confirmar que o vídeo conecta.
+- **Registrado em:** 2026-10-04.
+
+### Do lançamento (lista B)
+
+#### 17. Planos e preços no Stripe em modo real
 
 - **Situação:** os planos Essencial (R$ 69,90), Flex (R$ 120,00) e Completo (R$ 159,90) estão configurados só no **modo de teste** do Stripe (produtos, preços e secrets `STRIPE_PRICE_*` conferidos em 2026-11-07). Produtos e preços do modo de teste não passam para o modo real.
 - **Antes de tudo (bloqueia o resto):** ativar a conta do Stripe para o modo real (Configurações → Ativar pagamentos): CNPJ (MEI ou empresa), dados do responsável, endereço, descrição do negócio e conta bancária para receber. Sem isso o Stripe não libera o modo real. Situação em 2026-11-07: ainda sem empresa aberta; o app segue no modo de teste.
@@ -54,137 +235,13 @@ O que precisa ser resolvido antes de o app ficar pronto. Ao resolver um item, mo
 - **Como conferir:** assinar um plano com cartão real de baixo valor (ou cupom de 100%), ver o plano no Perfil e cancelar dentro dos 7 dias (o reembolso sai automático).
 - **Registrado em:** 2026-11-07.
 
-### 25. Publicar o app Android e iOS nas lojas
-
-- **Situação (2026-11-09):** o projeto está pronto para gerar os dois apps pelo GitHub Actions, sem Android Studio nem Mac. **Android:** assinatura de release lida de fora do repositório, `versionCode` automático, `targetSdkVersion 36` (exigido pelo Play desde 31/08/2026), workflow `Android (AAB)`. **iOS:** plataforma adicionada ao Capacitor (`ios/`, Swift Package Manager, iOS 15+, só iPhone), textos de câmera, microfone e fotos, push pelo Firebase (o `AppDelegate` troca o token da Apple pelo do FCM), workflow `iOS (TestFlight)`.
-- **Sons fora do app (2026-11-09):** o primeiro AAB saiu com 432 MB por causa dos sons (limite do Play: 200 MB). Os 16 sons foram enviados ao bucket público `sounds` do Supabase Storage e os apps tocam de lá; o build dos apps caiu para ~4,5 MB. Cada vez que alguém ouve um som no app conta no tráfego mensal do Supabase (o player baixa aos poucos, só o que toca).
-- **Ícones do Android e som do push no iPhone (2026-11-12):** o app Android ainda saía com o ícone e a tela de abertura padrão do Capacitor (um "X" azul). Agora usa o logo do Soliv: ícone normal, redondo, adaptativo e monocromático (Android 13+), ícone da barra de avisos e abertura, gerados por `scripts/gerar-icones-android.py`. No iPhone o push chegava sem som; o servidor passou a pedir o som padrão (`_shared/fcm.ts`). ~~Falta publicar as edge functions `notification-push`, `firebase-notifications` e `habit-reminders` para o som valer.~~ **Publicadas** (conferido em 2026-11-22: as versões no ar, de 2026-11-20 — `notification-push` v63, `firebase-notifications` v253, `habit-reminders` v70 — já mandam `aps.sound = 'default'`).
-- **O que falta (só o dono da conta faz):** passo a passo em `docs/publicacao-lojas.md`.
-  1. Android: gerar a chave de upload, cadastrar os 4 secrets `ANDROID_*`, criar o app no Play Console (Play App Signing), enviar o primeiro AAB para o teste interno.
-  2. iOS: conta Apple Developer (com D-U-N-S, pode levar semanas: começar já), App ID com push, chave APNs enviada ao Firebase, app iOS no Firebase (`GoogleService-Info.plist`), app e chave de API na App Store Connect, 5 secrets, enviar ao TestFlight.
-  3. Fazer o roteiro de testes no aparelho (seção 4 do guia) nos dois.
-- **Bloqueado pela pendência 26** (pagamento dentro dos apps) para a revisão das lojas.
-- **Registrado em:** 2026-11-09.
-
-### 26. Pagamento dentro dos apps das lojas
-
-- **Situação:** a assinatura é vendida pelo checkout do Stripe também dentro do app instalado. Apple e Google exigem o sistema de pagamento deles para bens e serviços digitais. A exceção da Apple (diretriz 3.1.3(d)) cobre serviço ao vivo entre duas pessoas, como consulta; grupos e recursos do app não entram. No Brasil, desde junho de 2026 (acordo com o CADE), a Apple aceita pagamento alternativo ou link para o site ao lado da compra pela Apple, com comissão menor.
-- **Decidido em 2026-11-09 (opção A):** nos apps Android e iOS a assinatura não é vendida nem trocada (`src/lib/storePolicy.ts`). A tela de planos mostra o que cada plano inclui, sem preço e sem botão de pagar, com o aviso "A contratação e a troca de planos não estão disponíveis neste app"; quem já assina (pelo site) usa normalmente e pode cancelar. Nenhum texto do app aponta para comprar fora (regra das lojas). O site continua vendendo como antes. O atendimento avulso (SOS ou consulta com psicólogo) segue à venda no app, pela exceção de serviço ao vivo entre duas pessoas (Apple 3.1.3(d)).
-- **Falta:** confirmar com o advogado a venda do avulso dentro do app. Risco que sobra: a Apple pode questionar um app de assinatura que libera recursos comprados fora (regra 3.1.3(b)); a resposta na revisão é que o plano é principalmente atendimento com psicólogo. Se as vendas pelo app fizerem falta, evoluir para a compra pela loja (opção B).
-- **Registrado em:** 2026-11-09.
-
-## Importantes
-
-### 33. Atendimentos no painel do admin (registrada em 2026-11-22)
-
-- **Situação:** Admin → Atendimento → **Consultas agendadas** (nova, parecida com a de SOS) e **SOS** listam os atendimentos com paciente, psicólogo, duração e as avaliações; clicando, abrem os detalhes (pessoas, horários, duração, avaliação do paciente e do psicólogo, plano de segurança se houver e o botão da transcrição do paciente e do psicólogo). Em Pessoas, **Psicólogos** e **Pacientes** ganharam os subitens **Consultas agendadas** e **SOS**: a lista das pessoas com quantos atendimentos têm; clicando numa pessoa, todos os atendimentos dela, com os mesmos detalhes.
-- **Decisão de 2026-11-22:** o admin passa a ler o plano de segurança e a transcrição (antes nunca lia). Cada abertura do detalhe, do plano e da transcrição fica na **Auditoria** (`view_care_detail`, `view_safety_plan`, `view_call_transcript`). Política de Privacidade (item 5), Termos do paciente (item 7A), Termos do psicólogo (item 4A) e registro de tratamento atualizados, ainda na versão 1.0 (não publicados). Entra na revisão jurídica (pendência 16).
-- **Aplicado em 2026-11-22:** migration `20261122120000_admin_atendimentos.sql` no Supabase (registrada no histórico), numa transação só. Conferido na produção, numa transação desfeita (nada ficou gravado): as 7 funções existem; o admin lista 27 consultas e 41 SOS, abre detalhe, plano e transcrição, e cada leitura entra na Auditoria; psicólogo é recusado; a função auxiliar não é chamável pelo app. Com `app_settings.environment = 'test'`, o admin sem o código (aal1) também entra, como no resto do painel (pendência do lançamento: mudar para `production`).
-- **Validado em 2026-11-22 (local):** migration aplicada no Supabase local (`e2e/transcricao/rodar.sh`): listas, filtros por psicólogo e paciente, busca, números, detalhe, plano e transcrição respondem para o admin e gravam a Auditoria; as 7 funções recusam quem não é admin; as auxiliares não são chamáveis pelo app. 9 testes de unidade das telas (`src/test/adminCare.test.tsx`).
-- **Como conferir:** roteiro `s17-35` a `s17-39`.
-
-### 32. Transcrição das chamadas do SOS e da consulta (registrada em 2026-11-20)
-
-- **Aplicado em 2026-11-20:** migration `20261120120000_transcricao_das_chamadas.sql` no Supabase (registrada no histórico) e edge functions `transcribe-call-chunk` (nova, versão 1) e `emergency-sos` (versão 261) publicadas pela CLI v3 com `--use-api`, `verify_jwt` mantido (sem login respondem 401).
-- **Situação:** Antes de entrar, o paciente marca o consentimento ("Concordo que o áudio da chamada seja gravado e transcrito em texto"): no SOS por vídeo, na tela de confirmação; na consulta, numa tela antes da sala. O SOS por mensagem não pede (já é texto). Durante a chamada, cada lado envia o próprio microfone em trechos de 30 s; a função `transcribe-call-chunk` só aceita com o consentimento gravado no atendimento e guarda só o texto (`call_transcript_segments`). O psicólogo vê a transcrição no Histórico de consultas.
-- **Falta:**
-  1. Transcrição: sem nada novo, usa a `LOVABLE_API_KEY` que já existe (modelo `google/gemini-2.5-flash`, com áudio WAV). **Ainda não testado com a chave real**: na primeira chamada de teste, conferir em Edge Functions → `transcribe-call-chunk` → Logs se não há erro do gateway. Se o gateway não aceitar áudio, criar o secret `OPENAI_API_KEY` (a função passa a usar a transcrição da OpenAI, `gpt-4o-mini-transcribe`).
-- **Revisão jurídica (pendência 16):** a Política de Privacidade passou a descrever a transcrição em 2026-11-20 (itens 3.1, 3.2, 3.4, 4, 5, 6, 7 e 8), assim como o registro de tratamento, e continua na versão 1.0 porque ainda não foi publicada. Os Termos do paciente (itens 6, 7, 7A e 9) e do psicólogo (itens 4 e 4A) também passaram a citar a transcrição, na versão 1.0.
-- **Publicado em 2026-11-20:** `transcribe-call-chunk` versão 2 (regras em `_shared/transcription.ts`, mesmo comportamento), `verify_jwt` mantido (sem login responde 401). O corte dos trechos numa pausa da fala vale quando o app da `main` for publicado.
-- **Validado em 2026-11-20 (local, sem tocar na produção):** `e2e/transcricao/rodar.sh` sobe o Supabase local com todas as migrations (esquema igual ao da produção), as edge functions do repositório e um serviço de transcrição falso, e roda 7 testes de ponta a ponta, 4 no servidor e 3 com dois navegadores numa chamada de vídeo real, cada um com uma fala sintetizada como microfone. Passam: consentimento (consulta e SOS), recusas, a voz certa chegando em WAV 16 kHz com a frase inteira, texto gravado com o papel certo, microfone desligado fora da transcrição e a transcrição no histórico da psicóloga. Além disso, 65 testes de unidade (função, captura do áudio, sala e histórico). Falta só o **serviço de transcrição real**, que não dá para testar fora da produção (roteiro s03-70 a s03-75).
-- **Publicado em 2026-11-22:** `transcribe-call-chunk` versão 4, com `reasoning_effort: "none"` na chamada da Lovable (o Gemini não cobra tokens de raciocínio). Se o gateway recusar o parâmetro (400 citando "reasoning"), a função repete sem ele e registra o aviso "recusou reasoning_effort" no log. `verify_jwt` mantido (sem login responde 401). Na primeira chamada de teste: conferir em More → AI da Lovable o custo por requisição e, nos Logs da função, se não aparece esse aviso.
-- **Como conferir:** consulta de teste com paciente e psicólogo conversando 1 minuto; o aviso "Chamada sendo transcrita" aparece nos dois lados e, depois, a transcrição aparece no Histórico de consultas do psicólogo.
-
-### 31. Verificação do CRP no CFP (registrada em 2026-11-14)
-
-- **Situação:** o painel do admin confere o CRP no Cadastro Nacional do CFP antes de aprovar (precisa estar ATIVO numa consulta dos últimos 30 dias) e de rotina a cada 6 meses (aba **Verificar CRP** e botão **Verificação de rotina do CRP**, que passa por todos os pendentes um a um). O site do CFP tem reCAPTCHA: a busca é feita pelo admin e o atalho do navegador "Soliv: ler CFP" lê a tabela de resultados.
-- **Aplicado em 2026-11-14:** migration `20261113120000_verificacao_crp_cfp.sql` no Supabase (registrada no histórico). Conferido no banco, em transação desfeita: psicólogo não marca o próprio CRP como verificado e trocar o número do CRP apaga a verificação.
-- **Publicado em 2026-11-14:** edge function `psychologist-management` (ação `crp-verify` e trava na aprovação) pela CLI v3 com `--use-api`, `verify_jwt` mantido (versão 242; sem login responde 401).
-- **Falta:** testar o atalho no site real do CFP; conferir os 5 psicólogos aprovados (todos "Não verificado").
-
-### 27. Ligar o monitoramento (Grafana Cloud, plano gratuito)
-
-- **Situação (2026-11-09):** o código está pronto e fica desligado até receber as configurações. O app envia erros (site, Android e iOS) pelo SDK Faro, limpos de dados pessoais (`src/lib/monitoring/`). As 41 edge functions enviam ao Loki os erros 5xx (`supabase/functions/_shared/monitoring.ts`). A nova função `health` responde se o backend e o banco estão de pé.
-- **Feito em 2026-11-12:** conta Free criada e app **Soliv** no Frontend Observability (região São Paulo); o endereço do coletor já está no código e liga na próxima publicação do site e dos apps.
-- **Feito em 2026-11-12 (Loki):** os 3 secrets `GRAFANA_LOKI_*` estão no Supabase (token só com `logs:write`) e todas as edge functions foram publicadas de novo. A `health` responde `{"status":"ok","db":"ok"}`.
-- **Feito em 2026-11-12 (banco):** integração Supabase → Grafana ligada (job `soliv-supabase`, painel *Supabase Project*). **Atenção:** a primeira leitura mostrou a instância com ~768 MiB de RAM e swap ~98% (pendência 30).
-- **O que falta:** as conferências da pendência 30 (memória do banco, checagens e cotas), o site (pendência 28) e os alertas (pendência 29). O que depende do site publicado está na pendência 28. Os alertas estão na pendência 29.
-- **Como conferir:** derrubar uma tela de propósito no app publicado e ver o erro em Frontend → Errors; a checagem da `health` verde; a consulta `{app="soliv", source="edge-function"}` no Explore sem erro de autenticação.
-- **Registrado em:** 2026-11-09.
-
-### 28. Monitorar o site no dia da publicação
-
-- **Desbloqueada em 2026-11-22:** o site está publicado em `https://solivsaude.com.br` (pendência 2); usar esse endereço nos passos abaixo.
-- **Situação (2026-11-12):** o site ainda não foi publicado em produção, então não dá para criar a checagem de "site no ar" nem liberar o endereço dele no coletor de erros. Os apps Android e iOS e o backend já estão cobertos (pendência 27).
-- **O que fazer, logo depois de publicar o site (ou ligar o domínio próprio, pendência 2):**
-  1. Grafana → **Observability → Frontend → Soliv → Settings** → em **CORS allowed origins**, adicionar o endereço publicado (ex.: `https://soliv.lovable.app` ou `https://app.SEU-DOMINIO`). Sem isso o navegador bloqueia o envio dos erros do site.
-  2. Grafana → **Testing & synthetics → Synthetics → Add new check → API Endpoint**: job name `soliv-site`, `GET` no endereço publicado, status válido `2xx`, **um local só** (o mesmo das outras checagens), frequência **2 min**, alerta de falha ligado.
-- **Como conferir:** a checagem `soliv-site` verde em Synthetics → Checks; abrir o site publicado e ver a sessão aparecer em Frontend → Soliv em alguns minutos.
-- **Registrado em:** 2026-11-12.
-
-### 29. Alertas do monitoramento (esperando o e-mail oficial)
-
-- **Situação (2026-11-12):** as checagens e o Loki já coletam, mas nenhum aviso sai do Grafana: falta para onde mandar. O Soliv ainda não tem e-mail oficial, que depende do domínio (pendência 2).
-- **O que fazer quando houver o e-mail:** passo a passo em `docs/monitoramento-grafana.md`, seção 6:
-  1. Contact point `soliv-equipe` com o e-mail oficial (opcional: Telegram) e torná-lo o padrão da Default policy.
-  2. Regras do Loki `Soliv - erros nas edge functions` (mais de 5 em 10 min) e `Soliv - ERRO NO SOS` (qualquer erro em 5 min), com **"no data" = Normal**.
-  3. Ligar o alerta de falha nas checagens `soliv-backend` e `soliv-login` (e `soliv-site`, pendência 28).
-- **Como conferir:** **Send test notification** chega no e-mail oficial; as regras aparecem como *Normal* em Alert rules.
-- **Registrado em:** 2026-11-12.
-
-### 30. Memória do banco e conferências do monitoramento
-
-- **Situação (2026-11-12):** na primeira leitura do Grafana, o banco do Supabase tem cerca de **768 MiB de RAM** e o **swap está em ~98%**. É sinal de falta de memória: com vários usuários ao mesmo tempo, as consultas ficam lentas. A CPU em 100% na mesma leitura pode ser falsa (a primeira medida não tem com o que comparar).
-- **O que fazer:**
-  1. **Algumas horas depois (ou no dia seguinte):** Grafana → Dashboards → *Integration - Supabase → Supabase Project*, últimas 6 h. Olhar *Memory Basic* (swap) e *CPU Basic*.
-  2. **Se o swap seguir acima de 80% ou a CPU ficar perto de 100%:** aumentar a instância antes do lançamento em Supabase → Project Settings → **Compute and Disk** (tem custo; conferir o valor antes).
-  3. **Synthetics → Checks:** `soliv-backend` e `soliv-login` verdes, cada uma rodando de **um local só** (não Calgary nem vários).
-  4. **Cost management → Usage** depois de 1 dia: *Metrics active series* abaixo de 5 mil (o Free tem 10 mil); sessões, logs e execuções das checagens dentro das cotas grátis (`docs/monitoramento-grafana.md`, seção 7).
-- **Feito em 2026-11-22 (plano Pro do Supabase):** banco passou de **Nano (0,5 GB)** para **Micro (1 GB de RAM, 2 CPUs compartilhadas)**, pago pelo crédito de compute do Pro, sem custo a mais; Postgres atualizado de 17.11 para **17.12**. Conferido pela API: projeto `ACTIVE_HEALTHY`, `shared_buffers` 256 MB, 60 conexões diretas (200 pelo pooler). Falta olhar o swap no Grafana com o Micro (passo 1); se seguir acima de 80%, o próximo é o Small (~US$ 15/mês, cobrado à parte).
-- **Como conferir:** swap abaixo de 80% e CPU folgada no painel; as duas checagens verdes; uso dentro do plano gratuito.
-- **Registrado em:** 2026-11-12.
-
-### 24. Voltar a exigir o código de verificação do admin
+#### 24. Voltar a exigir o código de verificação do admin
 
 - **Situação:** com o app em teste, o admin entra só com a senha; o código do app autenticador (verificação em duas etapas) é pedido apenas quando o ambiente está em produção. O ambiente fica na tabela `public.app_settings` (migration `20261109120000_bloqueio_flexivel_e_mfa_por_ambiente.sql`), começando em `test`. O banco (`is_super_admin`), as edge functions de admin (`adminMfaSatisfied`) e o painel leem o mesmo valor.
 - **O que fazer no lançamento:** no SQL Editor do Supabase, rodar `UPDATE public.app_settings SET environment = 'production', updated_at = now();`. Na hora, o painel e as funções voltam a exigir o código.
 - **Como conferir:** entrar com a conta de admin; depois da senha, a tela do código precisa aparecer e o painel não abre sem ele.
 - **Aplicado em 2026-11-09:** migration no Supabase (registrada no histórico) e 11 edge functions publicadas pela CLI com `--use-api`, mesmo `verify_jwt` de antes: `account-block-status` (nova), `admin-block-*`, `admin-update-*`, `admin-delete-*`, `admin-psychologist-management`, `psychologist-management`, `confirm-payment` e `payment-sync`. Conferido no banco, numa transação desfeita: aviso de bloqueio só com a senha certa (com prazo e por tempo indeterminado), sessões encerradas ao bloquear, admin com token aal1 aceito em `test` e recusado em `production`.
 - **Registrado em:** 2026-11-09.
-
-### 5. Configurar o TURN das chamadas de vídeo
-
-- **Adiado para perto do lançamento (2026-10-13):** a Cloudflare pede cartão para liberar o TURN, mesmo dentro dos 1.000 GB grátis por mês (depois, US$ 0,05 por GB). Sem TURN o app funciona; a diferença aparece com usuários reais em 4G e redes de empresa. Ao configurar, ligar o aviso de cobrança em Manage Account → Billing → Notifications.
-
-- **Onde:** secrets das edge functions (função `ice-servers`).
-- **Por quê:** sem TURN, a chamada de vídeo (SOS e consulta) não conecta quando um dos lados está em rede que bloqueia conexão direta: muitas redes 4G/5G (NAT da operadora) e redes corporativas. Estimativa comum: 10% a 20% das chamadas. O app já está pronto; falta a conta.
-- **O que fazer:** uma das opções:
-  1. Cloudflare Realtime TURN (recomendado, tem cota gratuita): criar uma chave TURN no painel da Cloudflare e cadastrar `CLOUDFLARE_TURN_KEY_ID` e `CLOUDFLARE_TURN_API_TOKEN`.
-  2. Outro provedor (Twilio, Metered, coturn próprio): cadastrar `TURN_URLS` (separadas por vírgula), `TURN_USERNAME` e `TURN_CREDENTIAL`.
-- **Como testar:** fazer uma chamada com um lado no 4G e o outro numa rede corporativa ou de outra operadora e confirmar que o vídeo conecta.
-- **Registrado em:** 2026-10-04.
-
-### 6. Ajustes de segurança no painel do Supabase (Authentication)
-
-- **Onde:** Supabase → Authentication → Policies/Settings (não dá para configurar pelo código).
-- **O que fazer:**
-  1. ~~Tamanho mínimo de senha: 8, com letras e números ("Letters and digits"), e validade do link/código de e-mail em 1 hora (`3600`).~~ **Feito em 2026-10-13.**
-  2. ~~Ativar "Prevent use of leaked passwords" (recusa senhas que já vazaram na internet). Só existe no plano Pro do Supabase.~~ **Ligado (conferido pela API em 2026-11-22, com o plano Pro).** Falta testar no cadastro com uma senha comum de letras e números (ex.: `senha123`): tem que ser recusada.
-  3. ~~"Confirm email": ligar depois do domínio (pendência 2), para o e-mail de confirmação chegar.~~ **Ligado em 2026-11-22 (conferido pela API).** O app já estava pronto (desde 2026-10-21 o paciente é criado pelo banco e o psicólogo conclui o cadastro no primeiro acesso). Falta testar: cadastrar um paciente e um psicólogo com e-mails de fora da equipe, receber o link em português, confirmar e entrar.
-- **Registrado em:** 2026-10-04.
-
-### 16. Revisão jurídica dos documentos
-
-- **Situação:** política de privacidade, termos de uso (paciente e psicólogo) e registro de tratamento (`docs/lgpd/`) estão em versão para revisão. Os registros de acesso do Marco Civil já são guardados por 7 meses na tabela `access_logs` (migration `20261109210000_registros_de_acesso_marco_civil.sql`, aba **Registros de acesso** do admin; aplicada no Supabase em 2026-11-09 e registrada no histórico, com o gatilho de login em `auth.sessions` e a rotina `purge-access-logs` criados. Conferido no banco, numa transação desfeita: login e uso do app gravados com o IP certo, repetição ignorada, paciente sem leitura da tabela nem da consulta do admin, admin busca e exporta e as duas ações entram na Auditoria); falta o advogado avaliar a ausência da porta de origem (LEIA-ME, item 10). O registro ainda tem itens **[DECIDIR]** (prazo dos demais logs de segurança e auditoria) e **[CONFIRMAR]** (hospedagem do front-end pela Lovable, regiões e cláusulas da transferência internacional de dados).
-- **Atualizado em 2026-11-22:** o admin passou a ler, a partir do detalhe de uma consulta ou SOS, o plano de segurança e a transcrição, com registro de cada leitura na Auditoria (pendência 33). Política (item 5), Termos do paciente (7A) e do psicólogo (4A) e registro de tratamento atualizados, ainda na versão 1.0. Pontos para o advogado: base legal para a equipe ler dado de saúde (qualidade, segurança e apuração de reclamações; art. 11, II, "f"?); se o consentimento da transcrição precisa citar a leitura pela equipe; quem da equipe pode ler (hoje, qualquer admin).
-- **Atualizado em 2026-11-20:** a Política de Privacidade e os Termos do paciente e do psicólogo descrevem a transcrição das chamadas (consentimento, fornecedor, quem lê, guarda) e continuam na versão 1.0; incluir na revisão. Pontos para o advogado: base legal do consentimento por atendimento; consentimento obrigatório para o SOS por vídeo e para a consulta (o SOS por mensagem é a alternativa); concordância do psicólogo pela aceitação dos Termos; transferência internacional do áudio para o fornecedor.
-- **Atualizado em 2026-11-07:** os Termos do paciente (planos Grátis, Essencial, Flex e Completo) e do psicólogo (repasse R$ 85,00 e R$ 40,00) mudaram e continuam na versão 1.0, porque ainda não foram publicados; incluir na revisão.
-- **O que fazer:** revisão por um advogado de proteção de dados antes do lançamento; depois, pedir ao Claude para atualizar os textos e a versão dos documentos (o app pede o aceite de novo quando a versão muda).
-- **Registrado em:** 2026-10-13 (estava só na ficha 18).
-
-## Menores
-
-Nenhuma no momento.
 
 ## Resolvidas
 

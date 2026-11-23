@@ -43,7 +43,9 @@ O mesmo roteiro está no checklist interativo (mesmos itens e códigos `sNN-MM`)
 - [ ] `s01-31` Login com e-mail com espaço ou maiúscula ⇒ entra normalmente
 - [ ] `s01-14` Psicólogo → Perfil → editar especialização e biografia → salvar ⇒ paciente vê os dados novos ao agendar
 - [ ] `s01-32` Supabase → Authentication → Email Templates ⇒ os 6 modelos em português do repositório (`supabase/templates/`) colados, com os assuntos "Redefina sua senha do Soliv", "Confirme seu e-mail no Soliv" etc. (colados em 2026-11-08)
-- [ ] `s01-33` Visitante → Esqueci a senha 3 vezes seguidas ⇒ aviso claro de que é preciso esperar (sem SMTP próprio o Supabase manda só 2 e-mails por hora), sem tela de erro
+- [ ] `s01-33` Visitante → Esqueci a senha 3 vezes seguidas ⇒ os e-mails chegam (com o SMTP do Resend o limite é 100 por hora para o projeto); se passar do limite, aviso claro de que é preciso esperar, sem tela de erro
+- [ ] `s01-35` Com um e-mail de fora da equipe → cadastro e Esqueci a senha ⇒ os e-mails chegam em português, com a logo e o remetente "Soliv <nao-responda@solivsaude.com.br>", e o link volta para `solivsaude.com.br`
+- [ ] `s01-36` Cadastro com a senha `senha123` ⇒ recusada por ser uma senha vazada, com aviso claro
 - [ ] `s01-34` Psicólogo em análise → Perfil → abrir o próprio documento enviado ⇒ abre (link assinado, também com o bucket privado)
 - [ ] `s01-15` Qualquer → abrir endereço inexistente (`/xyz`) ⇒ "Não encontramos esta página"; "Voltar para o início" leva à Home, ao painel ou ao login
 
@@ -467,6 +469,7 @@ _Cartão de teste `4242 4242 4242 4242`; para pedir autenticação, `4000 0025 0
 - [ ] `s17-37` Detalhe de uma consulta transcrita → "Ver plano de segurança" e "Abrir transcrição do paciente e do psicólogo" ⇒ abrem; na transcrição, as abas Paciente/Psicólogo mostram só aquele lado
 - [ ] `s17-38` Admin → Pessoas → Psicólogos → SOS (e Pacientes → Consultas agendadas) ⇒ lista de pessoas com a contagem; buscar pelo nome; clicar ⇒ só os atendimentos daquela pessoa; "Voltar para a lista"
 - [ ] `s17-39` Depois de s17-36 e s17-37 → Auditoria ⇒ "Abriu detalhes do atendimento", "Leu o plano de segurança" e "Leu a transcrição da chamada", com o nome do paciente
+- [ ] `s17-40` Admin → Verificar CRP → buscar no site do CFP e usar o atalho "Soliv: ler CFP" ⇒ a tabela de resultados é lida e o psicólogo fica "Verificado" (fazer nos 5 psicólogos aprovados, hoje "Não verificado")
 
 ## 18. Segurança (ficha 20)
 
