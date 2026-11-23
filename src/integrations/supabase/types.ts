@@ -3295,6 +3295,8 @@ export type Database = {
         | { Args: { p_user_id: string }; Returns: number }
         | { Args: { p_reason: string; p_user_id: string }; Returns: number }
       check_organization_code: { Args: { p_code: string }; Returns: Json }
+      check_signup_invite_code: { Args: { p_code: string }; Returns: Json }
+      signup_invite_required: { Args: never; Returns: boolean }
       check_rate_limit: {
         Args: {
           p_key: string
