@@ -16,7 +16,8 @@ Ao resolver um item, marque o quadradinho, atualize o detalhe da pendência e, q
 ### Monitoramento
 
 - [ ] **Site no Grafana (pendência 28):** adicionar `https://solivsaude.com.br` em CORS allowed origins e criar a checagem `soliv-site`.
-- [ ] **Memória do banco (pendência 30):** olhar o swap no Grafana com o Micro; checagens `soliv-backend` e `soliv-login` verdes; uso dentro das cotas grátis.
+- [x] **Memória do banco (pendência 30):** medido em 2026-11-23 com o Micro: swap em 14% (antes ~98%), 62% da RAM livre, CPU ~97% ociosa. Medir de novo antes do lançamento (lista B).
+- [ ] **Grafana (pendência 30):** checagens `soliv-backend` e `soliv-login` verdes, rodando de um local só; uso dentro das cotas grátis (Cost management → Usage).
 - [ ] **Alertas (pendência 29):** criar um e-mail da equipe no domínio (ex.: `contato@solivsaude.com.br`) e ligar os alertas do Grafana nele.
 
 ### Preparar o que demora (para não travar o lançamento)
@@ -155,6 +156,7 @@ Em 2026-11-22 o banco tinha 20 contas (13 pacientes, 6 psicólogos), 27 consulta
   3. **Synthetics → Checks:** `soliv-backend` e `soliv-login` verdes, cada uma rodando de **um local só** (não Calgary nem vários).
   4. **Cost management → Usage** depois de 1 dia: *Metrics active series* abaixo de 5 mil (o Free tem 10 mil); sessões, logs e execuções das checagens dentro das cotas grátis (`docs/monitoramento-grafana.md`, seção 7).
 - **Feito em 2026-11-22 (plano Pro do Supabase):** banco passou de **Nano (0,5 GB)** para **Micro (1 GB de RAM, 2 CPUs compartilhadas)**, pago pelo crédito de compute do Pro, sem custo a mais; Postgres atualizado de 17.11 para **17.12**. Conferido pela API: projeto `ACTIVE_HEALTHY`, `shared_buffers` 256 MB, 60 conexões diretas (200 pelo pooler). Falta olhar o swap no Grafana com o Micro (passo 1); se seguir acima de 80%, o próximo é o Small (~US$ 15/mês, cobrado à parte).
+- **Medido em 2026-11-23 (métricas do Supabase, ~4 h depois da troca para o Micro):** RAM 904 MiB, 557 MiB disponíveis; swap 143 MiB de 1 GiB (**14%**); CPU ~97% ociosa nas 2 CPUs. Resolvido o problema de memória; falta só medir de novo perto do lançamento, já com uso, e os passos 3 e 4 (checagens e cotas do Grafana).
 - **Como conferir:** swap abaixo de 80% e CPU folgada no painel; as duas checagens verdes; uso dentro do plano gratuito.
 - **Registrado em:** 2026-11-12.
 
