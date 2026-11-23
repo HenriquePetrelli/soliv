@@ -20,6 +20,8 @@ import { passwordProblem, PASSWORD_HINT } from '@/lib/password';
 import { findCity, findStateAbbreviation } from '@/lib/placeMatch';
 import AddressAutofillInputs from '@/components/AddressAutofillInputs';
 import { getAuthErrorMessage } from '@/utils/errorMessage';
+import SignupInviteCodeField from '@/components/SignupInviteCodeField';
+import { checkSignupInviteCode, signupInviteErrorMessage, signupInviteMetadata, useSignupInviteRequired } from '@/lib/signupInvite';
 
 interface SignUpFormProps {
   userType: "patient" | "psychologist";
@@ -64,6 +66,21 @@ const [formData, setFormData] = useState({
   const [showCompanyCode, setShowCompanyCode] = useState(false);
   const [companyCode, setCompanyCode] = useState("");
   const [companyCheck, setCompanyCheck] = useState<{ valid: boolean; message: string } | null>(null);
+  // Cadastro só com convite enquanto o app está em teste (o banco confere).
+  const inviteRequired = useSignupInviteRequired();
+  const [inviteCode, setInviteCode] = useState("");
+  const [inviteError, setInviteError] = useState<string | null>(null);
+
+  const checkInviteCode = async (): Promise<boolean> => {
+    if (!inviteRequired) return true;
+    if (!inviteCode.trim()) {
+      setInviteError("Digite o código de convite.");
+      return false;
+    }
+    const result = await checkSignupInviteCode(inviteCode);
+    setInviteError(result.valid ? null : signupInviteErrorMessage(result.error ?? 'invalid'));
+    return result.valid;
+  };
 
   const checkCompanyCode = async (): Promise<boolean> => {
     const code = normalizeInviteCode(companyCode);
@@ -258,6 +275,11 @@ const [formData, setFormData] = useState({
         return;
       }
 
+      if (!(await checkInviteCode())) {
+        toast.error("Confira o código de convite para criar a conta.");
+        return;
+      }
+
       if (isPatient && companyCode.trim() && !(await checkCompanyCode())) {
         toast.error("Confira o código da empresa ou apague o campo para continuar.");
         return;
@@ -298,6 +320,7 @@ const [formData, setFormData] = useState({
             user_type: userType,
             full_name: formData.name,
             ...signupAcceptanceMetadata(userType),
+            ...(inviteRequired ? signupInviteMetadata(inviteCode) : {}),
             ...(isPatient && normalizeInviteCode(companyCode) ? { organization_code: normalizeInviteCode(companyCode) } : {}),
             ...(isPatient
               ? {
@@ -314,7 +337,9 @@ const [formData, setFormData] = useState({
 
       if (error) {
         if (/database error saving new user/i.test(error.message)) {
-          toast.error("Não foi possível criar a conta. Se este CPF já tem cadastro, entre com o e-mail dele ou recupere a senha.");
+          toast.error(inviteRequired
+            ? "Não foi possível criar a conta. Confira o código de convite; se este CPF já tem cadastro, entre com o e-mail dele ou recupere a senha."
+            : "Não foi possível criar a conta. Se este CPF já tem cadastro, entre com o e-mail dele ou recupere a senha.");
         } else {
           toast.error(getAuthErrorMessage(error, "Não foi possível criar sua conta agora. Tente novamente em alguns instantes."));
         }
@@ -408,6 +433,19 @@ const { error: profileError } = await supabase
           )}
 
           <div className="space-y-4">
+            {inviteRequired && (
+              <SignupInviteCodeField
+                value={inviteCode}
+                onChange={(value) => {
+                  setInviteCode(value);
+                  setInviteError(null);
+                }}
+                onBlur={() => {
+                  if (inviteCode.trim()) void checkInviteCode();
+                }}
+                error={inviteError}
+              />
+            )}
             <div className="space-y-2">
               <Label htmlFor="name" className="text-foreground font-medium">
                 Nome completo

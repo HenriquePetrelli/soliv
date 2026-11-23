@@ -2,6 +2,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { v4 as uuidv4 } from 'uuid';
 import { signupAcceptanceMetadata } from '@/lib/legal';
 import { errorText, getAuthErrorMessage } from '@/utils/errorMessage';
+import { signupInviteMetadata } from '@/lib/signupInvite';
 
 export interface PsychologistFormData {
   email: string;
@@ -15,6 +16,8 @@ export interface PsychologistFormData {
   state: string;
   city: string;
   address?: string;
+  /** Código de convite, quando o cadastro está fechado (o banco confere). */
+  inviteCode?: string;
 }
 
 /** Falha ao enviar o documento (a tela marca o campo do arquivo). */
@@ -67,6 +70,7 @@ export class PsychologistService {
             area_atendimento: formData.areaAtendimento,
             // Aceite de idade, Termos e Política marcado na tela de cadastro.
             ...signupAcceptanceMetadata('psychologist'),
+            ...signupInviteMetadata(formData.inviteCode ?? ''),
           },
           emailRedirectTo: `${window.location.origin}/`
         }
@@ -305,6 +309,10 @@ export class PsychologistService {
     const code = (error as { code?: string } | null)?.code;
     if (message.includes('valid_cpf_format')) return 'CPF inválido. Verifique os números digitados.';
     if (code === '23505' || message.includes('duplicate key')) return 'Este e-mail, CPF ou CRP já está cadastrado.';
+    // Recusa do banco ao criar a conta (código de convite ou dado já usado): o erro chega genérico.
+    if (message.includes('database error saving new user')) {
+      return 'Não foi possível criar a conta. Confira o código de convite; se este CPF ou CRP já tem cadastro, entre com o e-mail dele.';
+    }
     return getAuthErrorMessage(error, 'Não foi possível concluir o cadastro agora. Tente novamente em alguns instantes.');
   }
 

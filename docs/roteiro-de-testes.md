@@ -46,6 +46,8 @@ O mesmo roteiro está no checklist interativo (mesmos itens e códigos `sNN-MM`)
 - [ ] `s01-33` Visitante → Esqueci a senha 3 vezes seguidas ⇒ os e-mails chegam (com o SMTP do Resend o limite é 100 por hora para o projeto); se passar do limite, aviso claro de que é preciso esperar, sem tela de erro
 - [ ] `s01-35` Com um e-mail de fora da equipe → cadastro e Esqueci a senha ⇒ os e-mails chegam em português, com a logo e o remetente "Soliv <nao-responda@solivsaude.com.br>", e o link volta para `solivsaude.com.br`
 - [ ] `s01-36` Cadastro com a senha `senha123` ⇒ recusada por ser uma senha vazada, com aviso claro
+- [ ] `s01-37` Cadastro fechado (código em `app_settings.signup_invite_code`) → cadastro de paciente e de psicólogo ⇒ campo "Código de convite" no topo; código errado ⇒ "Código de convite inválido" e a conta não é criada; código certo (com minúsculas ou espaços) ⇒ cadastro normal
+- [ ] `s01-38` Cadastro aberto (`signup_invite_code = NULL`) ⇒ o campo "Código de convite" não aparece
 - [ ] `s01-34` Psicólogo em análise → Perfil → abrir o próprio documento enviado ⇒ abre (link assinado, também com o bucket privado)
 - [ ] `s01-15` Qualquer → abrir endereço inexistente (`/xyz`) ⇒ "Não encontramos esta página"; "Voltar para o início" leva à Home, ao painel ou ao login
 

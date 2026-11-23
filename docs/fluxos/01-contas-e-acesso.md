@@ -22,6 +22,12 @@ Existem três perfis: **paciente**, **psicólogo** e **admin**. O paciente se ca
 
 ## Como funciona
 
+### Cadastro só com convite (enquanto o app está em teste)
+Com o cadastro fechado, os dois cadastros (paciente e psicólogo) mostram no topo o campo **Código de convite** ("O Soliv está em fase de testes"). O app confere o código ao sair do campo e antes de enviar (`check_signup_invite_code`, 10 tentativas a cada 15 min por IP); sem o código certo, não envia. Quem decide é o banco: o gatilho `on_auth_user_signup_invite` (antes de criar a conta em `auth.users`) recusa a conta sem o código, então nem chamando a API direto dá para se cadastrar. O código não fica guardado nos dados do usuário.
+- O código fica em `app_settings.signup_invite_code` (o app não lê a tabela). Trocar: `UPDATE public.app_settings SET signup_invite_code = 'NOVO-CODIGO', updated_at = now();`. Abrir o cadastro para todos (lançamento): `... SET signup_invite_code = NULL ...`; o campo some sozinho.
+- Contas criadas pelo painel do Supabase ou pela API de admin também precisam do código (`signup_invite_code` nos dados do usuário), ou abrir o cadastro por um momento.
+- Migration `20261123120000_codigo_de_convite_no_cadastro.sql`; app: `src/lib/signupInvite.ts`, `src/components/SignupInviteCodeField.tsx`; testes: `src/test/signupInvite.test.tsx`.
+
 ### Cadastro do paciente
 1. Escolhe "Sou paciente" e preenche nome, e-mail, senha, sintomas ("O que você tem sentido?") e, se tiver, o **código da empresa**.
 2. Marca "Tenho 18 anos ou mais", aceita Termos e Política e dá o consentimento para dados de saúde.

@@ -22,6 +22,8 @@ import { validateCPF } from "@/utils/cpf";
 import LegalConsents from "@/components/legal/LegalConsents";
 import { EMPTY_CONSENTS, allConsentsGiven, consentKeysFor } from "@/components/legal/consents";
 import { passwordProblem, PASSWORD_HINT } from '@/lib/password';
+import SignupInviteCodeField from "@/components/SignupInviteCodeField";
+import { checkSignupInviteCode, signupInviteErrorMessage, useSignupInviteRequired } from "@/lib/signupInvite";
 
 const specializations = [
   // Áreas tradicionais
@@ -96,6 +98,21 @@ const PsychologistSignUpPublic = () => {
   const [isAreasModalOpen, setIsAreasModalOpen] = useState(false);
   const [consents, setConsents] = useState(EMPTY_CONSENTS);
   const [showConsentErrors, setShowConsentErrors] = useState(false);
+  // Cadastro só com convite enquanto o app está em teste (o banco confere).
+  const inviteRequired = useSignupInviteRequired();
+  const [inviteCode, setInviteCode] = useState("");
+  const [inviteError, setInviteError] = useState<string | null>(null);
+
+  const checkInviteCode = async (): Promise<boolean> => {
+    if (!inviteRequired) return true;
+    if (!inviteCode.trim()) {
+      setInviteError("Digite o código de convite.");
+      return false;
+    }
+    const result = await checkSignupInviteCode(inviteCode);
+    setInviteError(result.valid ? null : signupInviteErrorMessage(result.error ?? 'invalid'));
+    return result.valid;
+  };
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
@@ -117,6 +134,11 @@ const PsychologistSignUpPublic = () => {
   });
 
   const onSubmit = async (data: FormData) => {
+    if (!(await checkInviteCode())) {
+      toast.error("Confira o código de convite para se cadastrar.");
+      return;
+    }
+
     if (!allConsentsGiven(consents, consentKeysFor("psychologist"))) {
       setShowConsentErrors(true);
       toast.error("Marque as confirmações de idade e de aceite para se cadastrar.");
@@ -145,6 +167,7 @@ const PsychologistSignUpPublic = () => {
           city: data.city,
           
           address: data.address,
+          inviteCode: inviteRequired ? inviteCode : undefined,
         },
         documentFile
       );
@@ -245,6 +268,19 @@ const PsychologistSignUpPublic = () => {
           <CardContent>
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                {inviteRequired && (
+                  <SignupInviteCodeField
+                    value={inviteCode}
+                    onChange={(value) => {
+                      setInviteCode(value);
+                      setInviteError(null);
+                    }}
+                    onBlur={() => {
+                      if (inviteCode.trim()) void checkInviteCode();
+                    }}
+                    error={inviteError}
+                  />
+                )}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <FormField
                     control={form.control}
