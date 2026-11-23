@@ -26,7 +26,7 @@ Painel único em `/admin-dashboard`, com a seção na URL (`?secao=...`), para r
 
 ## Como funciona
 
-- **Entrada com verificação em duas etapas** (obrigatória):
+- **Entrada com verificação em duas etapas** (obrigatória com o cadastro aberto; enquanto o cadastro pede o código de convite, o admin entra só com a senha, ver `admin_mfa_required()` e a pendência 24):
   1. depois da senha, o admin vai para `/admin/verificacao`;
   2. na primeira vez, cadastra um app autenticador (Google Authenticator, Microsoft Authenticator, Authy ou 1Password) lendo o QR code, ou digitando a chave, e confirma um código de 6 dígitos;
   3. nas próximas, só digita o código;

@@ -61,7 +61,7 @@ Em 2026-11-22 o banco tinha 20 contas (13 pacientes, 6 psicólogos), 27 consulta
 
 ### 4. Supabase em produção
 
-- [ ] **Código do admin (pendência 24):** no SQL Editor, `UPDATE public.app_settings SET environment = 'production', updated_at = now();` e conferir que o painel pede o código do autenticador.
+- [ ] **Código do admin (pendência 24):** volta sozinho quando o cadastro abrir (item 5, `signup_invite_code = NULL`). Depois de abrir, conferir que o painel pede o código do autenticador.
 - [ ] **TURN (pendência 5),** se não foi feito na lista A.
 - [ ] Conferir Authentication: "Confirm email" ligado, SMTP do Resend, limite de e-mails (100/h) e Site URL `https://solivsaude.com.br` (já estão assim desde 2026-11-22).
 
@@ -252,9 +252,10 @@ Em 2026-11-22 o banco tinha 20 contas (13 pacientes, 6 psicólogos), 27 consulta
 
 #### 24. Voltar a exigir o código de verificação do admin
 
-- **Situação:** com o app em teste, o admin entra só com a senha; o código do app autenticador (verificação em duas etapas) é pedido apenas quando o ambiente está em produção. O ambiente fica na tabela `public.app_settings` (migration `20261109120000_bloqueio_flexivel_e_mfa_por_ambiente.sql`), começando em `test`. O banco (`is_super_admin`), as edge functions de admin (`adminMfaSatisfied`) e o painel leem o mesmo valor.
-- **O que fazer no lançamento:** no SQL Editor do Supabase, rodar `UPDATE public.app_settings SET environment = 'production', updated_at = now();`. Na hora, o painel e as funções voltam a exigir o código.
+- **Situação:** enquanto o cadastro pede o código de convite (`app_settings.signup_invite_code` preenchido), o admin entra só com a senha. Com o cadastro aberto (`signup_invite_code` vazio), o código do app autenticador (verificação em duas etapas) é exigido. Desde 2026-11-23 a regra segue o código de convite (migration `20261123140000_mfa_do_admin_segue_codigo_de_convite.sql`); antes dependia de `app_settings.environment`, que não decide mais nada. O banco (`is_super_admin`), as edge functions de admin (`adminMfaSatisfied`) e o painel leem a mesma função, `admin_mfa_required()`.
+- **O que fazer no lançamento:** nada à parte. Ao abrir o cadastro (`UPDATE public.app_settings SET signup_invite_code = NULL, updated_at = now();`), o painel e as funções passam a exigir o código na hora. Para voltar a fechar o cadastro, preencher o código de novo, e o admin volta a entrar só com a senha.
 - **Como conferir:** entrar com a conta de admin; depois da senha, a tela do código precisa aparecer e o painel não abre sem ele.
+- **Aplicado em 2026-11-23:** migration `20261123140000_mfa_do_admin_segue_codigo_de_convite.sql` no Supabase (registrada no histórico). Conferido antes numa transação desfeita: com o código de convite, `admin_mfa_required()` = false; com `signup_invite_code = NULL`, true. Depois de aplicar, o código continua `SOLIV-BETA` e o admin entra só com a senha.
 - **Aplicado em 2026-11-09:** migration no Supabase (registrada no histórico) e 11 edge functions publicadas pela CLI com `--use-api`, mesmo `verify_jwt` de antes: `account-block-status` (nova), `admin-block-*`, `admin-update-*`, `admin-delete-*`, `admin-psychologist-management`, `psychologist-management`, `confirm-payment` e `payment-sync`. Conferido no banco, numa transação desfeita: aviso de bloqueio só com a senha certa (com prazo e por tempo indeterminado), sessões encerradas ao bloquear, admin com token aal1 aceito em `test` e recusado em `production`.
 - **Registrado em:** 2026-11-09.
 
