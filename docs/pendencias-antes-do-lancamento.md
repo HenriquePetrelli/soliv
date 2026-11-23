@@ -11,12 +11,16 @@ Ao resolver um item, marque o quadradinho, atualize o detalhe da pendência e, q
 
 > **Passo a passo das configurações externas:** `docs/guia-configuracoes-externas.md`.
 
+> **Esperando o cartão ou a conta da empresa** (TURN, lojas, Stripe real, trocar o cartão dos serviços pagos): `docs/pendencias-cartao-da-empresa.md`.
+
 ## Lista A — Agora, no ambiente de teste
 
 ### Monitoramento
 
-- [ ] **Site no Grafana (pendência 28):** adicionar `https://solivsaude.com.br` em CORS allowed origins e criar a checagem `soliv-site`.
-- [ ] **Memória do banco (pendência 30):** olhar o swap no Grafana com o Micro; checagens `soliv-backend` e `soliv-login` verdes; uso dentro das cotas grátis.
+- [x] **Site no Grafana (pendência 28):** feito em 2026-11-23: `https://solivsaude.com.br` em Allowed origins do Frontend → Soliv e checagem `soliv-site` (2 min, São Paulo) em 100%.
+- [x] **Memória do banco (pendência 30):** medido em 2026-11-23 com o Micro: swap em 14% (antes ~98%), 62% da RAM livre, CPU ~97% ociosa. Medir de novo antes do lançamento (lista B).
+- [x] **Checagens do Grafana (pendência 30):** feito em 2026-11-23: `soliv-backend` (2 min; estava DOWN por falta do Invert na regra de corpo, corrigido), `soliv-login` (5 min, cabeçalho `apikey` com a publishable key) e `soliv-site` (2 min), todas só em São Paulo: ~53.600 execuções/mês de 100 mil grátis.
+- [ ] **Cotas do Grafana (pendência 30):** em 2026-11-24, Cost management → Usage: *Metrics active series* abaixo de 5 mil e logs/sessões dentro do grátis; `soliv-backend` subindo para perto de 100%.
 - [ ] **Alertas (pendência 29):** criar um e-mail da equipe no domínio (ex.: `contato@solivsaude.com.br`) e ligar os alertas do Grafana nele.
 
 ### Preparar o que demora (para não travar o lançamento)
@@ -24,8 +28,9 @@ Ao resolver um item, marque o quadradinho, atualize o detalhe da pendência e, q
 - [ ] **Advogado (pendências 16 e 26):** revisão da Política de Privacidade, dos Termos (paciente e psicólogo) e do registro de tratamento, com os pontos listados na pendência 16; confirmar a venda do avulso dentro do app (pendência 26).
 - [ ] **CNPJ e conta do Stripe (pendência 17):** abrir a empresa (MEI ou outra) e ativar a conta do Stripe para o modo real (Configurações → Ativar pagamentos). Só a ativação; os planos reais ficam para a lista B.
 - [ ] **Contas das lojas (pendência 25):** conta Apple Developer (o D-U-N-S pode levar semanas) e Play Console; gerar os apps e testar no aparelho pelo **teste interno** do Play e pelo **TestFlight** (seção 4 de `docs/publicacao-lojas.md`).
-- [ ] **TURN das chamadas (pendência 5):** criar a chave do TURN na Cloudflare e cadastrar os 2 secrets. Dá para deixar para a lista B, mas testar antes evita surpresa com usuários no 4G.
-- [ ] **SEO (`roadmap.md`):** Search Console com o sitemap; decidir sobre uma página de apresentação.
+- [ ] **TURN das chamadas (pendência 5):** criar a chave do TURN na Cloudflare e cadastrar os 2 secrets. **Esperando o cartão de crédito da empresa (Nubank PJ)** em 2026-11-23: a ativação do Cloudflare Realtime pede cartão (cobra $0/mês; 1.000 GB grátis, depois US$ 0,05/GB). Dá para deixar para a lista B, mas testar antes evita surpresa com usuários no 4G.
+- [x] **Site fora do Google até o lançamento (2026-11-23):** todas as páginas com `noindex` e o sitemap fora do `robots.txt` (`SEARCH_INDEXING_ENABLED = false` em `src/lib/seo.ts`), para o público não chegar ao cadastro antes da hora. Vale depois do próximo Publish na Lovable. Quem tiver o link ainda consegue abrir o site e se cadastrar.
+- [ ] **Página de apresentação (`roadmap.md`):** decidir se haverá uma (hoje a página inicial é o login).
 
 ## Lista B — No lançamento (virar produção)
 
@@ -59,7 +64,12 @@ Em 2026-11-22 o banco tinha 20 contas (13 pacientes, 6 psicólogos), 27 consulta
 - [ ] **TURN (pendência 5),** se não foi feito na lista A.
 - [ ] Conferir Authentication: "Confirm email" ligado, SMTP do Resend, limite de e-mails (100/h) e Site URL `https://solivsaude.com.br` (já estão assim desde 2026-11-22).
 
-### 5. Lojas (pendência 25)
+### 5. Abrir o site para o Google
+
+- [ ] Em `src/lib/seo.ts`, `SEARCH_INDEXING_ENABLED = true`; no `index.html`, `<meta name="robots" content="index, follow" />`; no `public/robots.txt`, tirar o `#` da linha `Sitemap:` (o teste `src/test/seo.test.ts` confere os três juntos). Publicar na Lovable.
+- [ ] Google Search Console: propriedade de domínio `solivsaude.com.br` (registro TXT no Registro.br, nome vazio) e enviar `sitemap.xml`. Opcional: Bing Webmaster Tools (importa do Search Console).
+
+### 6. Lojas (pendência 25)
 
 - [ ] Enviar Android (produção no Play) e iOS (App Store) para revisão, com a ficha da loja (descrição, capturas, política de privacidade em `https://solivsaude.com.br/privacidade`).
 
@@ -144,6 +154,7 @@ Em 2026-11-22 o banco tinha 20 contas (13 pacientes, 6 psicólogos), 27 consulta
   1. Grafana → **Observability → Frontend → Soliv → Settings** → em **CORS allowed origins**, adicionar o endereço publicado (ex.: `https://soliv.lovable.app` ou `https://app.SEU-DOMINIO`). Sem isso o navegador bloqueia o envio dos erros do site.
   2. Grafana → **Testing & synthetics → Synthetics → Add new check → API Endpoint**: job name `soliv-site`, `GET` no endereço publicado, status válido `2xx`, **um local só** (o mesmo das outras checagens), frequência **2 min**, alerta de falha ligado.
 - **Como conferir:** a checagem `soliv-site` verde em Synthetics → Checks; abrir o site publicado e ver a sessão aparecer em Frontend → Soliv em alguns minutos.
+- **Feito em 2026-11-23:** passos 1 e 2 (Allowed origins com `https://solivsaude.com.br`; checagem `soliv-site`, GET, 2xx, 2 min, São Paulo, em 100%). Falta só ver a primeira sessão do site em Frontend → Soliv depois do próximo Publish na Lovable.
 - **Registrado em:** 2026-11-12.
 
 #### 30. Memória do banco e conferências do monitoramento
@@ -155,6 +166,7 @@ Em 2026-11-22 o banco tinha 20 contas (13 pacientes, 6 psicólogos), 27 consulta
   3. **Synthetics → Checks:** `soliv-backend` e `soliv-login` verdes, cada uma rodando de **um local só** (não Calgary nem vários).
   4. **Cost management → Usage** depois de 1 dia: *Metrics active series* abaixo de 5 mil (o Free tem 10 mil); sessões, logs e execuções das checagens dentro das cotas grátis (`docs/monitoramento-grafana.md`, seção 7).
 - **Feito em 2026-11-22 (plano Pro do Supabase):** banco passou de **Nano (0,5 GB)** para **Micro (1 GB de RAM, 2 CPUs compartilhadas)**, pago pelo crédito de compute do Pro, sem custo a mais; Postgres atualizado de 17.11 para **17.12**. Conferido pela API: projeto `ACTIVE_HEALTHY`, `shared_buffers` 256 MB, 60 conexões diretas (200 pelo pooler). Falta olhar o swap no Grafana com o Micro (passo 1); se seguir acima de 80%, o próximo é o Small (~US$ 15/mês, cobrado à parte).
+- **Medido em 2026-11-23 (métricas do Supabase, ~4 h depois da troca para o Micro):** RAM 904 MiB, 557 MiB disponíveis; swap 143 MiB de 1 GiB (**14%**); CPU ~97% ociosa nas 2 CPUs. Resolvido o problema de memória; falta só medir de novo perto do lançamento, já com uso, e os passos 3 e 4 (checagens e cotas do Grafana).
 - **Como conferir:** swap abaixo de 80% e CPU folgada no painel; as duas checagens verdes; uso dentro do plano gratuito.
 - **Registrado em:** 2026-11-12.
 

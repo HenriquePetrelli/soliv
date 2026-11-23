@@ -4,6 +4,12 @@
 
 export const SITE_URL = 'https://solivsaude.com.br';
 
+// Desligado até o lançamento: nenhuma página aparece no Google, para o público
+// não chegar ao cadastro antes da hora. No lançamento, trocar para `true`, pôr
+// de volta "index, follow" no index.html e a linha Sitemap no robots.txt
+// (lista B de docs/pendencias-antes-do-lancamento.md).
+export const SEARCH_INDEXING_ENABLED = false;
+
 export const DEFAULT_TITLE = 'Soliv — Bem-estar Emocional';
 export const DEFAULT_DESCRIPTION =
   'Soliv conecta pacientes e psicólogos para cuidar do bem-estar emocional com atendimentos online, sons, respiração guiada e SOS.';
@@ -57,7 +63,8 @@ export function getPageSeo(pathname: string) {
   const page = PUBLIC_PAGES[path];
   return {
     path,
-    indexable: Boolean(page),
+    isPublic: Boolean(page),
+    indexable: Boolean(page) && SEARCH_INDEXING_ENABLED,
     title: page?.title ?? DEFAULT_TITLE,
     description: page?.description ?? DEFAULT_DESCRIPTION,
     canonical: `${SITE_URL}${path === '/' ? '/' : path}`,

@@ -1,5 +1,7 @@
-# Só as páginas abertas sem login entram na busca (lista em src/lib/seo.ts).
-# As telas do app pedem login e também levam "noindex".
+# Até o lançamento o site fica fora do Google: as páginas levam "noindex"
+# (src/lib/seo.ts e index.html). O Allow abaixo deixa o Google ler esse aviso;
+# bloquear tudo aqui faria os endereços poderem aparecer na busca sem descrição.
+# No lançamento, descomentar a linha Sitemap (lista B das pendências).
 User-agent: *
 Allow: /
 Disallow: /admin
@@ -18,4 +20,4 @@ Disallow: /reset-password
 Disallow: /subscription-
 Disallow: /avulso/
 
-Sitemap: https://solivsaude.com.br/sitemap.xml
+# Sitemap: https://solivsaude.com.br/sitemap.xml
