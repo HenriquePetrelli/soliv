@@ -105,3 +105,11 @@ describe('cadastro do psicólogo', () => {
     expect(result.error).toMatch(/código de convite/);
   });
 });
+
+describe('recusa do banco', () => {
+  it('mostra a frase do banco em português', async () => {
+    const { getAuthErrorMessage } = await import('@/utils/errorMessage');
+    const fromDb = { code: 'P0001', message: 'Código de convite inválido. Confira com quem te convidou.', hint: 'signup_invite_code_required' };
+    expect(getAuthErrorMessage(fromDb, 'genérica')).toBe('Código de convite inválido. Confira com quem te convidou.');
+  });
+});
