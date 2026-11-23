@@ -52,10 +52,11 @@
     </style>
 
     <!-- SEO: o endereço oficial é solivsaude.com.br (as cópias em lovable.app
-         apontam para ele). As telas com login trocam robots para noindex
-         (src/lib/seo.ts). -->
+         apontam para ele). Até o lançamento o site fica fora do Google
+         (noindex); no lançamento, trocar para "index, follow" junto com
+         SEARCH_INDEXING_ENABLED em src/lib/seo.ts. -->
     <link rel="canonical" href="https://solivsaude.com.br/" />
-    <meta name="robots" content="index, follow" />
+    <meta name="robots" content="noindex, nofollow" />
 
     <!-- Open Graph (WhatsApp, Facebook, LinkedIn): esses leitores não rodam
          JavaScript, então valem os valores daqui. -->

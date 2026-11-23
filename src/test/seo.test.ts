@@ -1,14 +1,15 @@
 import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { getPageSeo, PUBLIC_PAGES, SITE_URL } from '@/lib/seo';
+import { getPageSeo, PUBLIC_PAGES, SEARCH_INDEXING_ENABLED, SITE_URL } from '@/lib/seo';
 
 const read = (p: string) => readFileSync(resolve(__dirname, '../..', p), 'utf8');
 
 describe('SEO das rotas', () => {
-  it('páginas públicas indexáveis, com canonical no domínio', () => {
+  it('páginas públicas com canonical no domínio; no Google só quando a busca estiver ligada', () => {
     const seo = getPageSeo('/patient-signup/');
-    expect(seo.indexable).toBe(true);
+    expect(seo.isPublic).toBe(true);
+    expect(seo.indexable).toBe(SEARCH_INDEXING_ENABLED);
     expect(seo.canonical).toBe(`${SITE_URL}/patient-signup`);
     expect(getPageSeo('/').canonical).toBe(`${SITE_URL}/`);
   });
@@ -16,6 +17,18 @@ describe('SEO das rotas', () => {
   it('telas com login ficam fora da busca', () => {
     for (const p of ['/home', '/sos', '/admin-dashboard', '/psychologist-dashboard', '/consultation-call/abc']) {
       expect(getPageSeo(p).indexable).toBe(false);
+    }
+  });
+
+  it('index.html e robots.txt seguem a chave da busca', () => {
+    const html = read('index.html');
+    const robots = read('public/robots.txt');
+    if (SEARCH_INDEXING_ENABLED) {
+      expect(html).toContain('<meta name="robots" content="index, follow" />');
+      expect(robots).toMatch(/^Sitemap: /m);
+    } else {
+      expect(html).toContain('<meta name="robots" content="noindex, nofollow" />');
+      expect(robots).not.toMatch(/^Sitemap: /m);
     }
   });
 
