@@ -63,10 +63,12 @@ Grafana Cloud → **Testing & synthetics → Synthetics → Add new check → AP
 
 | Checagem | Endereço | Frequência | Esperado | Execuções/mês |
 |---|---|---|---|---|
-| Site (**criar no dia da publicação**, pendência 28) | endereço publicado do site | 2 min | status 200 | ~21.600 |
-| Backend + banco | `https://ihrrgmmsfuvlasmzdmwf.supabase.co/functions/v1/health` | 2 min | status 200 e corpo contém `"ok"` | ~21.600 |
+| Site (`soliv-site`, pendência 28) | `https://solivsaude.com.br` | 2 min | status 200 | ~21.600 |
+| Backend + banco | `https://ihrrgmmsfuvlasmzdmwf.supabase.co/functions/v1/health` | 2 min | status 200 (opcional: regra de corpo, ver abaixo) | ~21.600 |
 | Login (Supabase Auth) | `https://ihrrgmmsfuvlasmzdmwf.supabase.co/auth/v1/health` com o cabeçalho `apikey: <chave anon>` | 5 min | status 200 | ~8.600 |
 | **Total** | | | | **~52 mil de 100 mil grátis** |
+
+**Regra de corpo (Regexp validation):** o Grafana **reprova quando o corpo bate** com a expressão ("Check fails if condition matches regexp"). Para exigir `"status":"ok"` no corpo, marque **Invert** na regra; sem o Invert a checagem fica DOWN o tempo todo com "Body matched regular expression" (aconteceu na `soliv-backend` em 2026-11-23). O status 200 já basta: a `health` devolve 503 quando o banco não responde.
 
 Cuidado com a conta: **cada local a mais multiplica** as execuções. 3 checagens a cada 1 min em 3 locais dariam ~390 mil e sairiam do Free (no Free, as checagens param). Com a tabela acima, sobra margem para mais uma checagem quando o domínio próprio existir.
 
