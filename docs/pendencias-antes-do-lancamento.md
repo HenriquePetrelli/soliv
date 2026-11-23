@@ -2,7 +2,7 @@
 
 O que falta para o app ficar pronto, em duas listas:
 
-- **Lista A — Agora, no ambiente de teste:** o que dá para fazer e testar já, sem afetar ninguém.
+- **Lista A — Agora, no ambiente de teste:** o que dá para fazer já, sem afetar ninguém. Os testes ficam em `docs/roteiro-de-testes.md`, não aqui.
 - **Lista B — No lançamento (virar produção):** o que só se liga no dia de abrir o app ao público: Stripe real, Supabase em produção, lojas etc.
 
 Ao resolver um item, marque o quadradinho, atualize o detalhe da pendência e, quando ela acabar inteira, mova-a para "Resolvidas" com a data e o que foi feito.
@@ -12,14 +12,6 @@ Ao resolver um item, marque o quadradinho, atualize o detalhe da pendência e, q
 > **Passo a passo das configurações externas:** `docs/guia-configuracoes-externas.md`.
 
 ## Lista A — Agora, no ambiente de teste
-
-### Testes do que já está pronto
-
-- [ ] **E-mails (pendências 2 e 6):** com e-mails de fora da equipe, cadastrar um paciente e um psicólogo, receber o link em português com a logo e o remetente "Soliv", confirmar e entrar; pedir "Esqueci minha senha"; cadastrar com `senha123` e ver a senha recusada.
-- [ ] **Transcrição (pendência 32):** consulta de teste de 1 minuto; conferir os Logs da `transcribe-call-chunk` (sem erro do gateway nem "recusou reasoning_effort") e o custo por requisição em More → AI da Lovable. Roteiro `s03-70` a `s03-75`.
-- [ ] **Atendimentos no admin (pendência 33):** roteiro `s17-35` a `s17-39`.
-- [ ] **CRP no CFP (pendência 31):** testar o atalho "Soliv: ler CFP" no site real e verificar os 5 psicólogos aprovados.
-- [ ] **Pagamento e vídeo no celular (pendência 19, resolvida, faltou isto):** checkout do Stripe de teste pelo celular (cartão, 3-D Secure, volta ao app) e uma chamada de vídeo real. Roteiro `s06-21` a `s06-24` e `s03-42`.
 
 ### Monitoramento
 
@@ -70,12 +62,6 @@ Em 2026-11-22 o banco tinha 20 contas (13 pacientes, 6 psicólogos), 27 consulta
 ### 5. Lojas (pendência 25)
 
 - [ ] Enviar Android (produção no Play) e iOS (App Store) para revisão, com a ficha da loja (descrição, capturas, política de privacidade em `https://solivsaude.com.br/privacidade`).
-
-### 6. Logo depois de abrir
-
-- [ ] Assinar um plano com cartão real e cancelar dentro dos 7 dias (o reembolso sai automático).
-- [ ] Grafana: checagens verdes, nenhum alerta, erros do site chegando em Frontend → Soliv.
-- [ ] Logs do webhook do Stripe sem falha.
 
 ## Detalhes das pendências
 
