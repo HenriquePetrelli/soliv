@@ -25,9 +25,9 @@ export const tokenAal = (authHeader: string | null | undefined): string | null =
 export const adminMfaOk = (authHeader: string | null | undefined): boolean => tokenAal(authHeader) === "aal2";
 
 /**
- * Pode seguir com a ação de admin: token com o código (aal2) ou cadastro com
- * código de convite ligado, quando o código do autenticador não é pedido
- * (public.admin_mfa_required, que segue app_settings.signup_invite_code). Na dúvida (erro ao ler o ambiente), exige o código.
+ * Pode seguir com a ação de admin: token com o código (aal2) ou ambiente de
+ * teste, quando o código do autenticador não é pedido
+ * (public.admin_mfa_required, que segue app_settings.environment). Na dúvida (erro ao ler o ambiente), exige o código.
  */
 export const adminMfaSatisfied = async (authHeader: string | null | undefined): Promise<boolean> => {
   if (adminMfaOk(authHeader)) return true;

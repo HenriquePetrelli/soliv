@@ -4,9 +4,9 @@ import { supabase } from '@/integrations/supabase/client';
 export const ADMIN_MFA_PATH = '/admin/verificacao';
 
 /**
- * O código do app autenticador é exigido do admin? Só com o cadastro aberto:
- * enquanto o cadastro pede o código de convite (app_settings.signup_invite_code),
- * a senha basta. Na dúvida, exige.
+ * O código do app autenticador é exigido do admin? Só em produção
+ * (app_settings.environment = 'production'); em 'test', a senha basta. Na
+ * dúvida, exige.
  */
 export const isAdminMfaRequired = async (): Promise<boolean> => {
   try {
@@ -20,8 +20,8 @@ export const isAdminMfaRequired = async (): Promise<boolean> => {
 
 /**
  * True se o admin pode usar o painel nesta sessão: já passou pela verificação
- * em duas etapas (nível "aal2") ou o cadastro pede o código de convite, quando
- * o código do autenticador não é pedido. Em produção, o banco e as funções de admin só aceitam o admin com
+ * em duas etapas (nível "aal2") ou o ambiente é 'test', quando o código do
+ * autenticador não é pedido. Em produção, o banco e as funções de admin só aceitam o admin com
  * aal2; com a senha sozinha (aal1), a conta não acessa nada do painel.
  */
 export const hasAdminMfaSession = async (): Promise<boolean> => {
