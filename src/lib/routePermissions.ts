@@ -2,6 +2,7 @@
 export const ROUTE_PERMISSIONS = {
   public: [
     '/',
+    '/entrar',
     '/signup-type',
     '/patient-signup',
     '/psychologist-signup',

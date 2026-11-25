@@ -4,7 +4,7 @@ Documento vivo. Descreve funcionalidades e regras de negócio da plataforma. Dev
 
 Para cada funcionalidade, o passo a passo, como validar, o status e os problemas comuns ficam nas fichas de `docs/fluxos/` (comece pelo `docs/fluxos/README.md`).
 
-Última atualização: 2026-09-20
+Última atualização: 2026-11-25
 
 ---
 
@@ -26,6 +26,8 @@ Soliv é uma plataforma de saúde mental que conecta pacientes a psicólogos por
 | Paciente | Cadastro público (`/patient-signup`) | `/home` |
 | Psicólogo | Cadastro público (`/psychologist-signup`), sujeito a aprovação | `/psychologist-dashboard` |
 | Admin | Conta criada administrativamente | `/admin-dashboard` |
+
+Entrada pública: no navegador (computador e celular), `/` é a página de apresentação (`src/pages/Landing.tsx`), com o SOS em destaque (abertura e seção própria: passo a passo, vídeo ou mensagem, garantias e telefones de emergência), seguido de recursos, comunidade de apoio, hábitos, consultas, autocuidado, progresso, segurança, planos, área do psicólogo, dúvidas e CVV 188/SAMU 192 e o login fica em `/entrar`. No app instalado (Android/iOS), `/` abre direto o login (`src/pages/RootEntry.tsx`), como nos apps das grandes empresas. Botões "Entrar"/"Fazer login" e o link de confirmação do e-mail usam `LOGIN_PATH` (`/entrar`); "Voltar ao início" e as saídas da conta continuam indo para `/`.
 
 Regras:
 - Psicólogo só atende após aprovação do admin; CRP é único por profissional.

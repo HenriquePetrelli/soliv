@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { LOGIN_PATH } from '@/lib/authPaths';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -305,7 +306,7 @@ const [formData, setFormData] = useState({
       }
 
       // Registro com Supabase Auth
-      const redirectUrl = `${window.location.origin}/`;
+      const redirectUrl = `${window.location.origin}${LOGIN_PATH}`;
       
       // Os dados do paciente vão junto com o cadastro e o banco cria tudo numa
       // operação só (antes era uma segunda chamada depois do login, que falhava
@@ -719,7 +720,7 @@ const { error: profileError } = await supabase
           <div className="text-center">
             <button
               type="button"
-              onClick={() => navigate("/")}
+              onClick={() => navigate(LOGIN_PATH)}
               className="text-sm text-muted-foreground hover:text-foreground transition-colors"
             >
               Já tem uma conta? Faça login

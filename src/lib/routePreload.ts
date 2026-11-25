@@ -18,6 +18,7 @@ type Loader = () => Promise<unknown>;
 
 const page = {
   Index: () => import("@/pages/Index"),
+  RootEntry: () => import("@/pages/RootEntry"),
   SignupType: () => import("@/pages/SignupType"),
   PatientSignUp: () => import("@/pages/PatientSignUp"),
   PsychologistSignUpPublic: () => import("@/pages/PsychologistSignUpPublic"),
@@ -72,7 +73,8 @@ const page = {
 
 /** Rota do App (mesma escrita do `path`) e o código da tela dela. */
 export const ROUTE_LOADERS: [string, Loader][] = [
-  ["/", page.Index],
+  ["/", page.RootEntry],
+  ["/entrar", page.Index],
   ["/signup-type", page.SignupType],
   ["/patient-signup", page.PatientSignUp],
   ["/psychologist-signup", page.PsychologistSignUpPublic],

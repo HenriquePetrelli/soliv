@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { LOGIN_PATH } from '@/lib/authPaths';
 import { useNavigate } from "react-router-dom";
 import InputMask from 'react-input-mask';
 import type { InputHTMLAttributes } from 'react';
@@ -229,7 +230,7 @@ const PsychologistSignUpPublic = () => {
             </CardHeader>
             <CardContent className="space-y-4">
               <Button 
-                onClick={() => navigate('/')}
+                onClick={() => navigate(LOGIN_PATH)}
                 className="w-full"
               >
                 Fazer Login
@@ -506,7 +507,7 @@ const PsychologistSignUpPublic = () => {
 
         <div className="text-center">
           <button
-            onClick={() => navigate("/")}
+            onClick={() => navigate(LOGIN_PATH)}
             className="text-sm text-muted-foreground hover:text-foreground transition-colors"
           >
             Já tem uma conta? Faça login aqui

@@ -15,7 +15,7 @@ const renderPage = () =>
     <MemoryRouter initialEntries={['/reset-password']}>
       <Routes>
         <Route path="/reset-password" element={<ResetPassword />} />
-        <Route path="/" element={<p>Tela de login</p>} />
+        <Route path="/entrar" element={<p>Tela de login</p>} />
       </Routes>
     </MemoryRouter>,
   );

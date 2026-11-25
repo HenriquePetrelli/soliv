@@ -57,6 +57,7 @@ const AccessLogger = lazy(() => import("./components/AccessLogger"));
 
 // Lazy load all pages for better performance
 const Index = lazy(() => import("./pages/Index"));
+const RootEntry = lazy(() => import("./pages/RootEntry"));
 const SignupType = lazy(() => import("./pages/SignupType"));
 const PatientSignUp = lazy(() => import("./pages/PatientSignUp"));
 const PsychologistSignUpPublic = lazy(() => import("./pages/PsychologistSignUpPublic"));
@@ -149,7 +150,13 @@ const App = () => {
 
                     <Routes>
                   {/* Rotas Públicas */}
+                  {/* "/": apresentação no navegador; login no app instalado */}
                   <Route path="/" element={
+                    <RouteGuard allowedUserTypes={['public']}>
+                      <RootEntry />
+                    </RouteGuard>
+                  } />
+                  <Route path="/entrar" element={
                     <RouteGuard allowedUserTypes={['public']}>
                       <Index />
                     </RouteGuard>

@@ -14,5 +14,5 @@
   - [x] Site fora do Google até o lançamento (2026-11-23): `noindex` em todas as páginas e sem a linha Sitemap no `robots.txt` (`SEARCH_INDEXING_ENABLED` em `src/lib/seo.ts`). Ligar no lançamento (lista B das pendências).
   - [ ] No lançamento, Google Search Console: adicionar `solivsaude.com.br` como propriedade de domínio (registro TXT no DNS do Registro.br) e enviar `https://solivsaude.com.br/sitemap.xml`. Fazer o mesmo no Bing Webmaster Tools (dá para importar do Search Console).
   - [ ] Conferir a prévia do link no WhatsApp e no [Sharing Debugger do Facebook](https://developers.facebook.com/tools/debug/) depois de publicar.
-  - [ ] Decidir se haverá uma página de apresentação: hoje a página inicial é o login, com pouco texto para o Google entender o que é o Soliv e para quem.
+  - [x] Página de apresentação (2026-11-25): `/` no navegador (computador e celular) mostra a apresentação (`src/pages/Landing.tsx`); o login fica em `/entrar` (`LOGIN_PATH`, `src/lib/authPaths.ts`). No app instalado (Android/iOS) `/` abre direto o login (`src/pages/RootEntry.tsx`). Teste: `src/test/landing.test.tsx`.
   - [ ] Página nas lojas (nome, descrição curta e longa, palavras-chave, capturas de tela) quando os apps forem publicados (pendência 25).
