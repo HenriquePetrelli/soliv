@@ -1,0 +1,14 @@
+-- Assinatura: o próprio paciente não altera mais a linha dele em subscribers
+--
+-- A regra "Users can update their own subscription SOS usage" deixava qualquer
+-- conta logada mudar QUALQUER coluna da própria linha (plano, subscribed,
+-- contadores de SOS e de consultas do mês) chamando o Supabase direto, sem
+-- passar pelo Stripe. A regra de RLS limita a linha, não as colunas.
+--
+-- Uma migration de 18/09 já a removia, mas nunca rodou na produção, e a
+-- varredura de 07/11 recriou a regra ao unificar as políticas.
+--
+-- Nada no app depende dela: toda escrita em subscribers passa por função com
+-- service role (check-subscription, manage-subscription, mark-sos-used,
+-- admin-delete-patient), que ignora RLS.
+DROP POLICY IF EXISTS "Users can update their own subscription SOS usage" ON public.subscribers;

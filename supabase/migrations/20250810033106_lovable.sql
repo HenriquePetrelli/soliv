@@ -1,41 +1,30 @@
--- Update create_psychologist_profile function to include area_atendimento
+-- Remove accepts_presential usage from DB
+
+-- 1) Drop column from psychologists
+ALTER TABLE public.psychologists
+  DROP COLUMN IF EXISTS accepts_presential;
+
+-- 2) Update stored procedure to remove accepts_presential parameter
 CREATE OR REPLACE FUNCTION public.create_psychologist_profile(
-  p_user_id uuid, 
-  p_full_name text, 
-  p_email text, 
-  p_crp_number text, 
-  p_specialization text, 
-  p_bio text, 
-  p_state text, 
-  p_city text, 
-  p_address text DEFAULT NULL::text, 
-  p_document_url text DEFAULT NULL::text, 
-  p_cpf text DEFAULT NULL::text, 
-  p_area_atendimento text DEFAULT NULL::text
+  p_user_id uuid,
+  p_full_name text,
+  p_email text,
+  p_crp_number text,
+  p_specialization text,
+  p_bio text,
+  p_state text,
+  p_city text,
+  p_address text DEFAULT NULL,
+  p_document_url text DEFAULT NULL,
+  p_cpf text DEFAULT NULL,
+  p_professional_email text DEFAULT NULL
 )
 RETURNS json
 LANGUAGE plpgsql
-SECURITY DEFINER 
-SET search_path TO 'public'
-AS $function$
+SECURITY DEFINER
+SET search_path = ''
+AS $$
 BEGIN
-  -- Insert into profiles table
-  INSERT INTO public.profiles (
-    user_id,
-    user_type,
-    full_name,
-    cpf,
-    crp,
-    specialty
-  ) VALUES (
-    p_user_id,
-    'psychologist'::user_type,
-    p_full_name,
-    p_cpf,
-    p_crp_number,
-    p_specialization
-  );
-
   -- Insert into psychologists table
   INSERT INTO public.psychologists (
     user_id,
@@ -49,7 +38,7 @@ BEGIN
     address,
     document_url,
     cpf,
-    area_atendimento,
+    professional_email,
     approval_status
   ) VALUES (
     p_user_id,
@@ -63,7 +52,7 @@ BEGIN
     p_address,
     p_document_url,
     p_cpf,
-    p_area_atendimento,
+    p_professional_email,
     'pending'
   );
 
@@ -74,7 +63,7 @@ BEGIN
     submitted_at
   ) VALUES (
     p_user_id,
-    'pending'::registration_status,
+    'pending',
     now()
   );
 
@@ -89,4 +78,4 @@ EXCEPTION
       'error', SQLERRM
     );
 END;
-$function$;
+$$;
