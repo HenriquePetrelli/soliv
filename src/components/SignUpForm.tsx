@@ -353,6 +353,15 @@ const [formData, setFormData] = useState({
         return;
       }
 
+      // Com a confirmação de e-mail ligada, o Supabase não diz que o e-mail já
+      // existe: devolve um usuário sem identidades e não cria nada. Antes a
+      // tela mostrava "Conta criada!" e a pessoa esperava um e-mail que não vinha.
+      if (Array.isArray(data.user.identities) && data.user.identities.length === 0) {
+        toast.error("Este e-mail já está cadastrado. Entre com ele ou recupere a senha.");
+        setErrors({ email: true });
+        return;
+      }
+
       // O perfil e os dados do paciente são criados pelo banco junto com a
       // conta (gatilho handle_new_user).
       if (!isPatient) {
