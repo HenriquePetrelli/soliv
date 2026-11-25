@@ -81,6 +81,12 @@ export class PsychologistService {
         throw authError ?? new Error('Falha ao criar usuário');
       }
 
+      // E-mail já cadastrado: com a confirmação ligada, o Supabase devolve um
+      // usuário sem identidades e não cria nada (nem há o que desfazer).
+      if (Array.isArray(authData.user.identities) && authData.user.identities.length === 0) {
+        return { success: false, error: 'Este e-mail já está cadastrado. Entre com ele ou recupere a senha.' };
+      }
+
       userId = authData.user.id;
 
       // O envio do documento e o perfil precisam da pessoa logada. Com a

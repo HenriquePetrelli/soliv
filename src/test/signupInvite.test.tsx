@@ -11,6 +11,7 @@ import { PsychologistService } from '@/services/psychologist.service';
 import {
   checkSignupInviteCode,
   normalizeSignupInviteCode,
+  resetSignupInviteCache,
   signupInviteErrorMessage,
   signupInviteMetadata,
 } from '@/lib/signupInvite';
@@ -18,6 +19,7 @@ import {
 const CODE = 'SOLIV-TESTE-2026';
 
 beforeEach(() => {
+  resetSignupInviteCache();
   fakeDb.rpcHandlers = {
     signup_invite_required: () => ({ data: true, error: null }),
     check_signup_invite_code: (_db, params) => ({
@@ -46,6 +48,28 @@ describe('código de convite: regras', () => {
 
     expect(signupInviteErrorMessage('too_many_attempts')).toMatch(/15 minutos/);
     expect(signupInviteErrorMessage('invalid')).toMatch(/inválido/);
+  });
+});
+
+describe('código de convite: sem travar quem tem o código certo', () => {
+  it('código certo é conferido no banco uma vez só (não gasta tentativas a cada envio)', async () => {
+    const check = vi.fn((_db: unknown, params: Record<string, unknown>) => ({
+      data: params.p_code === CODE ? { valid: true } : { valid: false, error: 'invalid' },
+      error: null,
+    }));
+    fakeDb.rpcHandlers.check_signup_invite_code = check as never;
+    for (let i = 0; i < 5; i++) {
+      expect(await checkSignupInviteCode(' soliv-teste-2026 ')).toEqual({ valid: true });
+    }
+    expect(check).toHaveBeenCalledTimes(1);
+  });
+
+  it('falha de rede passageira: pergunta de novo antes de dizer "tente de novo"', async () => {
+    let calls = 0;
+    fakeDb.rpcHandlers.check_signup_invite_code = () =>
+      ++calls === 1 ? { data: null, error: { message: 'Failed to fetch' } } : { data: { valid: true }, error: null };
+    expect(await checkSignupInviteCode(CODE)).toEqual({ valid: true });
+    expect(calls).toBe(2);
   });
 });
 
@@ -103,6 +127,34 @@ describe('cadastro do psicólogo', () => {
     expect(options.data.signup_invite_code).toBe(CODE);
     expect(result.success).toBe(false);
     expect(result.error).toMatch(/código de convite/);
+  });
+});
+
+describe('e-mail já cadastrado', () => {
+  it('psicólogo: avisa em vez de dizer que a conta foi criada', async () => {
+    const signUp = vi.fn(async () => ({
+      data: { user: { id: 'falso', identities: [] }, session: null },
+      error: null,
+    }));
+    (fakeSupabase.auth as Record<string, unknown>).signUp = signUp;
+    const result = await PsychologistService.signUpPsychologist(
+      {
+        email: 'ja@teste.local',
+        password: 'senhaForte123',
+        fullName: 'Psi Teste',
+        cpf: '12345678909',
+        crp: '06/123456',
+        specialty: 'Psicologia Clínica',
+        areaAtendimento: ['Ansiedade'],
+        bio: 'Psicóloga clínica com experiência em ansiedade e depressão em adultos.',
+        state: 'SP',
+        city: 'São Paulo',
+        inviteCode: CODE,
+      },
+      new File(['%PDF'], 'crp.pdf', { type: 'application/pdf' }),
+    );
+    expect(result.success).toBe(false);
+    expect(result.error).toMatch(/já está cadastrado/);
   });
 });
 

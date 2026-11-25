@@ -16,7 +16,7 @@ export const normalizeSignupInviteCode = (code: string): string => code.replace(
 export const signupInviteErrorMessage = (error: SignupInviteError): string => {
   switch (error) {
     case 'too_many_attempts':
-      return 'Muitas tentativas. Espere 15 minutos e tente de novo.';
+      return 'Muitos códigos errados em pouco tempo. Espere 15 minutos e tente de novo.';
     case 'unavailable':
       return 'Não foi possível conferir o código agora. Tente de novo.';
     default:
@@ -30,11 +30,36 @@ export const signupInviteMetadata = (code: string): Record<string, string> => {
   return normalized ? { [SIGNUP_INVITE_METADATA_KEY]: normalized } : {};
 };
 
+// Códigos que o banco já confirmou nesta aba: não pergunta de novo (o campo
+// confere ao sair e o formulário confere ao enviar; cada envio que volta por
+// outro campo errado conferia outra vez).
+const confirmedCodes = new Set<string>();
+
+/** Só para os testes. */
+export const resetSignupInviteCache = () => confirmedCodes.clear();
+
+type InviteRpcResult = { valid?: boolean; error?: SignupInviteError } | null;
+
+const askDatabase = async (code: string) => {
+  const { data, error } = await supabase.rpc('check_signup_invite_code', { p_code: code });
+  return { result: data as InviteRpcResult, failed: Boolean(error) || !data };
+};
+
 export async function checkSignupInviteCode(code: string): Promise<{ valid: boolean; error?: SignupInviteError }> {
-  const { data, error } = await supabase.rpc('check_signup_invite_code', { p_code: normalizeSignupInviteCode(code) });
-  const result = data as { valid?: boolean; error?: SignupInviteError } | null;
-  if (error || !result) return { valid: false, error: 'unavailable' };
-  if (result.valid) return { valid: true };
+  const normalized = normalizeSignupInviteCode(code);
+  if (confirmedCodes.has(normalized)) return { valid: true };
+
+  // Uma falha de rede passageira não deve virar "tente de novo": pergunta mais uma vez.
+  let { result, failed } = await askDatabase(normalized);
+  if (failed) {
+    await new Promise((resolve) => setTimeout(resolve, 600));
+    ({ result, failed } = await askDatabase(normalized));
+  }
+  if (failed || !result) return { valid: false, error: 'unavailable' };
+  if (result.valid) {
+    confirmedCodes.add(normalized);
+    return { valid: true };
+  }
   return { valid: false, error: result.error === 'too_many_attempts' ? 'too_many_attempts' : 'invalid' };
 }
 
