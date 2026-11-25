@@ -4,21 +4,14 @@ import { isPriorityTriage, sanitizeTriage } from "../_shared/sosTriage.ts";
 import { errorMessage } from '../_shared/errors.ts';
 import { monitored } from "../_shared/monitoring.ts";
 
-const getCorsHeaders = (origin: string | null) => {
-  // Check if origin is from Lovable domains or localhost
-  const isLovableOrigin = origin && (
-    origin.includes('sandbox.lovable.dev') ||
-    origin.includes('lovable.app') ||
-    origin.startsWith('http://localhost')
-  );
-  
-  return {
-    'Access-Control-Allow-Origin': isLovableOrigin ? origin : '*',
-    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-    'Access-Control-Allow-Methods': 'POST, GET, OPTIONS',
-    'Access-Control-Allow-Credentials': 'true'
-  };
-};
+// Login vai no cabeçalho Authorization (não em cookie): '*' sem credenciais,
+// como nas outras funções. Antes a origem era refletida com credenciais para
+// qualquer endereço que contivesse "lovable.app" (ex.: lovable.app.site-falso.com).
+const getCorsHeaders = (_origin: string | null) => ({
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Methods': 'POST, GET, OPTIONS',
+});
 
 serve(monitored("emergency-sos", async (req) => {
   const origin = req.headers.get('origin');

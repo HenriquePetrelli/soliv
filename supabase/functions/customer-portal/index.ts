@@ -2,6 +2,7 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { findCustomerId, newStripe } from "../_shared/stripe.ts";
 import { monitored } from "../_shared/monitoring.ts";
+import { appOrigin } from "../_shared/origin.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -40,7 +41,7 @@ serve(monitored("customer-portal", async (req) => {
     if (!customerId) throw new Error("No Stripe customer found for this user");
     logStep("Found Stripe customer", { customerId });
 
-    const origin = req.headers.get("origin") || "http://localhost:3000";
+    const origin = appOrigin(req);
     const portalSession = await stripe.billingPortal.sessions.create({
       customer: customerId,
       return_url: `${origin}/subscription-plans`,

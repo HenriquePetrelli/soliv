@@ -2,22 +2,14 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.52.1";
 import { monitored } from "../_shared/monitoring.ts";
 
-const getCorsHeaders = (origin: string | null) => {
-  // Check if origin is from Lovable domains or localhost
-  const isLovableOrigin = origin && (
-    origin.includes('sandbox.lovable.dev') ||
-    origin.includes('lovable.app') ||
-    origin.includes('preview--soliv.lovable.app') ||
-    origin.startsWith('http://localhost')
-  );
-  
-  return {
-    'Access-Control-Allow-Origin': isLovableOrigin ? origin : '*',
-    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-    'Access-Control-Allow-Methods': 'POST, OPTIONS',
-    'Access-Control-Allow-Credentials': 'true'
-  };
-};
+// Login vai no cabeçalho Authorization (não em cookie): '*' sem credenciais,
+// como nas outras funções. Antes a origem era refletida com credenciais para
+// qualquer endereço que contivesse "lovable.app" (ex.: lovable.app.site-falso.com).
+const getCorsHeaders = (_origin: string | null) => ({
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+});
 
 serve(monitored("emergency-cleanup", async (req) => {
   const origin = req.headers.get('origin');

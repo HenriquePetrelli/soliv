@@ -4,6 +4,7 @@ import { EXTRA_LABELS, EXTRA_PRICES, parseExtraKind, type ExtraKind } from "../_
 import { EXTRA_PRICE_IDS, findCustomerId, newStripe } from "../_shared/stripe.ts";
 import { grantFromPaymentIntent as grant } from "../_shared/extras.ts";
 import { monitored } from "../_shared/monitoring.ts";
+import { appOrigin } from "../_shared/origin.ts";
 
 // Atendimento avulso (SOS ou consulta agendada), cobrado na hora.
 //   - action "buy": com cartão salvo no Stripe, cobra direto e devolve
@@ -151,7 +152,7 @@ Deno.serve(monitored("buy-extra", async (req) => {
       }
     }
 
-    const origin = req.headers.get("origin") ?? "";
+    const origin = appOrigin(req);
     const session = await stripe.checkout.sessions.create(
       {
         mode: "payment",
