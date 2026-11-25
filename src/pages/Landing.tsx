@@ -2,6 +2,10 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
   ArrowRight,
+  BellRing,
+  RefreshCw,
+  Trophy,
+  Zap,
   BadgeCheck,
   BookLock,
   Building2,
@@ -32,7 +36,9 @@ import LifeRing from '@/components/icons/LifeRingIcon';
 import Reveal from '@/components/landing/Reveal';
 import {
   BreathingScreen,
-  HomeScreen,
+  CommunityScreen,
+  HabitsScreen,
+  SosChatScreen,
   PhoneFrame,
   ProgressScreen,
   SosScreen,
@@ -48,32 +54,28 @@ import { cn } from '@/lib/utils';
  * como fazem Nubank, Headspace e Calm: quem baixou o app já decidiu usar.
  * Estrutura no padrão das grandes (Headspace, Calm, Zenklub, Nubank): promessa
  * clara com o produto à vista, prova de confiança logo abaixo, recursos,
- * como funciona, segurança, planos, perguntas frequentes e chamada final.
+ * SOS em destaque, comunidade, hábitos, como funciona, segurança, planos,
+ * perguntas frequentes e chamada final.
  */
 
 const NAV = [
+  { href: '#sos', label: 'SOS emocional' },
   { href: '#recursos', label: 'Recursos' },
-  { href: '#como-funciona', label: 'Como funciona' },
-  { href: '#seguranca', label: 'Segurança' },
+  { href: '#comunidade', label: 'Comunidade' },
+  { href: '#habitos', label: 'Hábitos' },
   { href: '#planos', label: 'Planos' },
   { href: '#psicologos', label: 'Para psicólogos' },
   { href: '#perguntas', label: 'Dúvidas' },
 ];
 
 interface Feature {
-  Icon: LucideIcon | typeof LifeRing;
+  Icon: LucideIcon;
   title: string;
   text: string;
   tone: string;
 }
 
 const FEATURES: Feature[] = [
-  {
-    Icon: LifeRing,
-    title: 'SOS emocional',
-    text: 'Num momento difícil, um toque chama um psicólogo online para uma conversa por vídeo de até 25 minutos.',
-    tone: 'bg-card',
-  },
   {
     Icon: Video,
     title: 'Consultas por vídeo',
@@ -112,8 +114,8 @@ const FEATURES: Feature[] = [
   },
   {
     Icon: Target,
-    title: 'Hábitos e metas',
-    text: 'Pequenas metas semanais e hábitos do dia a dia, no seu ritmo e sem cobrança.',
+    title: 'Melhorar hábitos',
+    text: 'Água, sono, movimento, remédio e até largar o cigarro ou o álcool, com lembretes discretos e contador de dias.',
     tone: 'bg-evolution-primary/10 text-evolution-primary dark:text-evolution-secondary',
   },
   {
@@ -124,14 +126,20 @@ const FEATURES: Feature[] = [
   },
   {
     Icon: Users,
-    title: 'Grupos de apoio',
-    text: 'Leia e compartilhe experiências por tema, com a opção de publicar como anônimo.',
+    title: 'Comunidade de apoio',
+    text: 'Depoimentos de outros pacientes por tema. Leia, compartilhe o que funcionou para você e publique como anônimo, se preferir.',
     tone: 'bg-accent text-primary',
   },
   {
     Icon: ClipboardList,
     title: 'Questionários',
     text: 'Questionários reconhecidos de ansiedade e humor para você e seu psicólogo acompanharem a evolução.',
+    tone: 'bg-accent text-primary',
+  },
+  {
+    Icon: Trophy,
+    title: 'Desafios de 7 dias',
+    text: 'Dormir melhor, respirar, gratidão, acalmar a ansiedade ou menos tela: uma semana de passos pequenos.',
     tone: 'bg-accent text-primary',
   },
   {
@@ -183,6 +191,18 @@ const FAQ = [
     a: 'Você toca no SOS e os psicólogos online recebem o pedido na hora. O primeiro que aceitar entra numa chamada de vídeo com você, de até 25 minutos. Em risco imediato, ligue para o CVV (188) ou o SAMU (192).',
   },
   {
+    q: 'Posso pedir o SOS por mensagem?',
+    a: 'Pode. Se você não consegue falar agora (no trabalho, perto de outras pessoas ou sem voz), escolha "Por mensagem" e o psicólogo conversa com você por escrito.',
+  },
+  {
+    q: 'E se o psicólogo cair no meio do SOS?',
+    a: 'A chamada tenta reconectar sozinha. Se ele não voltar, você pode chamar outro psicólogo na hora, e o SOS do mês volta para você.',
+  },
+  {
+    q: 'Os depoimentos da comunidade são anônimos?',
+    a: 'Se você quiser, sim: marque "Anônimo" ao publicar e seu nome não aparece. A equipe modera os depoimentos e qualquer pessoa pode denunciar um conteúdo.',
+  },
+  {
     q: 'Quem são os psicólogos?',
     a: 'Psicólogos com CRP ativo. Antes de atender, cada cadastro passa pela análise da nossa equipe, que confere o registro e os documentos.',
   },
@@ -192,7 +212,7 @@ const FAQ = [
   },
   {
     q: 'Posso usar de graça?',
-    a: 'Sim. O plano grátis já inclui respiração guiada e sons terapêuticos. Os planos pagos somam atendimento com psicólogo e liberam todos os recursos.',
+    a: 'Sim. O plano grátis inclui respiração guiada, sons terapêuticos, até 3 hábitos e a leitura da comunidade. O SOS e as consultas com psicólogo começam no plano Essencial.',
   },
   {
     q: 'Posso cancelar quando quiser?',
@@ -322,20 +342,24 @@ const Hero = () => (
       <div className="text-center lg:text-left">
         <Reveal>
           <span className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-accent px-3 py-1 text-sm font-medium text-accent-foreground">
-            <HeartHandshake className="h-4 w-4" aria-hidden="true" />
-            Bem-estar emocional, do seu jeito
+            <span className="relative flex h-2 w-2">
+              <span className="absolute inline-flex h-full w-full rounded-full bg-success opacity-60 animate-ping" />
+              <span className="relative inline-flex h-2 w-2 rounded-full bg-success" />
+            </span>
+            SOS emocional com psicólogos online
           </span>
         </Reveal>
         <Reveal delay={80}>
           <h1 className="mt-6 text-5xl sm:text-6xl lg:text-[3.5rem] lg:leading-[1.08] font-semibold tracking-tight text-foreground text-balance">
-            Um lugar seguro para{' '}
-            <span className="landing-gradient-text">cuidar da sua mente</span>
+            Ajuda emocional{' '}
+            <span className="landing-gradient-text">na hora em que você precisa</span>
           </h1>
         </Reveal>
         <Reveal delay={160}>
           <p className="mx-auto mt-6 max-w-lg text-lg sm:text-xl text-muted-foreground text-pretty lg:mx-0">
-            Psicólogos online quando você precisar, SOS emocional em minutos e ferramentas de
-            autocuidado para o dia a dia. Tudo num só app, com privacidade.
+            Num momento difícil, toque no SOS: um psicólogo online atende você por vídeo ou por
+            mensagem. E, no dia a dia, consultas, uma comunidade que acolhe, hábitos melhores e
+            pausas para respirar.
           </p>
         </Reveal>
         <Reveal delay={240}>
@@ -347,10 +371,15 @@ const Hero = () => (
               </Link>
             </Button>
             <Button asChild size="lg" variant="outline" className="h-12 w-full rounded-full px-7 text-base sm:w-auto">
-              <Link to={LOGIN_PATH}>Já tenho conta</Link>
+              <a href="#sos">
+                <LifeRing className="mr-1 h-5 w-5" />
+                Como funciona o SOS
+              </a>
             </Button>
           </div>
-          <p className="mt-4 text-sm text-muted-foreground">Plano grátis para sempre. Sem cartão de crédito.</p>
+          <p className="mt-4 text-sm text-muted-foreground">
+            Comece grátis, sem cartão. O SOS está nos planos a partir do Essencial.
+          </p>
         </Reveal>
       </div>
 
@@ -358,7 +387,7 @@ const Hero = () => (
         <div className="relative mx-auto w-fit">
           <div className="landing-float">
             <PhoneFrame>
-              <HomeScreen />
+              <SosScreen />
             </PhoneFrame>
           </div>
 
@@ -366,12 +395,12 @@ const Hero = () => (
             aria-hidden="true"
             className="absolute -left-48 top-[300px] hidden sm:flex items-center gap-2.5 rounded-2xl border border-border bg-card/95 px-3.5 py-3 shadow-lg backdrop-blur landing-float [animation-delay:1.5s]"
           >
-            <span className="grid h-9 w-9 place-items-center rounded-full bg-accent">
-              <BadgeCheck className="h-5 w-5 text-primary" />
+            <span className="grid h-9 w-9 place-items-center rounded-full bg-success/15">
+              <Check className="h-5 w-5 text-success" />
             </span>
             <span>
-              <span className="block text-sm font-semibold text-foreground">CRP verificado</span>
-              <span className="block text-xs text-muted-foreground">em todos os psicólogos</span>
+              <span className="block text-sm font-semibold text-foreground">Dra. Marina aceitou</span>
+              <span className="block text-xs text-muted-foreground">entrando na chamada…</span>
             </span>
           </div>
 
@@ -379,12 +408,12 @@ const Hero = () => (
             aria-hidden="true"
             className="absolute -right-40 top-16 hidden sm:flex items-center gap-2.5 rounded-2xl border border-border bg-card/95 px-3.5 py-3 shadow-lg backdrop-blur landing-float [animation-delay:3s]"
           >
-            <span className="grid h-9 w-9 place-items-center rounded-full bg-breathing-primary/15">
-              <Wind className="h-5 w-5 text-breathing-primary" />
+            <span className="grid h-9 w-9 place-items-center rounded-full bg-accent">
+              <MessageCircle className="h-5 w-5 text-primary" />
             </span>
             <span>
-              <span className="block text-sm font-semibold text-foreground">Respire comigo</span>
-              <span className="block text-xs text-muted-foreground">3 minutos para desacelerar</span>
+              <span className="block text-sm font-semibold text-foreground">Por vídeo ou mensagem</span>
+              <span className="block text-xs text-muted-foreground">você escolhe como falar</span>
             </span>
           </div>
         </div>
@@ -406,12 +435,197 @@ const TrustStrip = () => (
   </section>
 );
 
+const SOS_STEPS = [
+  {
+    Icon: LifeRing,
+    title: 'Toque no SOS',
+    text: 'Se quiser, marque o que está sentindo. Não é obrigatório: um toque já chama ajuda.',
+  },
+  {
+    Icon: MessageCircle,
+    title: 'Escolha como falar',
+    text: 'Por vídeo, ou por mensagem se você não pode falar agora: no trabalho, perto de alguém ou sem voz.',
+  },
+  {
+    Icon: BellRing,
+    title: 'Psicólogos recebem na hora',
+    text: 'Todos os psicólogos disponíveis são avisados, até com o app fechado. O primeiro que aceitar atende você.',
+  },
+  {
+    Icon: HeartHandshake,
+    title: 'Atendimento e cuidado depois',
+    text: 'Até 25 minutos de conversa. Depois, o psicólogo pode deixar um plano pós-crise, e no dia seguinte você recebe uma mensagem de cuidado.',
+  },
+];
+
+const SOS_PROMISES = [
+  { Icon: Wind, text: 'Enquanto espera, respire com o guia ou abra o seu plano de segurança.' },
+  { Icon: Zap, text: 'Pedidos de quem está em risco aparecem primeiro para os psicólogos.' },
+  { Icon: RefreshCw, text: 'Se o psicólogo cair, chame outro na hora. O SOS do mês volta para você.' },
+  { Icon: Phone, text: 'CVV 188, SAMU 192, Polícia 190 e Ligue 180 a um toque, sempre.' },
+];
+
+const SosSection = () => (
+  <section id="sos" className="scroll-mt-20 py-20 sm:py-28">
+    <div className="mx-auto max-w-6xl px-4 sm:px-6">
+      <div className="relative overflow-hidden rounded-[2.5rem] border border-primary/15 bg-calm px-5 py-14 sm:px-10 lg:px-14 lg:py-20">
+        <div aria-hidden="true" className="pointer-events-none absolute -left-24 -top-24 h-80 w-80 rounded-full bg-primary/15 blur-3xl" />
+        <div aria-hidden="true" className="pointer-events-none absolute -bottom-32 -right-20 h-96 w-96 rounded-full bg-primary-glow/15 blur-3xl" />
+
+        <div className="relative grid gap-14 lg:grid-cols-[1.05fr_1fr] lg:items-center">
+          <div>
+            <Reveal>
+              <span className="inline-flex items-center gap-2 rounded-full bg-card px-3 py-1 text-sm font-semibold text-primary shadow-sm">
+                <LifeRing className="h-5 w-5" /> SOS emocional
+              </span>
+              <h2 className="mt-5 text-4xl sm:text-5xl font-semibold text-foreground text-balance">
+                Na hora mais difícil, alguém atende você
+              </h2>
+              <p className="mt-5 text-lg text-muted-foreground text-pretty">
+                Sem procurar contato, sem marcar horário, sem explicar tudo antes. Você pede ajuda e um
+                psicólogo com CRP verificado conversa com você em poucos minutos.
+              </p>
+            </Reveal>
+
+            <ol className="mt-10 space-y-6">
+              {SOS_STEPS.map(({ Icon, title, text }, i) => (
+                <Reveal as="li" key={title} delay={i * 90} className="relative flex gap-4">
+                  {i < SOS_STEPS.length - 1 && (
+                    <span aria-hidden="true" className="absolute left-6 top-14 h-[calc(100%-2rem)] w-px bg-gradient-to-b from-primary/40 to-transparent" />
+                  )}
+                  <span className="relative grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-card shadow-md ring-1 ring-primary/10">
+                    <Icon className="h-6 w-6 text-primary" aria-hidden="true" />
+                  </span>
+                  <div className="pt-1">
+                    <h3 className="text-base font-semibold text-foreground">
+                      <span className="mr-1.5 text-primary tabular-nums">{i + 1}.</span>
+                      {title}
+                    </h3>
+                    <p className="mt-1 text-base text-muted-foreground">{text}</p>
+                  </div>
+                </Reveal>
+              ))}
+            </ol>
+          </div>
+
+          <Reveal delay={150} className="relative">
+            <div className="relative mx-auto w-fit">
+              <div className="landing-float">
+                <PhoneFrame>
+                  <SosChatScreen />
+                </PhoneFrame>
+              </div>
+              <div
+                aria-hidden="true"
+                className="absolute -left-44 top-4 hidden sm:flex items-center gap-3 rounded-2xl border border-border bg-card px-4 py-3 shadow-lg landing-float [animation-delay:1.5s]"
+              >
+                <span className="grid h-10 w-10 place-items-center rounded-xl bg-accent">
+                  <Video className="h-5 w-5 text-primary" />
+                </span>
+                <span>
+                  <span className="block text-sm font-semibold text-foreground">Por vídeo</span>
+                  <span className="block text-xs text-muted-foreground">cara a cara, até 25 min</span>
+                </span>
+              </div>
+              <div
+                aria-hidden="true"
+                className="absolute -right-24 -bottom-7 hidden sm:flex items-center gap-3 rounded-2xl border border-border bg-card px-4 py-3 shadow-lg landing-float [animation-delay:3s]"
+              >
+                <span className="grid h-10 w-10 place-items-center rounded-xl bg-accent">
+                  <MessageCircle className="h-5 w-5 text-primary" />
+                </span>
+                <span>
+                  <span className="block text-sm font-semibold text-foreground">Por mensagem</span>
+                  <span className="block text-xs text-muted-foreground">quando não dá para falar</span>
+                </span>
+              </div>
+            </div>
+          </Reveal>
+        </div>
+
+        <ul className="relative mt-14 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {SOS_PROMISES.map(({ Icon, text }, i) => (
+            <Reveal as="li" key={text} delay={i * 70} className="rounded-2xl border border-border bg-card/90 p-5 shadow-xs">
+              <Icon className="h-5 w-5 text-primary" aria-hidden="true" />
+              <p className="mt-3 text-sm leading-relaxed text-foreground">{text}</p>
+            </Reveal>
+          ))}
+        </ul>
+
+        <Reveal className="relative mt-10 flex flex-col items-center gap-3 text-center sm:flex-row sm:justify-center">
+          <Button asChild size="lg" className="h-12 w-full rounded-full px-7 text-base shadow-primary sm:w-auto">
+            <Link to="/patient-signup">
+              Quero ter o SOS comigo
+              <ArrowRight className="ml-1 h-4 w-4" aria-hidden="true" />
+            </Link>
+          </Button>
+          <p className="text-sm text-muted-foreground">1 SOS por mês nos planos Essencial, Flex e Completo.</p>
+        </Reveal>
+      </div>
+    </div>
+  </section>
+);
+
+const Community = () => (
+  <section id="comunidade" className="scroll-mt-20 bg-gradient-calm py-20 sm:py-28">
+    <div className="mx-auto max-w-6xl px-4 sm:px-6">
+      <Spotlight
+        eyebrow="Comunidade de apoio"
+        title="Você não é a única pessoa passando por isso"
+        text="Nos grupos de apoio, pacientes contam o que viveram e o que ajudou. Ler a experiência de alguém que entende pode aliviar, e contar a sua pode ajudar outra pessoa."
+        bullets={[
+          'Grupos por tema: ansiedade, pânico, ansiedade social, TOC, TEPT e outros',
+          'Publique com seu nome ou como anônimo, você escolhe',
+          'Marque "me ajudou" nos depoimentos que fizeram diferença',
+          'Moderação da equipe e denúncia em um toque, para ser um lugar seguro',
+          'Se um texto fala em se machucar, o app oferece o CVV e o SOS na hora',
+        ]}
+        figure={
+          <figure>
+            <PhoneFrame>
+              <CommunityScreen />
+            </PhoneFrame>
+            <figcaption className="mt-4 text-center text-xs text-muted-foreground">Tela ilustrativa, com depoimentos de exemplo.</figcaption>
+          </figure>
+        }
+        glow="bg-primary/15"
+      />
+    </div>
+  </section>
+);
+
+const Habits = () => (
+  <section id="habitos" className="scroll-mt-20 pt-20 sm:pt-28">
+    <div className="mx-auto max-w-6xl px-4 sm:px-6">
+      <Spotlight
+        reverse
+        eyebrow="Melhorar hábitos"
+        title="Pequenos hábitos que cuidam da mente"
+        text="Sono, água, movimento e remédio no horário fazem diferença no humor. O app ajuda você a acompanhar cada um, e também a largar o que faz mal."
+        bullets={[
+          'Hábitos do dia: água, sono, movimento, refeições, remédio, menos cafeína e menos tela',
+          'Largar um hábito: cigarro, álcool ou outro, com contador de dias ao vivo',
+          'Lembretes discretos e registro em um toque, mesmo sem internet',
+          'Gráfico de 7 dias, sequência e recorde de cada hábito',
+          'Só você vê: nem o psicólogo nem a equipe têm acesso',
+        ]}
+        figure={
+          <PhoneFrame>
+            <HabitsScreen />
+          </PhoneFrame>
+        }
+        glow="bg-evolution-primary/15"
+      />
+    </div>
+  </section>
+);
+
 const FeatureGrid = () => (
   <section id="recursos" className="scroll-mt-20 py-20 sm:py-28">
     <div className="mx-auto max-w-6xl px-4 sm:px-6">
       <SectionTitle
         eyebrow="Recursos"
-        title="Tudo o que ajuda a sua saúde emocional, num só lugar"
+        title="Além do SOS, tudo o que ajuda no dia a dia"
         text="Do cuidado de todo dia ao atendimento com psicólogo, cada recurso foi pensado para ser simples, acolhedor e seguro."
       />
       <ul className="mt-14 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -483,22 +697,6 @@ const Spotlight = ({
 const Spotlights = () => (
   <section aria-label="Conheça o app" className="relative overflow-hidden bg-gradient-calm py-20 sm:py-28">
     <div className="mx-auto max-w-6xl space-y-24 px-4 sm:space-y-32 sm:px-6">
-      <Spotlight
-        eyebrow="SOS emocional"
-        title="Quando apertar, alguém atende"
-        text="Num momento de crise você não precisa procurar contato nem marcar horário. O SOS chama os psicólogos online e o primeiro disponível conversa com você por vídeo."
-        bullets={[
-          'Psicólogos online recebem o seu pedido na hora',
-          'Conversa por vídeo de até 25 minutos',
-          'CVV 188 e SAMU 192 sempre à vista',
-        ]}
-        figure={
-          <PhoneFrame>
-            <SosScreen />
-          </PhoneFrame>
-        }
-        glow="bg-primary/15"
-      />
       <Spotlight
         reverse
         eyebrow="Consultas por vídeo"
@@ -844,7 +1042,10 @@ const Landing = () => (
     <main id="conteudo">
       <Hero />
       <TrustStrip />
+      <SosSection />
       <FeatureGrid />
+      <Community />
+      <Habits />
       <Spotlights />
       <HowItWorks />
       <Security />

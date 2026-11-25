@@ -1012,6 +1012,13 @@ body {
 .landing-ripple {
   animation: landingRipple 2.4s ease-out infinite;
 }
+.landing-typing {
+  animation: landingTyping 1.2s ease-in-out infinite;
+}
+@keyframes landingTyping {
+  0%, 60%, 100% { transform: translateY(0); opacity: 0.5; }
+  30% { transform: translateY(-3px); opacity: 1; }
+}
 
 @keyframes landingFloat {
   0%, 100% { transform: translateY(0); }

@@ -15,10 +15,22 @@ describe('Página de apresentação', () => {
         <Landing />
       </MemoryRouter>,
     );
-    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Um lugar seguro para cuidar da sua mente');
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Ajuda emocional na hora em que você precisa');
     const header = screen.getByRole('banner');
     expect(within(header).getByRole('link', { name: 'Entrar' })).toHaveAttribute('href', LOGIN_PATH);
     expect(within(header).getByRole('link', { name: 'Criar conta' })).toHaveAttribute('href', '/signup-type');
+  });
+
+  it('dá destaque ao SOS, com seção própria e atalho no topo', () => {
+    const { container } = render(
+      <MemoryRouter>
+        <Landing />
+      </MemoryRouter>,
+    );
+    expect(container.querySelector('section#sos')).not.toBeNull();
+    expect(screen.getByRole('link', { name: /Como funciona o SOS/ })).toHaveAttribute('href', '#sos');
+    expect(container.querySelector('section#comunidade')).not.toBeNull();
+    expect(container.querySelector('section#habitos')).not.toBeNull();
   });
 
   it('mantém o CVV 188 e o SAMU 192 à vista', () => {

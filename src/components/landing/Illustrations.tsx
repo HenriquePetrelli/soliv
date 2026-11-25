@@ -2,22 +2,20 @@ import type { ReactNode } from 'react';
 import {
   BadgeCheck,
   BarChart3,
-  Bell,
-  CalendarCheck,
   Home as HomeIcon,
-  Laugh,
-  Meh,
   MessageCircle,
   Mic,
-  Music,
   PhoneOff,
   Smile,
-  Frown,
-  Annoyed,
   User,
   Video,
-  Wind,
   Flame,
+  ArrowUp,
+  ThumbsUp,
+  Droplet,
+  MoonStar,
+  Pill,
+  Check,
 } from 'lucide-react';
 import LifeRing from '@/components/icons/LifeRingIcon';
 import { cn } from '@/lib/utils';
@@ -76,79 +74,6 @@ const BottomBar = ({ active = 'home' }: { active?: 'home' | 'progress' }) => {
           <LifeRing key={key} className="h-8 w-8 -mt-1" />
         ),
       )}
-    </div>
-  );
-};
-
-/** Tela inicial do paciente: humor do dia e atalhos de autocuidado. */
-export const HomeScreen = () => {
-  const moods = [
-    { Icon: Frown, label: 'Mal' },
-    { Icon: Annoyed, label: 'Baixo' },
-    { Icon: Meh, label: 'Ok' },
-    { Icon: Smile, label: 'Bem', active: true },
-    { Icon: Laugh, label: 'Ótimo' },
-  ];
-  return (
-    <div className="relative h-full">
-      <StatusBar />
-      <div className="px-5 pt-5 space-y-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-xs text-muted-foreground">Boa noite,</p>
-            <p className="text-lg font-semibold text-foreground">Ana</p>
-          </div>
-          <div className="relative grid h-9 w-9 place-items-center rounded-full bg-accent">
-            <Bell className="h-4 w-4 text-primary" />
-            <span className="absolute right-2 top-2 h-1.5 w-1.5 rounded-full bg-primary" />
-          </div>
-        </div>
-
-        <div className="rounded-2xl border border-border bg-card p-4 shadow-sm">
-          <p className="text-sm font-semibold text-foreground">Como você está hoje?</p>
-          <div className="mt-3 flex justify-between">
-            {moods.map(({ Icon, label, active }) => (
-              <div key={label} className="flex flex-col items-center gap-1">
-                <span
-                  className={cn(
-                    'grid h-9 w-9 place-items-center rounded-full',
-                    active ? 'bg-primary text-primary-foreground shadow-primary' : 'bg-muted text-muted-foreground',
-                  )}
-                >
-                  <Icon className="h-[18px] w-[18px]" />
-                </span>
-                <span className={cn('text-[0.75rem]', active ? 'text-primary font-medium' : 'text-muted-foreground')}>
-                  {label}
-                </span>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <div className="grid grid-cols-2 gap-3">
-          <div className="rounded-2xl bg-gradient-breathing p-3.5 text-primary-foreground">
-            <Wind className="h-5 w-5" />
-            <p className="mt-6 text-sm font-semibold text-primary-foreground">Respirar</p>
-            <p className="text-xs text-primary-foreground/85">3 min</p>
-          </div>
-          <div className="rounded-2xl bg-gradient-sounds p-3.5 text-primary-foreground">
-            <Music className="h-5 w-5" />
-            <p className="mt-6 text-sm font-semibold text-primary-foreground">Sons</p>
-            <p className="text-xs text-primary-foreground/85">Chuva leve</p>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-3 rounded-2xl border border-border bg-card p-3.5 shadow-sm">
-          <span className="grid h-10 w-10 place-items-center rounded-xl bg-accent">
-            <CalendarCheck className="h-5 w-5 text-primary" />
-          </span>
-          <div className="min-w-0">
-            <p className="text-sm font-semibold text-foreground">Consulta confirmada</p>
-            <p className="text-xs text-muted-foreground">Quinta, 19h · por vídeo</p>
-          </div>
-        </div>
-      </div>
-      <BottomBar />
     </div>
   );
 };
@@ -327,3 +252,146 @@ export const VideoCallCard = ({ className }: { className?: string }) => (
     </div>
   </div>
 );
+
+/** SOS por mensagem: para quem não consegue falar agora. */
+export const SosChatScreen = () => (
+  <div className="relative h-full bg-calm">
+    <StatusBar />
+    <div className="flex items-center gap-3 border-b border-border bg-card/80 px-4 py-3">
+      <span className="grid h-9 w-9 place-items-center rounded-full bg-gradient-primary text-xs font-semibold text-primary-foreground">
+        RL
+      </span>
+      <div className="min-w-0 flex-1">
+        <p className="text-sm font-semibold text-foreground">Rafael · psicólogo</p>
+        <p className="flex items-center gap-1 text-xs text-muted-foreground">
+          <BadgeCheck className="h-3.5 w-3.5 text-primary" /> CRP verificado · online
+        </p>
+      </div>
+      <span className="rounded-full bg-accent px-2 py-0.5 text-xs font-medium tabular-nums text-accent-foreground">18:40</span>
+    </div>
+    <div className="space-y-3 px-4 pt-4">
+      <p className="mx-auto w-fit rounded-full bg-muted px-3 py-1 text-xs text-muted-foreground">SOS por mensagem</p>
+      <div className="max-w-[80%] rounded-2xl rounded-tl-md border border-border bg-card px-3.5 py-2.5 text-sm text-foreground shadow-sm">
+        Oi, estou aqui com você. Quer me contar o que está acontecendo?
+      </div>
+      <div className="ml-auto max-w-[80%] rounded-2xl rounded-tr-md bg-primary px-3.5 py-2.5 text-sm text-primary-foreground">
+        Estou no trabalho e não consigo parar de tremer.
+      </div>
+      <div className="max-w-[80%] rounded-2xl rounded-tl-md border border-border bg-card px-3.5 py-2.5 text-sm text-foreground shadow-sm">
+        Vamos juntos. Primeiro, solte o ar devagar pela boca, contando até 6.
+      </div>
+      <p className="text-right text-xs text-muted-foreground">Visto</p>
+      <div className="flex w-fit items-center gap-1 rounded-2xl border border-border bg-card px-3 py-2.5">
+        <span className="h-1.5 w-1.5 rounded-full bg-muted-foreground/60 landing-typing" />
+        <span className="h-1.5 w-1.5 rounded-full bg-muted-foreground/60 landing-typing [animation-delay:150ms]" />
+        <span className="h-1.5 w-1.5 rounded-full bg-muted-foreground/60 landing-typing [animation-delay:300ms]" />
+      </div>
+    </div>
+    <div className="absolute inset-x-4 bottom-6 flex items-center gap-2 rounded-full border border-border bg-card px-4 py-2.5 shadow-sm">
+      <span className="flex-1 text-sm text-muted-foreground">Escreva uma mensagem</span>
+      <span className="grid h-7 w-7 place-items-center rounded-full bg-primary">
+        <ArrowUp className="h-4 w-4 text-primary-foreground" />
+      </span>
+    </div>
+  </div>
+);
+
+/** Grupos de apoio: depoimentos por tema, com opção de anônimo. */
+export const CommunityScreen = () => {
+  const posts = [
+    {
+      who: 'Anônimo',
+      tag: 'Crise de pânico no ônibus',
+      text: 'Contar 5 coisas que eu via ao redor me trouxe de volta. Hoje consigo sozinha.',
+      helped: 42,
+    },
+    {
+      who: 'Lucas',
+      tag: 'Medo de sair de casa',
+      text: 'Comecei indo só até a esquina. Ler vocês me deu coragem.',
+      helped: 27,
+    },
+  ];
+  return (
+    <div className="relative h-full">
+      <StatusBar />
+      <div className="px-5 pt-4">
+        <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Grupo de apoio</p>
+        <p className="mt-0.5 text-lg font-semibold text-foreground">Ataque de Pânico</p>
+        <div className="mt-3 flex gap-2 overflow-hidden">
+          {['Todos', 'Pânico', 'Ansiedade', 'TOC'].map((c, i) => (
+            <span
+              key={c}
+              className={cn(
+                'shrink-0 rounded-full px-3 py-1 text-xs font-medium',
+                i === 0 ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground',
+              )}
+            >
+              {c}
+            </span>
+          ))}
+        </div>
+        <div className="mt-4 space-y-3">
+          {posts.map((p) => (
+            <div key={p.tag} className="rounded-2xl border border-border bg-card p-3.5 shadow-sm">
+              <div className="flex items-center gap-2">
+                <span className="grid h-7 w-7 place-items-center rounded-full bg-accent">
+                  <User className="h-3.5 w-3.5 text-primary" />
+                </span>
+                <span className="text-sm font-semibold text-foreground">{p.who}</span>
+              </div>
+              <span className="mt-2 inline-block rounded-full bg-accent px-2 py-0.5 text-xs text-accent-foreground">{p.tag}</span>
+              <p className="mt-2 text-sm leading-snug text-foreground/90">{p.text}</p>
+              <div className="mt-3 flex items-center gap-4 text-xs text-muted-foreground">
+                <span className="flex items-center gap-1 font-medium text-primary">
+                  <ThumbsUp className="h-3.5 w-3.5" /> Me ajudou · {p.helped}
+                </span>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+      <BottomBar />
+    </div>
+  );
+};
+
+/** Meus hábitos: hábitos do dia e um hábito para largar. */
+export const HabitsScreen = () => {
+  const habits = [
+    { Icon: Droplet, label: 'Água', detail: '5 de 8 copos', value: 62, tone: 'bg-breathing-primary/15 text-breathing-primary' },
+    { Icon: MoonStar, label: 'Sono', detail: '7h30 esta noite', value: 100, tone: 'bg-accent text-primary' },
+    { Icon: Pill, label: 'Remédio', detail: 'Tomado às 8h', value: 100, tone: 'bg-accent text-primary' },
+  ];
+  return (
+    <div className="relative h-full">
+      <StatusBar />
+      <div className="px-5 pt-4 space-y-3">
+        <p className="text-lg font-semibold text-foreground">Meus hábitos</p>
+        <div className="rounded-2xl bg-gradient-primary p-4 text-primary-foreground shadow-primary">
+          <p className="text-xs font-medium text-primary-foreground/85">Largar o cigarro</p>
+          <p className="mt-1 text-2xl font-bold tabular-nums text-primary-foreground">12 dias sem fumar</p>
+          <p className="text-xs text-primary-foreground/85">Recorde: 12 dias · contando agora</p>
+        </div>
+        {habits.map(({ Icon, label, detail, value, tone }) => (
+          <div key={label} className="flex items-center gap-3 rounded-2xl border border-border bg-card p-3 shadow-sm">
+            <span className={cn('grid h-10 w-10 shrink-0 place-items-center rounded-xl', tone)}>
+              <Icon className="h-5 w-5" />
+            </span>
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center justify-between">
+                <p className="text-sm font-semibold text-foreground">{label}</p>
+                {value === 100 && <Check className="h-4 w-4 text-success" />}
+              </div>
+              <p className="text-xs text-muted-foreground">{detail}</p>
+              <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-muted">
+                <div className="h-full rounded-full bg-gradient-primary" style={{ width: `${value}%` }} />
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+      <BottomBar />
+    </div>
+  );
+};
