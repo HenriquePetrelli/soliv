@@ -595,7 +595,7 @@ const Community = () => (
 );
 
 const Habits = () => (
-  <section id="habitos" className="scroll-mt-20 pt-20 sm:pt-28">
+  <section id="habitos" className="scroll-mt-20 pt-20 pb-12 sm:pt-28 sm:pb-16">
     <div className="mx-auto max-w-6xl px-4 sm:px-6">
       <Spotlight
         reverse
