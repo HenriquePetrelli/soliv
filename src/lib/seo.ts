@@ -22,8 +22,12 @@ export interface PublicPageSeo {
 // Mantenha igual ao public/sitemap.xml.
 export const PUBLIC_PAGES: Record<string, PublicPageSeo> = {
   '/': {
-    title: DEFAULT_TITLE,
+    title: 'Soliv — Psicólogos online, SOS emocional e autocuidado',
     description: DEFAULT_DESCRIPTION,
+  },
+  '/entrar': {
+    title: 'Entrar | Soliv',
+    description: 'Entre na sua conta da Soliv.',
   },
   '/signup-type': {
     title: 'Criar conta | Soliv',

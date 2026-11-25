@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { LOGIN_PATH } from '@/lib/authPaths';
 import { useNavigate } from 'react-router-dom';
 import { Eye, EyeOff, KeyRound, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
@@ -83,7 +84,7 @@ const ResetPassword = () => {
       toast.success('Senha alterada. Entre com a nova senha.');
       // Sessão de recuperação encerrada: entra de novo, do jeito normal.
       await supabase.auth.signOut();
-      navigate('/', { replace: true });
+      navigate(LOGIN_PATH, { replace: true });
     } finally {
       setSaving(false);
     }
@@ -115,7 +116,7 @@ const ResetPassword = () => {
                 <Button className="w-full min-h-11" onClick={() => setResendOpen(true)}>
                   Pedir um novo link
                 </Button>
-                <Button variant="ghost" className="w-full" onClick={() => navigate('/', { replace: true })}>
+                <Button variant="ghost" className="w-full" onClick={() => navigate(LOGIN_PATH, { replace: true })}>
                   Voltar para o login
                 </Button>
               </div>

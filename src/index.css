@@ -976,3 +976,52 @@ body {
     scroll-behavior: auto !important;
   }
 }
+
+/* Página de apresentação (src/pages/Landing.tsx): entrada suave ao rolar,
+   flutuar leve das figuras e o círculo da respiração. Com "menos movimento"
+   no sistema, a regra acima encurta tudo e o conteúdo aparece direto. */
+@media (prefers-reduced-motion: no-preference) {
+  html:has(.landing) {
+    scroll-behavior: smooth;
+  }
+}
+
+.landing-gradient-text {
+  background-image: var(--gradient-primary);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.landing-reveal {
+  opacity: 0;
+  transform: translateY(16px);
+  transition: opacity 700ms cubic-bezier(0.22, 1, 0.36, 1), transform 700ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+.landing-reveal.is-visible {
+  opacity: 1;
+  transform: none;
+}
+
+.landing-float {
+  animation: landingFloat 7s ease-in-out infinite;
+}
+.landing-breathe {
+  animation: landingBreathe 6s ease-in-out infinite;
+}
+.landing-ripple {
+  animation: landingRipple 2.4s ease-out infinite;
+}
+
+@keyframes landingFloat {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+@keyframes landingBreathe {
+  0%, 100% { transform: scale(0.92); }
+  50% { transform: scale(1.04); }
+}
+@keyframes landingRipple {
+  0% { transform: scale(0.6); opacity: 0.9; }
+  100% { transform: scale(1.25); opacity: 0; }
+}

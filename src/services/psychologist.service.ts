@@ -1,4 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
+import { LOGIN_PATH } from '@/lib/authPaths';
 import { v4 as uuidv4 } from 'uuid';
 import { signupAcceptanceMetadata } from '@/lib/legal';
 import { errorText, getAuthErrorMessage } from '@/utils/errorMessage';
@@ -72,7 +73,7 @@ export class PsychologistService {
             ...signupAcceptanceMetadata('psychologist'),
             ...signupInviteMetadata(formData.inviteCode ?? ''),
           },
-          emailRedirectTo: `${window.location.origin}/`
+          emailRedirectTo: `${window.location.origin}${LOGIN_PATH}`
         }
       });
 
