@@ -3,6 +3,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { PLAN_PRICES, findCustomerId, liveSubscriptions, newStripe } from "../_shared/stripe.ts";
 import { parseTier, tierRank } from "../_shared/billing.ts";
 import { monitored } from "../_shared/monitoring.ts";
+import { appOrigin } from "../_shared/origin.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -73,7 +74,7 @@ serve(monitored("create-checkout", async (req) => {
       logStep("Customer created", { customerId });
     }
 
-    const origin = req.headers.get("origin") ?? "";
+    const origin = appOrigin(req);
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
       client_reference_id: user.id,
