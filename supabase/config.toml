@@ -43,6 +43,13 @@ enable_refresh_token_rotation = true
 refresh_token_reuse_interval = 10
 enable_signup = true
 
+# Ambiente local/teste: cadastro entra direto, sem e-mail de confirmação.
+# ATENÇÃO: não rode `supabase config push` com isto — esse arquivo aponta para
+# o projeto publicado, que deve manter a confirmação ligada.
+[auth.email]
+enable_signup = true
+enable_confirmations = false
+
 # E-mails de login em português com o visual do Soliv (ver docs/emails-de-autenticacao.md).
 # No projeto publicado, os mesmos modelos são colados em Authentication > Email Templates.
 [auth.email.template.recovery]

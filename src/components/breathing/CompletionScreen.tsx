@@ -18,7 +18,7 @@ const CompletionScreen = ({
   duration = 5,
   techniqueName,
 }: CompletionScreenProps) => {
-  const { addActivity, updateActivityTime } = usePatientStatistics();
+  const { addActivity, updateActivityTime } = usePatientStatistics({ load: false });
   const { checkAchievements } = useAchievements();
 
   // Conta uma vez só (a tela pode montar de novo) e só a partir de 1 minuto

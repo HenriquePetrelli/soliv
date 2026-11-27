@@ -11,12 +11,24 @@ export interface CompanyBenefit {
   endsOn: string | null;
 }
 
+/**
+ * A pessoa digitou o código da empresa no cadastro? O banco usa esse código
+ * (nos dados do usuário) para entrar na empresa ao criar a conta e de novo ao
+ * confirmar o e-mail; não precisa pedir de novo.
+ */
+export const signupCompanyCode = (user: { user_metadata?: Record<string, unknown> } | null | undefined): string | null => {
+  const code = user?.user_metadata?.organization_code;
+  return typeof code === 'string' && code.trim() !== '' ? code.trim() : null;
+};
+
 /** Benefício da empresa (B2B) de quem está logado e as empresas que ele gerencia (RH). */
 export const useCompanyBenefit = () => {
   const { user } = useAuth();
   const { checkSubscription } = useSubscription();
   const [benefit, setBenefit] = useState<CompanyBenefit | null>(null);
   const [managedOrganizationIds, setManagedOrganizationIds] = useState<string[]>([]);
+  // Já foi colaborador de alguma empresa (mesmo que tenha saído ou sido desligado)?
+  const [everMember, setEverMember] = useState(false);
   const [loading, setLoading] = useState(true);
 
   const load = useCallback(async () => {
@@ -35,6 +47,7 @@ export const useCompanyBenefit = () => {
     setManagedOrganizationIds(
       (memberships.data ?? []).filter((m) => m.role === 'manager' && m.status === 'active').map((m) => m.organization_id),
     );
+    setEverMember((memberships.data ?? []).some((m) => m.role === 'member'));
     setLoading(false);
   }, [user?.id]);
 
@@ -64,5 +77,11 @@ export const useCompanyBenefit = () => {
     void checkSubscription();
   }, [load, checkSubscription]);
 
-  return { benefit, managedOrganizationIds, loading, join, leave, reload: load };
+  const signupCode = signupCompanyCode(user);
+
+  return { benefit, managedOrganizationIds, signupCode,
+    // Digitou o código no cadastro, mas não entrou na empresa (vagas, domínio
+    // do e-mail, código inativo...): o app mostra o campo de novo, com aviso.
+    signupCodeFailed: Boolean(signupCode) && !benefit && !everMember,
+    loading, join, leave, reload: load };
 };

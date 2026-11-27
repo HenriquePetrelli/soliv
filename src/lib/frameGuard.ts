@@ -1,16 +1,29 @@
+import { isProjectLovableHost } from '../../supabase/functions/_shared/origin';
+
 /**
  * Proteção contra clickjacking: outro site não pode exibir o Soliv dentro de
  * um iframe invisível e induzir a pessoa a clicar (ex.: em "Excluir conta").
  * O normal seria o cabeçalho X-Frame-Options, que a hospedagem da Lovable não
  * deixa configurar; então o próprio app confere quem o está exibindo.
  *
- * Liberados: o próprio site, o editor e o preview da Lovable e o localhost.
+ * Liberados: o próprio site, o editor da Lovable, as prévias deste projeto e
+ * o localhost. Outros sites em *.lovable.app não: qualquer pessoa publica lá.
  * Quando o navegador não informa quem é o site de fora (Firefox), o app abre
  * normalmente, para não quebrar o preview da Lovable.
  */
 
 const TRUSTED_ANCESTOR =
-  /^https:\/\/([a-z0-9-]+\.)*(lovable\.dev|lovable\.app|lovableproject\.com|lovableproject-dev\.com|gptengineer\.app|gpt-eng\.com|gptengineer\.run)$|^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i;
+  /^https:\/\/([a-z0-9-]+\.)*(lovable\.dev|gptengineer\.app)$|^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i;
+
+const isTrustedAncestor = (origin: string): boolean => {
+  if (TRUSTED_ANCESTOR.test(origin)) return true;
+  try {
+    const url = new URL(origin);
+    return url.protocol === 'https:' && url.origin === origin && isProjectLovableHost(url.hostname);
+  } catch {
+    return false;
+  }
+};
 
 export interface FrameContext {
   isFramed: boolean;
@@ -21,7 +34,7 @@ export interface FrameContext {
 export const isUntrustedFrame = ({ isFramed, ownOrigin, ancestorOrigin }: FrameContext): boolean => {
   if (!isFramed || !ancestorOrigin) return false;
   if (ancestorOrigin === ownOrigin) return false;
-  return !TRUSTED_ANCESTOR.test(ancestorOrigin);
+  return !isTrustedAncestor(ancestorOrigin);
 };
 
 export const currentFrameContext = (): FrameContext => {

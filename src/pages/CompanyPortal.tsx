@@ -115,7 +115,7 @@ const CompanyPortal = () => {
     <div className="has-tabs">
       <div className="screen">
         <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-sm">
-          <PageHeader title="Portal da empresa" backTo="/beneficio-empresa" />
+          <PageHeader title="Portal da empresa" backTo="/home" />
         </div>
 
         <main className="w-full min-w-0 p-4 space-y-5 max-w-2xl mx-auto">

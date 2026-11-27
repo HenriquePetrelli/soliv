@@ -2,7 +2,7 @@
 // Supabase recusa), então o app pergunta aqui o motivo e até quando vale.
 // Só responde a quem sabe a senha da conta; senha errada ou conta sem
 // bloqueio devolvem a mesma resposta vazia.
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.52.1";
 import { monitored } from "../_shared/monitoring.ts";
 import { withinRateLimit } from "../_shared/guards.ts";
 

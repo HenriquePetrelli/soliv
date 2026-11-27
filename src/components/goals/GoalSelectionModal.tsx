@@ -22,7 +22,13 @@ export const GoalSelectionModal = ({
   const [tempSelectedGoals, setTempSelectedGoals] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [goalOptions, setGoalOptions] = useState<WeeklyGoalTemplate[]>([]);
-  const { selectedGoals, fetchDefaultGoals, updateSelectedGoals } = useWeeklyGoals();
+  // Fechada (como fica na tela inicial) não busca nada: as metas escolhidas
+  // só são pedidas quando a janela abre.
+  const { selectedGoals, fetchDefaultGoals, fetchSelectedGoals, updateSelectedGoals } = useWeeklyGoals({ autoLoad: false });
+
+  useEffect(() => {
+    if (open) void fetchSelectedGoals();
+  }, [open, fetchSelectedGoals]);
 
   useEffect(() => {
     if (open) {

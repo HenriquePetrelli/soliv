@@ -8,13 +8,12 @@ import {
   BookOpen,
   ShieldCheck,
   Sprout,
-  ArrowUpRight
+  ArrowUpRight,
+  LayoutDashboard
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { MoodAccordion } from "@/components/MoodAccordion";
-import { WeeklyGoalModal } from "@/components/goals/WeeklyGoalModal";
-import { GoalSelectionModal } from "@/components/goals/GoalSelectionModal";
-import { useEffect, useState } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
 import { useLegalGateStatus } from "@/lib/legalGateStatus";
 import { useIdentityVerification } from "@/contexts/IdentityVerificationContext";
 import HomeHabitsCard from "@/components/habits/HomeHabitsCard";
@@ -28,6 +27,13 @@ import { useTheme } from "next-themes";
 import ActiveCallBanner from "@/components/sos/ActiveCallBanner";
 import HomeAllowanceLine from "@/components/home/HomeAllowanceLine";
 import { HomeSkeleton } from "@/components/skeletons/PageSkeletons";
+import { useCompanyBenefit } from "@/hooks/useCompanyBenefit";
+
+// As janelas das metas da semana ficam fechadas na maior parte das aberturas:
+// o código delas (com a biblioteca de animação, uns 36 KB) só baixa quando
+// uma vai abrir, em vez de atrasar toda tela inicial.
+const WeeklyGoalModal = lazy(() => import("@/components/goals/WeeklyGoalModal").then((m) => ({ default: m.WeeklyGoalModal })));
+const GoalSelectionModal = lazy(() => import("@/components/goals/GoalSelectionModal").then((m) => ({ default: m.GoalSelectionModal })));
 
 
 
@@ -45,6 +51,14 @@ const HomeContent = () => {
   const [showGoalSelection, setShowGoalSelection] = useState(false);
   // A janela das metas da semana espera o aceite dos Termos, para não abrir por cima dele.
   const legalGateStatus = useLegalGateStatus();
+  const [weeklyGoalModalMounted, setWeeklyGoalModalMounted] = useState(false);
+  const [goalSelectionMounted, setGoalSelectionMounted] = useState(false);
+  useEffect(() => {
+    if (showWeeklyGoalModal) setWeeklyGoalModalMounted(true);
+  }, [showWeeklyGoalModal]);
+  useEffect(() => {
+    if (showGoalSelection) setGoalSelectionMounted(true);
+  }, [showGoalSelection]);
 
   useEffect(() => {
     if (!user?.id) return;
@@ -81,6 +95,8 @@ const HomeContent = () => {
 
       // Verificar se deve mostrar a janela das metas da semana
       if (patientData?.show_weekly_goal_modal && patientData?.show_goal_modal) {
+        // O código da janela já começa a baixar durante a espera.
+        void import("@/components/goals/WeeklyGoalModal");
         setTimeout(() => setShowWeeklyGoalModal(true), 500);
       }
 
@@ -164,6 +180,15 @@ const HomeContent = () => {
   const { resolvedTheme } = useTheme();
   const isDark = resolvedTheme === 'dark';
 
+  // Gestor do RH: atalho para o Portal da empresa no topo da Home.
+  const { managedOrganizationIds } = useCompanyBenefit();
+  const companyPortal = {
+    color: isDark ? 'hsl(262, 80%, 80%)' : 'hsl(262,72%,52%)',
+    bg: isDark ? 'hsl(262, 25%, 20%)' : 'hsl(262,90%,97%)',
+    border: isDark ? 'hsl(262, 25%, 30%)' : 'hsl(262,75%,88%)',
+    iconBg: 'hsl(262,72%,55%)',
+  };
+
   const features = [
     {
       icon: Activity,
@@ -237,6 +262,31 @@ const HomeContent = () => {
       <div>
         <HomeAllowanceLine />
         <ActiveCallBanner />
+
+        {managedOrganizationIds.length > 0 && (
+          <button
+            type="button"
+            onClick={() => navigate('/empresa')}
+            className="group relative mt-4 flex w-full items-center gap-4 overflow-hidden rounded-2xl border p-4 lg:p-5 text-left shadow-sm transition-all duration-200 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+            style={{ backgroundColor: companyPortal.bg, borderColor: companyPortal.border }}
+          >
+            <div
+              className="relative flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl text-white shadow-sm"
+              style={{ backgroundColor: companyPortal.iconBg, boxShadow: isDark ? 'none' : `0 6px 16px -6px ${companyPortal.color}` }}
+            >
+              <LayoutDashboard className="h-6 w-6" strokeWidth={2.25} aria-hidden="true" />
+            </div>
+            <div className="relative min-w-0 flex-1">
+              <h2 className="text-sm lg:text-base font-semibold leading-tight" style={{ color: companyPortal.color }}>Portal da empresa</h2>
+              <p className="mt-0.5 lg:mt-1 text-xs lg:text-sm leading-snug text-foreground/70">Vagas, código de convite e uso geral</p>
+            </div>
+            <ArrowUpRight
+              className="relative h-4 w-4 flex-shrink-0 opacity-60 group-hover:opacity-100 transition-opacity"
+              style={{ color: companyPortal.color }}
+              aria-hidden="true"
+            />
+          </button>
+        )}
 
         {/* Mobile/Tablet Mood Section */}
         {moodEnabled && (
@@ -328,18 +378,26 @@ const HomeContent = () => {
 
         {/* Modals */}
 
-        <WeeklyGoalModal
-          open={showWeeklyGoalModal && legalGateStatus === "clear" && !identityPromptOpen}
-          onOpenChange={handleCloseWeeklyGoalModal}
-          onAddGoals={handleAddGoals}
-          onDontShowAgain={handleDontShowAgain}
-        />
+        <Suspense fallback={null}>
+          {/* Montadas a partir da primeira vez que vão abrir (e mantidas, para
+              a animação de fechar). */}
+          {weeklyGoalModalMounted && (
+            <WeeklyGoalModal
+              open={showWeeklyGoalModal && legalGateStatus === "clear" && !identityPromptOpen}
+              onOpenChange={handleCloseWeeklyGoalModal}
+              onAddGoals={handleAddGoals}
+              onDontShowAgain={handleDontShowAgain}
+            />
+          )}
 
-        <GoalSelectionModal
-          open={showGoalSelection}
-          onOpenChange={setShowGoalSelection}
-          onGoalsAdded={handleGoalsAdded}
-        />
+          {goalSelectionMounted && (
+            <GoalSelectionModal
+              open={showGoalSelection}
+              onOpenChange={setShowGoalSelection}
+              onGoalsAdded={handleGoalsAdded}
+            />
+          )}
+        </Suspense>
       </div>
     </>
   );

@@ -1,4 +1,4 @@
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.52.1';
 import { isTrustedCaller } from '../_shared/guards.ts';
 import { adminMfaSatisfied } from '../_shared/adminMfa.ts';
 import { monitored } from "../_shared/monitoring.ts";

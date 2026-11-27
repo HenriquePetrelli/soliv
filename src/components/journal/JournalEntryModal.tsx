@@ -26,7 +26,7 @@ const JournalEntryModal = ({
 }: JournalEntryModalProps) => {
   const [texto, setTexto] = useState('');
   const [humor, setHumor] = useState<number>(DEFAULT_JOURNAL_MOOD);
-  const { addActivity } = usePatientStatistics();
+  const { addActivity } = usePatientStatistics({ load: false });
   const { user } = useAuth();
   // Rascunho da anotação nova no aparelho: fechar sem querer, recarregar ou
   // falhar o envio não apaga o que foi escrito. Sai ao salvar ou ao sair da conta.

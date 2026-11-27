@@ -84,6 +84,10 @@ export default defineConfig(({ mode }) => ({
           'react-vendor': ['react', 'react-dom', 'react-router-dom'],
           'supabase': ['@supabase/supabase-js'],
           'query': ['@tanstack/react-query'],
+          // Ícones num arquivo só (só os usados; uns 17 KB comprimido). Antes
+          // cada ícone dividido entre telas virava um arquivo de menos de 1 KB,
+          // e a tela inicial esperava uma dúzia deles.
+          'icons': ['lucide-react'],
         },
       },
     },

@@ -1,4 +1,4 @@
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.52.1";
 import { isTrustedCaller } from "../_shared/guards.ts";
 import { firebaseServiceAccount, getAccessToken, sendToTokens } from "../_shared/fcm.ts";
 import { ROUND_BUDGET_MS, mapLimit } from "../_shared/batch.ts";
