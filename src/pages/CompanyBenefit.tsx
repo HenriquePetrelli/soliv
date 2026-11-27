@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Building2, Check } from 'lucide-react';
 import { toast } from 'sonner';
@@ -27,12 +27,17 @@ const formatDate = (iso: string) => new Date(`${iso}T12:00:00`).toLocaleDateStri
 /** Benefício da empresa (B2B): usar o código do RH, ver o que inclui, sair. */
 const CompanyBenefit = () => {
   const navigate = useNavigate();
-  const { benefit, signedUpWithCode, loading, join, leave } = useCompanyBenefit();
+  const { benefit, signupCode, signupCodeFailed, loading, join, leave } = useCompanyBenefit();
   const { personalSubscriptionTier } = useSubscription();
   const [code, setCode] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [joining, setJoining] = useState(false);
   const [leaveOpen, setLeaveOpen] = useState(false);
+
+  // O código do cadastro não deu certo: já deixa ele no campo para tentar de novo.
+  useEffect(() => {
+    if (signupCodeFailed && signupCode) setCode((current) => current || signupCode.toUpperCase());
+  }, [signupCodeFailed, signupCode]);
 
   const handleJoin = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -103,7 +108,7 @@ const CompanyBenefit = () => {
                 Sair do benefício
               </Button>
             </section>
-          ) : signedUpWithCode ? null : (
+          ) : (
             <form onSubmit={handleJoin} className="space-y-4 rounded-2xl border border-border bg-card p-5">
               <div className="space-y-1">
                 <h2 className="flex items-center gap-2 text-base font-semibold text-foreground">
@@ -114,6 +119,12 @@ const CompanyBenefit = () => {
                   Digite o código que o RH enviou para ter o plano da empresa, sem pagar nada.
                 </p>
               </div>
+              {signupCodeFailed && (
+                <p role="note" className="rounded-lg border border-warning/40 bg-warning/10 p-3 text-sm text-foreground">
+                  O código da empresa que você usou no cadastro não foi aceito. Toque em Usar código para tentar de novo e
+                  ver o motivo, ou confira o código com o RH.
+                </p>
+              )}
               <div className="space-y-1.5">
                 <Label htmlFor="company-code">Código da empresa</Label>
                 <Input

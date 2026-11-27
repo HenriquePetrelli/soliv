@@ -11,8 +11,6 @@ import PageHeader from "@/components/PageHeader";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useSubscription } from "@/contexts/SubscriptionContext";
-import { useAuth } from "@/contexts/AuthContext";
-import { signedUpWithCompanyCode } from "@/hooks/useCompanyBenefit";
 
 const formatBRL = (cents: number) =>
   (cents / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
@@ -56,9 +54,6 @@ const SubscriptionPlans = () => {
   } = useSubscription();
   // B2B: o plano vem da empresa; não há o que pagar, cancelar ou trocar para baixo.
   const fromCompany = entitlementSource === 'organization';
-  // Quem já digitou o código da empresa no cadastro não vê o convite para usá-lo.
-  const { user } = useAuth();
-  const showCompanyCodeLink = !fromCompany && !signedUpWithCompanyCode(user);
   const [loading, setLoading] = useState<string | null>(null);
   const [showCancelModal, setShowCancelModal] = useState(false);
   // Troca de plano de quem já assina (manage-subscription), com prévia do valor.
@@ -562,7 +557,7 @@ const SubscriptionPlans = () => {
         </section>
 
         <div className="mt-12 text-center">
-          {showCompanyCodeLink && (
+          {!fromCompany && (
             <p className="mb-4 text-sm text-muted-foreground">
               Sua empresa oferece o Soliv?{' '}
               <button type="button" className="font-medium text-primary underline underline-offset-2" onClick={() => navigate('/beneficio-empresa')}>

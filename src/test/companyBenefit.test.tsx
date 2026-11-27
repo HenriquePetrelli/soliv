@@ -61,11 +61,18 @@ describe('benefício da empresa (colaborador)', () => {
     expect(checkSubscription).toHaveBeenCalled();
   });
 
-  it('não pede o código de novo a quem já digitou no cadastro', async () => {
-    user.user_metadata = { organization_code: 'EMPX2026' };
+  it('código do cadastro que não deu certo: mostra o campo com aviso e o código preenchido', async () => {
+    user.user_metadata = { organization_code: 'empx2026' };
     renderAt('/beneficio-empresa');
-    expect(await screen.findByText('Benefício da empresa')).toBeInTheDocument();
-    await waitFor(() => expect(screen.queryByText('Sua empresa oferece o Soliv?')).not.toBeInTheDocument());
+    expect(await screen.findByText(/usou no cadastro não foi aceito/)).toBeInTheDocument();
+    await waitFor(() => expect(screen.getByLabelText('Código da empresa')).toHaveValue('EMPX2026'));
+  });
+
+  it('código do cadastro que deu certo: mostra o plano, sem o campo', async () => {
+    user.user_metadata = { organization_code: 'EMPX2026' };
+    entitled = { tier: 'Completo', organization_name: 'Empresa X', ends_on: null };
+    renderAt('/beneficio-empresa');
+    expect(await screen.findByText('Plano Completo pela Empresa X')).toBeInTheDocument();
     expect(screen.queryByLabelText('Código da empresa')).not.toBeInTheDocument();
   });
 
