@@ -209,8 +209,8 @@ export const useConversas = () => {
   // eslint-disable-next-line react-hooks/exhaustive-deps -- roda só quando os valores listados mudam (as funções são recriadas a cada render)
   }, [user, userType, conversas]);
 
-  // Tempo real: muda a conversa (status, nova conversa) ou chega/é lida uma
-  // mensagem → atualiza lista, última mensagem e não lidas.
+  // Tempo real: muda a conversa (status, nova conversa, mensagem nova ou lida)
+  // → atualiza lista, última mensagem e não lidas.
   useEffect(() => {
     if (!user) return;
 
@@ -230,9 +230,10 @@ export const useConversas = () => {
           fetchConversas(true);
         }
       )
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'mensagens' }, () => {
-        fetchConversas(true);
-      })
+      // Mensagem nova ou lida também chega por aqui: o banco marca a conversa
+      // (updated_at). Antes havia uma escuta da tabela de mensagens inteira:
+      // cada mensagem de qualquer pessoa passava pela checagem de acesso de
+      // cada usuário com o chat aberto.
       .subscribe();
 
     return () => {

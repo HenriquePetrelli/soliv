@@ -16,7 +16,7 @@ vi.mock('@/integrations/supabase/client', () => ({
 }));
 vi.mock('@/hooks/use-toast', () => ({ useToast: () => ({ toast: toastMock }) }));
 vi.mock('@/lib/currentUser', () => ({ getSessionUser: async () => ({ data: { user: { id: 'psi-1' } } }) }));
-vi.mock('@/lib/sosQueueChannel', () => ({ notifySosQueueChanged: vi.fn(), subscribeSosQueue: () => () => {} }));
+vi.mock('@/lib/sosQueueChannel', () => ({ subscribeSosQueue: () => () => {} }));
 vi.mock('@/lib/emergencyCallGuard', () => ({ findPsychologistOngoingCall: async () => null }));
 
 import { usePsychologistEmergency } from '@/hooks/usePsychologistEmergency';

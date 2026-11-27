@@ -1,7 +1,7 @@
 # 06. Chat entre paciente e psicólogo
 
 > **Status:** Pronto.
-> **Última verificação:** 2026-10-16 (segunda varredura: mensagens apagadas após 3 meses mesmo em conversa reaberta, hora do servidor, histórico em páginas, rascunho, foto grande reduzida, link da foto renovado, conversa não encontrada, aparelho compartilhado, aviso discreto). Antes: 2026-10-08 (envio sem duplicar, fila offline, ordem, lida com a tela visível, conversa no endereço, fotos apagadas com a conversa).
+> **Última verificação:** 2026-11-27 (escala: a lista de conversas se atualiza pela própria conversa, marcada pelo banco a cada mensagem nova ou lida). Antes: 2026-10-16 (segunda varredura: mensagens apagadas após 3 meses mesmo em conversa reaberta, hora do servidor, histórico em páginas, rascunho, foto grande reduzida, link da foto renovado, conversa não encontrada, aparelho compartilhado, aviso discreto). Antes: 2026-10-08 (envio sem duplicar, fila offline, ordem, lida com a tela visível, conversa no endereço, fotos apagadas com a conversa).
 > **Quem usa:** paciente e psicólogo que tiveram consulta concluída nos últimos 30 dias.
 
 ## Resumo
@@ -49,7 +49,7 @@ O chat dá continuidade ao cuidado depois de uma consulta. Só nasce de uma cons
 - **Hooks**: `useConversas` (usa `listar_conversas`, com não lidas; atualização em segundo plano não mostra erro), `useMensagens` (fila de envio com id do aparelho, pendentes guardadas em `chat:pendentes:<conversa>`, reenvio automático, tempo real, nova sincronização), `useChatModeration` (admin).
 - **Edge function**: `chat-cleanup` (apaga fotos de conversas que não existem mais e fotos sem mensagem com mais de 1 dia; só a rotina chama).
 - **Regras puras**: `src/lib/chatImage.ts`, `chatPhoto.ts` (reduz a foto), `browserNotifications.ts`.
-- **Banco**: `conversas`, `mensagens`; bucket `documents` (pasta `chat-images`). Funções: `notify_new_message` (aviso com link da conversa), `pode_criar_conversa`, `listar_conversas` (sem as ocultadas), `abrir_conversa`, `ocultar_conversa`, `marcar_mensagens_como_lidas`, `gerenciar_expiracao_conversas`, `get_admin_conversas_overview`.
+- **Banco**: `conversas`, `mensagens`; bucket `documents` (pasta `chat-images`). Funções: `notify_new_message` (aviso com link da conversa), `marcar_atividade_conversa` (mensagem nova marca a conversa: a lista escuta só as conversas da pessoa, não a tabela de mensagens inteira), `pode_criar_conversa`, `listar_conversas` (sem as ocultadas), `abrir_conversa`, `ocultar_conversa`, `marcar_mensagens_como_lidas`, `gerenciar_expiracao_conversas`, `get_admin_conversas_overview`.
 
 ## Como validar
 

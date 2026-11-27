@@ -25,7 +25,12 @@ interface ClockAnchor {
 
 /** O banco soma no máximo 60 s entre avisos; a tela também não passa disso. */
 const MAX_LIVE_SECONDS = 60;
-const RESYNC_MS = 5000;
+/**
+ * Conferência periódica. A cada mudança na sala (syncKey) já confere na hora;
+ * entre uma e outra o segundo anda na tela. Era 5 s (24 consultas por minuto
+ * por chamada só para o relógio); 15 s basta.
+ */
+const RESYNC_MS = 15_000;
 
 /**
  * Cronômetro da chamada (SOS e consulta), igual para paciente e psicólogo.
@@ -34,7 +39,7 @@ const RESYNC_MS = 5000;
  * ele mesmo soma a cada aviso de mídia. Começa quando o segundo lado confirma
  * áudio/vídeo, pausa quando um cai e volta de onde parou. Cada aparelho só
  * mostra esse valor e anda o segundo localmente entre uma conferência e outra
- * (a cada 5 s e a cada mudança na sala), então os dois relógios ficam iguais.
+ * (a cada 15 s e a cada mudança na sala), então os dois relógios ficam iguais.
  */
 export const useSharedCallTimer = ({ sessionId, timeLimit, syncKey, onExpire }: UseSharedCallTimerProps) => {
   const [anchor, setAnchor] = useState<ClockAnchor | null>(null);

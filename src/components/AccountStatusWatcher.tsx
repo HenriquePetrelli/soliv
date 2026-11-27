@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
+import { subscribePrivate } from '@/lib/privateChannel';
 import { clearLoginState, fetchLoginState } from '@/lib/loginState';
 import { isCurrentlyBlocked, notifyBlockedAccess, type BlockInfo } from '@/utils/psychologistBlock';
 
@@ -58,13 +59,16 @@ const AccountStatusWatcher = () => {
     // O aviso do servidor só pede uma conferência: quem decide é o banco.
     let channel: ReturnType<typeof supabase.channel> | null = null;
     try {
-      channel = supabase
-        .channel(`account-status:${userId}`)
-        .on('broadcast', { event: 'check' }, () => {
-          lastCheckRef.current = 0;
-          void check(true);
-        })
-        .subscribe();
+      channel = subscribePrivate(
+        supabase
+          // Privado: só a própria conta ouve; só o servidor envia (antes qualquer
+          // aparelho podia mandar "confira agora" para qualquer conta).
+          .channel(`account-status:${userId}`, { config: { private: true } })
+          .on('broadcast', { event: 'check' }, () => {
+            lastCheckRef.current = 0;
+            void check(true);
+          }),
+      );
     } catch {
       /* sem tempo real: as conferências periódicas continuam */
     }

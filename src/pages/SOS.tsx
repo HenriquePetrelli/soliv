@@ -18,7 +18,7 @@ import ExtraPurchaseDialog from "@/components/ExtraPurchaseDialog";
 import { useSubscription } from "@/contexts/SubscriptionContext";
 import { useIdentityVerification } from "@/contexts/IdentityVerificationContext";
 import { formatCents } from "@/lib/plans";
-import { notifySosQueueChanged, subscribeSosQueue } from "@/lib/sosQueueChannel";
+import { subscribeSosQueue } from "@/lib/sosQueueChannel";
 import type { RealtimeChannel } from '@supabase/supabase-js';
 import { saveSosTranscriptionConsent, takeSosTranscriptionConsent } from "@/lib/callTranscription";
 
@@ -76,9 +76,7 @@ const SosPage = () => {
       // Only cleanup if we have a requestId, the request was NOT accepted, and we're leaving the page
       if (requestIdRef.current && !acceptedRef.current) {
         console.log(`User left SOS page without acceptance, cleaning up pending request: ${requestIdRef.current}`);
-        cancelRequest(requestIdRef.current, 'abandoned')
-          .catch(console.error)
-          .finally(() => notifySosQueueChanged({ requestId: requestIdRef.current }));
+        cancelRequest(requestIdRef.current, 'abandoned').catch(console.error);
       } else if (acceptedRef.current) {
         console.log('Skipping cleanup: emergency was accepted, preserving request and session.');
       }
@@ -114,7 +112,6 @@ const SosPage = () => {
       } catch (error) {
         console.error('[SOS] failed to cleanup on unload', error);
       }
-      notifySosQueueChanged({ requestId: id });
     };
 
     window.addEventListener('pagehide', handleUnload);
@@ -129,16 +126,6 @@ const SosPage = () => {
   // Fetch latest emergency request for current user and subscribe for acceptance
   useEffect(() => {
     let reqChannel: RealtimeChannel | null = null;
-    
-    // Listen for emergency acceptance events
-    const handleEmergencyAccepted = (event: CustomEvent) => {
-      const { sessionId, requestId } = event.detail;
-      console.log('Emergency accepted, redirecting to call:', { sessionId, requestId });
-      acceptedRef.current = true;
-      navigate(`/emergency-call/${sessionId}?userType=patient&requestId=${requestId}`);
-    };
-    
-    window.addEventListener('emergencyAccepted', handleEmergencyAccepted as EventListener);
     
     const init = async () => {
       const { data: auth } = await getSessionUser();
@@ -223,8 +210,6 @@ const SosPage = () => {
         setRequestId(id);
         setChannel(sanitizeSosChannel((data as { channel?: unknown }).channel));
         setCreatedAt((data).created_at ?? new Date().toISOString());
-        // Wake up every psychologist dashboard immediately.
-        notifySosQueueChanged({ requestId: id });
 
 
         // Only navigate to call if this specific request is accepted
@@ -261,7 +246,6 @@ const SosPage = () => {
 
     return () => {
       if (reqChannel) supabase.removeChannel(reqChannel);
-      window.removeEventListener('emergencyAccepted', handleEmergencyAccepted as EventListener);
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps -- roda só quando os valores listados mudam (as funções são recriadas a cada render)
   }, [navigate]);
@@ -317,15 +301,27 @@ const SosPage = () => {
     // cada minuto, e cada paciente na espera recontava a cada confirmação de
     // qualquer um (com muitos online, uma avalanche de consultas). A contagem
     // vem da consulta periódica abaixo e dos avisos da fila.
-    // A psychologist accepting/declining also changes availability.
-    const unsubscribeQueue = subscribeSosQueue(fetchOnline);
+    // Aviso da fila: espera um tempo aleatório (0,5 a 2,5 s) e junta avisos
+    // seguidos, para os pacientes na espera não recontarem todos no mesmo
+    // instante.
+    let queueTimer: number | null = null;
+    const unsubscribeQueue = subscribeSosQueue(() => {
+      if (queueTimer !== null) return;
+      queueTimer = window.setTimeout(() => {
+        queueTimer = null;
+        void fetchOnline();
+      }, 500 + Math.random() * 2000);
+    });
 
-    // Fallback polling in case the realtime socket drops
-    const interval = window.setInterval(fetchOnline, 8000);
+    // Rede de segurança caso o tempo real caia; com a aba escondida, não conta.
+    const interval = window.setInterval(() => {
+      if (document.visibilityState === 'visible') void fetchOnline();
+    }, 15_000);
 
     return () => {
       active = false;
       window.clearInterval(interval);
+      if (queueTimer !== null) window.clearTimeout(queueTimer);
       unsubscribeQueue();
     };
   }, []);
@@ -355,7 +351,6 @@ const SosPage = () => {
       try {
         console.log(`User manually cancelled request: ${requestId}`);
         await cancelRequest(requestId, 'cancelled_by_patient');
-        notifySosQueueChanged({ requestId });
 
       } catch (error) {
         console.error('Error cancelling request:', error);

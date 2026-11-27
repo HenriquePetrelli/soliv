@@ -16,21 +16,24 @@ vi.mock('@/integrations/supabase/client', () => {
   return { supabase: { channel, removeChannel: vi.fn() } };
 });
 
-import { notifySosQueueChanged, subscribeSosQueue } from '@/lib/sosQueueChannel';
+import { subscribeSosQueue } from '@/lib/sosQueueChannel';
+
+// O aviso vem do banco (realtime.send no canal sos-queue).
+const serverBroadcast = (name: string) => rooms.get(name)?.handlers.forEach((h) => h());
 
 describe('fila do SOS em tempo real', () => {
-  it('o aviso enviado chega a quem está ouvindo (mesmo canal)', () => {
+  it('o aviso do banco chega a quem está ouvindo (mesmo canal)', () => {
     const psicologo = vi.fn();
     const paciente = vi.fn();
     const off1 = subscribeSosQueue(psicologo);
     subscribeSosQueue(paciente);
-    notifySosQueueChanged({ requestId: 'r1' });
+    serverBroadcast('sos-queue');
     expect(psicologo).toHaveBeenCalledTimes(1);
     expect(paciente).toHaveBeenCalledTimes(1);
     expect([...rooms.keys()]).toEqual(['sos-queue']);
 
     off1();
-    notifySosQueueChanged({ requestId: 'r2' });
+    serverBroadcast('sos-queue');
     expect(psicologo).toHaveBeenCalledTimes(1);
     expect(paciente).toHaveBeenCalledTimes(2);
   });

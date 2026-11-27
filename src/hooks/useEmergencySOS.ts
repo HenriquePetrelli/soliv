@@ -30,7 +30,6 @@ export interface SosDenial {
 export const useEmergencySOS = () => {
   const [currentRequest, setCurrentRequest] = useState<EmergencyRequest | null>(null);
   const [loading, setLoading] = useState(false);
-  const [stopPolling, setStopPolling] = useState<(() => void) | null>(null);
   const { toast } = useToast();
 
   /** `onDenied`: a tela mostra a recusa do jeito dela (sem o aviso flutuante). */
@@ -148,10 +147,9 @@ export const useEmergencySOS = () => {
         duration: 3000,
       });
       
-      // Start polling for status updates
-      const cleanupFn = startStatusPolling(data.emergency_request_id);
-      setStopPolling(() => cleanupFn);
-      
+      // O aceite chega pela tela do SOS (tempo real do pedido + leitura a cada
+      // 5 s). Antes este hook ainda chamava a edge function a cada 5 s, por 10
+      // minutos, mesmo depois de o paciente sair da tela.
       return data.emergency_request_id;
     } catch (error: unknown) {
       console.error('Error creating emergency request:', error);
@@ -200,162 +198,12 @@ export const useEmergencySOS = () => {
     }
   };
 
-  const startStatusPolling = (requestId: string) => {
-    let pollingInterval: ReturnType<typeof setTimeout> | null = null;
-    let consecutiveFailures = 0;
-    let temporaryFailures = 0;
-    const maxConsecutiveFailures = 5; // Allow more failures before stopping
-    const maxTemporaryFailures = 15; // Allow temporary failures for longer
-
-    const poll = async () => {
-      try {
-        const request = await checkRequestStatus(requestId);
-        
-        // Reset failure counters on success
-        consecutiveFailures = 0;
-        temporaryFailures = 0;
-        
-        if (request && request.status === 'accepted') {
-          console.log('Request accepted, stopping polling');
-          if (pollingInterval) {
-            clearInterval(pollingInterval);
-            pollingInterval = null;
-          }
-          
-          toast({
-            title: 'Psicólogo encontrado!',
-            description: `${request.psychologist?.full_name || 'Um psicólogo'} aceitou sua solicitação`,
-          });
-          
-          // Get session_id from the accepted request
-          const sessionId = request.video_room_id || request.room_url;
-          
-          if (sessionId) {
-            console.log('✅ Redirecting patient to video call with session_id:', sessionId);
-            // Use a callback to notify parent component about redirection
-            const redirectEvent = new CustomEvent('emergencyAccepted', {
-              detail: { sessionId, requestId: request.id }
-            });
-            window.dispatchEvent(redirectEvent);
-          } else {
-            console.error('❌ No session_id found in accepted request, retrying...');
-            // Don't show error immediately, give it more time to be updated
-            // The session_id might still be being written to the database
-            
-            // Retry after a short delay
-            setTimeout(async () => {
-              try {
-                const retryRequest = await checkRequestStatus(requestId);
-                if (retryRequest) {
-                  const retrySessionId = retryRequest.video_room_id || retryRequest.room_url;
-                  if (retrySessionId) {
-                    console.log('✅ Session_id found on retry:', retrySessionId);
-                    const redirectEvent = new CustomEvent('emergencyAccepted', {
-                      detail: { sessionId: retrySessionId, requestId: retryRequest.id }
-                    });
-                    window.dispatchEvent(redirectEvent);
-                  } else {
-                    console.error('❌ Session_id still not available after retry');
-                    toast({
-                      title: 'Erro de conexão',
-                      description: 'Não foi possível conectar à sala de vídeo. O psicólogo foi notificado.',
-                      variant: 'destructive',
-                      duration: 8000,
-                    });
-                  }
-                }
-              } catch (retryError) {
-                console.error('Error on retry check:', retryError);
-                toast({
-                  title: 'Erro de conexão',
-                  description: 'Problema de conexão. Tente atualizar a página.',
-                  variant: 'destructive',
-                  duration: 8000,
-                });
-              }
-            }, 2000); // Wait 2 seconds before retry
-          }
-          return;
-        }
-        
-        if (request && ['completed', 'cancelled'].includes(request.status)) {
-          console.log('Request completed or cancelled, stopping polling');
-          if (pollingInterval) {
-            clearInterval(pollingInterval);
-            pollingInterval = null;
-          }
-          return;
-        }
-        
-        // If request is null (cancelled/not found), stop polling
-        if (request === null) {
-          console.log('Request not found, stopping polling');
-          if (pollingInterval) {
-            clearInterval(pollingInterval);
-            pollingInterval = null;
-          }
-          return;
-        }
-      } catch (error: unknown) {
-        consecutiveFailures++;
-        temporaryFailures++;
-        
-        console.warn(`Status check failed (${consecutiveFailures}/${maxConsecutiveFailures}, temp: ${temporaryFailures}/${maxTemporaryFailures})`);
-        
-        // Stop polling if too many consecutive failures or too many temporary failures
-        if (consecutiveFailures >= maxConsecutiveFailures || temporaryFailures >= maxTemporaryFailures) {
-          console.error('Max failures reached, stopping status polling');
-          if (pollingInterval) {
-            clearInterval(pollingInterval);
-            pollingInterval = null;
-          }
-          
-          // Only show error toast after many failures
-          toast({
-            title: 'Problema de Conectividade',
-            description: 'Dificuldade para verificar o status. Sua solicitação continua ativa.',
-            variant: 'destructive',
-            duration: 5000,
-          });
-          return;
-        }
-      }
-    };
-
-    // Start polling immediately, then every 5 seconds
-    poll();
-    pollingInterval = setInterval(poll, 5000);
-
-    // Stop polling after 10 minutes
-    setTimeout(() => {
-      if (pollingInterval) {
-        clearInterval(pollingInterval);
-        pollingInterval = null;
-        console.log('Polling timeout reached, stopping status polling');
-      }
-    }, 600000);
-
-    // Return cleanup function
-    return () => {
-      if (pollingInterval) {
-        clearInterval(pollingInterval);
-        pollingInterval = null;
-      }
-    };
-  };
-
   const cancelRequest = useCallback(async (
     requestId: string,
     reason: 'cancelled_by_patient' | 'abandoned' = END_REASONS.CANCELLED_BY_PATIENT
   ) => {
     try {
       setLoading(true);
-
-      // Stop any ongoing polling first
-      if (stopPolling) {
-        stopPolling();
-        setStopPolling(null);
-      }
 
       const { data: { user } } = await getSessionUser();
 
@@ -398,7 +246,6 @@ export const useEmergencySOS = () => {
     } finally {
       setLoading(false);
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps -- roda só quando os valores listados mudam (as funções são recriadas a cada render)
   }, [toast]);
 
   return {

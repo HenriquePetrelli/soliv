@@ -132,7 +132,7 @@ Deno.serve(monitored("firebase-notifications", async (req) => {
     // permissão revogada): desativados para não gastar envio com eles.
     const deadTokens = results.filter((r) => r.dead).map((r) => r.token);
     if (deadTokens.length > 0) {
-      await supabase.from('fcm_tokens').update({ is_active: false }).in('token', deadTokens);
+      await supabase.rpc('deactivate_fcm_tokens', { p_tokens: deadTokens });
     }
 
     await supabase.from('notification_logs').insert({

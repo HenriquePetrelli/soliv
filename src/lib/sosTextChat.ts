@@ -66,6 +66,24 @@ export const parseHeartbeat = (raw: unknown): { state: SosChatServerState; serve
   };
 };
 
+/**
+ * Aplica uma linha de sos_chat_state recebida pelo tempo real (presença,
+ * "visto", última mensagem de cada lado) sem perguntar ao servidor.
+ */
+export const applyChatStateRow = (prev: SosChatServerState, row: Record<string, unknown>): SosChatServerState => {
+  const pick = (k: string, fallback: string | null) =>
+    k in row ? (typeof row[k] === 'string' ? (row[k] as string) : null) : fallback;
+  return {
+    ...prev,
+    psychologistSeenAt: pick('psychologist_seen_at', prev.psychologistSeenAt),
+    patientSeenAt: pick('patient_seen_at', prev.patientSeenAt),
+    psychologistReadAt: pick('psychologist_read_at', prev.psychologistReadAt),
+    patientReadAt: pick('patient_read_at', prev.patientReadAt),
+    lastPatientMessageAt: pick('last_patient_message_at', prev.lastPatientMessageAt),
+    lastPsychologistMessageAt: pick('last_psychologist_message_at', prev.lastPsychologistMessageAt),
+  };
+};
+
 export const isChatActive = (state: SosChatServerState) =>
   state.status === 'accepted' || state.status === 'in_progress';
 
