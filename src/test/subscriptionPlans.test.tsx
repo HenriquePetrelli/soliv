@@ -15,6 +15,7 @@ vi.mock('@/integrations/supabase/client', () => ({
 }));
 
 const toastMock = vi.fn();
+vi.mock('@/contexts/AuthContext', () => ({ useAuth: () => ({ user: null }) }));
 vi.mock('@/hooks/use-toast', () => ({ useToast: () => ({ toast: toastMock }) }));
 vi.mock('@/components/PageHeader', () => ({ default: ({ title }: { title: string }) => <h1>{title}</h1> }));
 

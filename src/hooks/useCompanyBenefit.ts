@@ -11,6 +11,14 @@ export interface CompanyBenefit {
   endsOn: string | null;
 }
 
+/**
+ * A pessoa digitou o código da empresa no cadastro? O banco usa esse código
+ * (nos dados do usuário) para entrar na empresa ao criar a conta e de novo ao
+ * confirmar o e-mail; não precisa pedir de novo.
+ */
+export const signedUpWithCompanyCode = (user: { user_metadata?: Record<string, unknown> } | null | undefined): boolean =>
+  typeof user?.user_metadata?.organization_code === 'string' && user.user_metadata.organization_code.trim() !== '';
+
 /** Benefício da empresa (B2B) de quem está logado e as empresas que ele gerencia (RH). */
 export const useCompanyBenefit = () => {
   const { user } = useAuth();
@@ -64,5 +72,5 @@ export const useCompanyBenefit = () => {
     void checkSubscription();
   }, [load, checkSubscription]);
 
-  return { benefit, managedOrganizationIds, loading, join, leave, reload: load };
+  return { benefit, managedOrganizationIds, signedUpWithCode: signedUpWithCompanyCode(user), loading, join, leave, reload: load };
 };

@@ -52,11 +52,12 @@ describe('Perfil: benefício da empresa', () => {
     expect(screen.getByText('Plano Essencial pela Empresa Teste')).toBeInTheDocument();
   });
 
-  it('aparece para o gestor do RH, mesmo sem usar o plano', async () => {
+  it('não leva o gestor do RH ao portal pelo perfil (o portal fica na Home)', async () => {
     company.managedOrganizationIds = ['org-1'];
     renderProfile();
-    expect(await screen.findByText('Benefício da empresa')).toBeInTheDocument();
-    expect(screen.getByText('Portal da empresa')).toBeInTheDocument();
+    expect(await screen.findByText('Termos de Uso')).toBeInTheDocument();
+    expect(screen.queryByText('Benefício da empresa')).not.toBeInTheDocument();
+    expect(screen.queryByText('Portal da empresa')).not.toBeInTheDocument();
   });
 });
 

@@ -32,8 +32,8 @@ const Profile = () => {
   const fromCompany = entitlementSource === 'organization';
   // "Benefício da empresa" só aparece para quem tem vínculo (colaborador ou RH).
   // Quem ainda não tem usa o código no cadastro ou em Planos.
-  const { benefit: companyBenefit, managedOrganizationIds } = useCompanyBenefit();
-  const linkedToCompany = Boolean(companyBenefit) || managedOrganizationIds.length > 0;
+  // O Portal da empresa (gestor do RH) fica na Home; aqui só o plano da empresa.
+  const { benefit: companyBenefit } = useCompanyBenefit();
   const { toast } = useToast();
   const { getShowGoalModalPreference, setShowGoalModal } = useWeeklyGoals();
   // Nome e e-mail já estão na sessão: a tela aparece na hora e o nome do
@@ -221,15 +221,11 @@ const Profile = () => {
           description="O que você sente, para indicarmos o melhor cuidado"
           onClick={() => setEditSymptomsOpen(true)}
         />
-        {linkedToCompany && (
+        {companyBenefit && (
           <SettingsRow
             icon={<Building2 />}
             title="Benefício da empresa"
-            description={
-              companyBenefit
-                ? `Plano ${companyBenefit.tier} pela ${companyBenefit.organizationName}`
-                : 'Portal da empresa'
-            }
+            description={`Plano ${companyBenefit.tier} pela ${companyBenefit.organizationName}`}
             onClick={() => navigate('/beneficio-empresa')}
           />
         )}

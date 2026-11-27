@@ -8,7 +8,8 @@ import {
   BookOpen,
   ShieldCheck,
   Sprout,
-  ArrowUpRight
+  ArrowUpRight,
+  LayoutDashboard
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { MoodAccordion } from "@/components/MoodAccordion";
@@ -28,6 +29,7 @@ import { useTheme } from "next-themes";
 import ActiveCallBanner from "@/components/sos/ActiveCallBanner";
 import HomeAllowanceLine from "@/components/home/HomeAllowanceLine";
 import { HomeSkeleton } from "@/components/skeletons/PageSkeletons";
+import { useCompanyBenefit } from "@/hooks/useCompanyBenefit";
 
 
 
@@ -164,6 +166,15 @@ const HomeContent = () => {
   const { resolvedTheme } = useTheme();
   const isDark = resolvedTheme === 'dark';
 
+  // Gestor do RH: atalho para o Portal da empresa no topo da Home.
+  const { managedOrganizationIds } = useCompanyBenefit();
+  const companyPortal = {
+    color: isDark ? 'hsl(262, 80%, 80%)' : 'hsl(262,72%,52%)',
+    bg: isDark ? 'hsl(262, 25%, 20%)' : 'hsl(262,90%,97%)',
+    border: isDark ? 'hsl(262, 25%, 30%)' : 'hsl(262,75%,88%)',
+    iconBg: 'hsl(262,72%,55%)',
+  };
+
   const features = [
     {
       icon: Activity,
@@ -237,6 +248,31 @@ const HomeContent = () => {
       <div>
         <HomeAllowanceLine />
         <ActiveCallBanner />
+
+        {managedOrganizationIds.length > 0 && (
+          <button
+            type="button"
+            onClick={() => navigate('/empresa')}
+            className="group relative mt-4 flex w-full items-center gap-4 overflow-hidden rounded-2xl border p-4 lg:p-5 text-left shadow-sm transition-all duration-200 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+            style={{ backgroundColor: companyPortal.bg, borderColor: companyPortal.border }}
+          >
+            <div
+              className="relative flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl text-white shadow-sm"
+              style={{ backgroundColor: companyPortal.iconBg, boxShadow: isDark ? 'none' : `0 6px 16px -6px ${companyPortal.color}` }}
+            >
+              <LayoutDashboard className="h-6 w-6" strokeWidth={2.25} aria-hidden="true" />
+            </div>
+            <div className="relative min-w-0 flex-1">
+              <h2 className="text-sm lg:text-base font-semibold leading-tight" style={{ color: companyPortal.color }}>Portal da empresa</h2>
+              <p className="mt-0.5 lg:mt-1 text-xs lg:text-sm leading-snug text-foreground/70">Vagas, código de convite e uso geral</p>
+            </div>
+            <ArrowUpRight
+              className="relative h-4 w-4 flex-shrink-0 opacity-60 group-hover:opacity-100 transition-opacity"
+              style={{ color: companyPortal.color }}
+              aria-hidden="true"
+            />
+          </button>
+        )}
 
         {/* Mobile/Tablet Mood Section */}
         {moodEnabled && (

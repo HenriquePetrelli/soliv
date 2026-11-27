@@ -4,7 +4,7 @@ import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { fakeDb, fakeSupabase } from './fakeSupabase';
 
 vi.mock('@/integrations/supabase/client', () => ({ supabase: fakeSupabase }));
-const user = { id: 'patient-1' };
+const user: { id: string; user_metadata: Record<string, unknown> } = { id: 'patient-1', user_metadata: {} };
 vi.mock('@/contexts/AuthContext', () => ({ useAuth: () => ({ user }) }));
 const checkSubscription = vi.fn();
 vi.mock('@/contexts/SubscriptionContext', () => ({ useSubscription: () => ({ checkSubscription, personalSubscriptionTier: personalTier }) }));
@@ -36,6 +36,7 @@ beforeEach(() => {
   fakeDb.currentUserId = 'patient-1';
   entitled = null;
   personalTier = null;
+  user.user_metadata = {};
   checkSubscription.mockClear();
   toastMock.success.mockClear();
   fakeDb.rpcHandlers.organization_entitlement = () => ({ data: entitled ? [entitled] : [], error: null });
@@ -58,6 +59,14 @@ describe('benefício da empresa (colaborador)', () => {
     expect(await screen.findByText('Plano Completo pela Empresa X')).toBeInTheDocument();
     expect(screen.getByText('1 consulta agendada por mês, de 50 minutos')).toBeInTheDocument();
     expect(checkSubscription).toHaveBeenCalled();
+  });
+
+  it('não pede o código de novo a quem já digitou no cadastro', async () => {
+    user.user_metadata = { organization_code: 'EMPX2026' };
+    renderAt('/beneficio-empresa');
+    expect(await screen.findByText('Benefício da empresa')).toBeInTheDocument();
+    await waitFor(() => expect(screen.queryByText('Sua empresa oferece o Soliv?')).not.toBeInTheDocument());
+    expect(screen.queryByLabelText('Código da empresa')).not.toBeInTheDocument();
   });
 
   it('explica por que o código não serviu', async () => {

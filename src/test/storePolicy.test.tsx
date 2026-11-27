@@ -11,6 +11,7 @@ vi.mock('@/integrations/supabase/client', () => ({
     auth: { getSession: async () => ({ data: { session: { access_token: 't' } } }) },
   },
 }));
+vi.mock('@/contexts/AuthContext', () => ({ useAuth: () => ({ user: null }) }));
 vi.mock('@/hooks/use-toast', () => ({ useToast: () => ({ toast: vi.fn() }) }));
 vi.mock('@/components/PageHeader', () => ({ default: ({ title }: { title: string }) => <h1>{title}</h1> }));
 

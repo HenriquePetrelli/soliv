@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Building2, Check, ChevronRight, LayoutDashboard } from 'lucide-react';
+import { Building2, Check } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -27,7 +27,7 @@ const formatDate = (iso: string) => new Date(`${iso}T12:00:00`).toLocaleDateStri
 /** Benefício da empresa (B2B): usar o código do RH, ver o que inclui, sair. */
 const CompanyBenefit = () => {
   const navigate = useNavigate();
-  const { benefit, managedOrganizationIds, loading, join, leave } = useCompanyBenefit();
+  const { benefit, signedUpWithCode, loading, join, leave } = useCompanyBenefit();
   const { personalSubscriptionTier } = useSubscription();
   const [code, setCode] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -103,7 +103,7 @@ const CompanyBenefit = () => {
                 Sair do benefício
               </Button>
             </section>
-          ) : (
+          ) : signedUpWithCode ? null : (
             <form onSubmit={handleJoin} className="space-y-4 rounded-2xl border border-border bg-card p-5">
               <div className="space-y-1">
                 <h2 className="flex items-center gap-2 text-base font-semibold text-foreground">
@@ -141,20 +141,6 @@ const CompanyBenefit = () => {
             </form>
           )}
 
-          {managedOrganizationIds.length > 0 && (
-            <button
-              type="button"
-              onClick={() => navigate('/empresa')}
-              className="flex w-full items-center gap-3 rounded-2xl border border-border bg-card p-4 text-left shadow-sm hover:bg-muted/40"
-            >
-              <LayoutDashboard className="h-5 w-5 text-primary" aria-hidden="true" />
-              <span className="flex-1">
-                <span className="block text-base font-semibold text-foreground">Portal da empresa</span>
-                <span className="block text-sm text-muted-foreground">Vagas, código de convite e uso geral</span>
-              </span>
-              <ChevronRight className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
-            </button>
-          )}
         </main>
       </div>
 
