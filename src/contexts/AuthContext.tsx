@@ -2,7 +2,8 @@ import React, { createContext, useContext, useEffect, useRef, useState } from 'r
 import SplashScreen from '@/components/SplashScreen';
 import { nextPaint, withTimeout } from '@/lib/async';
 import { clearLoginState, fetchLoginState, userTypeFromLoginState } from '@/lib/loginState';
-import { preloadCoreRoutesFor } from '@/lib/routePreload';
+import { preloadCoreRoutesFor, preloadRoute } from '@/lib/routePreload';
+import { prefetchPatientHome } from '@/lib/patientHomeRow';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { deactivateStoredPushToken } from '@/lib/pushToken';
@@ -53,6 +54,9 @@ const cleanupAuthState = () => {
     }
   });
 };
+
+// Endereços que levam o paciente logado para a tela inicial.
+const PATHS_TO_PATIENT_HOME = new Set(['/', '/entrar', '/home']);
 
 // Tempo máximo de cada etapa da saída que depende do servidor.
 const SIGN_OUT_STEP_MS = 2500;
@@ -138,6 +142,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // Paciente via metadata
     if (meta.user_type === 'patient' && meta.is_super_admin !== true) {
       console.log('[AuthContext] -> patient (fast path)');
+      // App reaberto já logado, a caminho da tela inicial: os dados dela
+      // começam a vir já, junto com o código (antes só depois de a tela montar).
+      if (PATHS_TO_PATIENT_HOME.has(window.location.pathname)) {
+        preloadRoute('/home');
+        prefetchPatientHome(authUser.id);
+      }
       setUserType('patient');
       setLoading(false);
       return;

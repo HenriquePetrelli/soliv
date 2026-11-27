@@ -151,9 +151,25 @@ const load = (loader: Loader) => {
 export const loaderForPath = (pathname: string): Loader | undefined =>
   ROUTE_LOADERS.find(([pattern]) => matchPath({ path: pattern, end: true }, pathname))?.[1];
 
+/**
+ * Layout do psicólogo (menu lateral e barra inferior), carregado à parte em
+ * App.tsx. Antes só começava a baixar depois de o painel já estar pronto: mais
+ * uma espera, em sequência, no login do psicólogo.
+ */
+const psychologistLayout: Loader = () => import("@/components/psychologist/layout/PsychologistLayout");
+const PSYCHOLOGIST_LAYOUT_ROUTES = new Set([
+  "/psychologist-dashboard",
+  "/psicologo/consultas",
+  "/psychologist-availability",
+  "/psychologist-payments",
+  "/psychologist-profile",
+  "/psychologist-notifications",
+]);
+
 export const preloadRoute = (pathname: string) => {
   const loader = loaderForPath(pathname);
   if (loader) load(loader);
+  if (PSYCHOLOGIST_LAYOUT_ROUTES.has(pathname)) load(psychologistLayout);
 };
 
 /** Abas principais de cada tipo de conta. */

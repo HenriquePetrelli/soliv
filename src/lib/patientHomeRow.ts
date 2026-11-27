@@ -1,4 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
+import { prefetchHabits } from '@/lib/habitsSnapshot';
 
 /**
  * A linha do paciente que a tela inicial precisa logo ao abrir, numa consulta
@@ -70,4 +71,14 @@ export const prefetchPatientHomeRow = (userId: string) => {
 /** O app gravou algo em `patients`: a próxima leitura vai ao servidor. */
 export const forgetPatientHomeRow = () => {
   entry = null;
+};
+
+/**
+ * Tudo o que a tela inicial do paciente pede ao abrir e que pode começar já:
+ * a linha do paciente e os hábitos (cartão "Meus hábitos"). Chamado quando a
+ * senha é aceita e ao reabrir o app já logado, junto com o código da tela.
+ */
+export const prefetchPatientHome = (userId: string) => {
+  prefetchPatientHomeRow(userId);
+  prefetchHabits(userId);
 };

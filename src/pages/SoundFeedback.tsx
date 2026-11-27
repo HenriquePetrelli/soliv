@@ -11,7 +11,7 @@ const SoundFeedback = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { sound, duration, isPlaylist, totalSounds, sessionId } = location.state || {};
-  const { addActivity, updateActivityTime } = usePatientStatistics();
+  const { addActivity, updateActivityTime } = usePatientStatistics({ load: false });
   const { checkAchievements } = useAchievements();
 
   // Conta uma vez por sessão ouvida: voltar a esta tela (botão voltar,

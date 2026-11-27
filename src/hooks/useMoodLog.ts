@@ -16,7 +16,7 @@ const toISODate = (date: Date): string =>
 export const useMoodLog = () => {
   const { user } = useAuth();
   const { toast } = useToast();
-  const { addActivity } = usePatientStatistics();
+  const { addActivity } = usePatientStatistics({ load: false });
   const [saving, setSaving] = useState(false);
 
   const logMood = async (value: number): Promise<boolean> => {
