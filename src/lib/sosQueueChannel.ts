@@ -1,4 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
+import { subscribePrivate } from '@/lib/privateChannel';
 
 /**
  * Broadcast bus for the SOS queue.
@@ -13,6 +14,11 @@ import { supabase } from '@/integrations/supabase/client';
  * em `sos-queue`, nunca chegava: a fila só se atualizava pela checagem
  * periódica. Agora há um canal só (o Supabase devolve o mesmo objeto para o
  * mesmo nome) e as telas se inscrevem numa lista interna.
+ *
+ * Quem avisa é o banco (gatilho em emergency_requests, realtime.send), a cada
+ * pedido novo ou mudança de status. Antes cada aparelho também mandava avisos
+ * (e cada psicólogo escutava a tabela inteira): cada mudança virava vários
+ * avisos para todos os conectados.
  */
 const CHANNEL = 'sos-queue';
 
@@ -21,29 +27,22 @@ let shared: ReturnType<typeof supabase.channel> | null = null;
 
 const getChannel = () => {
   if (!shared) {
-    shared = supabase
-      .channel(CHANNEL, { config: { broadcast: { self: true } } })
-      .on('broadcast', { event: 'queue-changed' }, () => {
-        listeners.forEach((listener) => {
-          try {
-            listener();
-          } catch (error) {
-            console.error('[SOS] queue listener failed', error);
-          }
-        });
-      })
-      .subscribe();
+    shared = subscribePrivate(
+      supabase
+        // Privado: só quem está logado ouve; só o banco envia.
+        .channel(CHANNEL, { config: { private: true } })
+        .on('broadcast', { event: 'queue-changed' }, () => {
+          listeners.forEach((listener) => {
+            try {
+              listener();
+            } catch (error) {
+              console.error('[SOS] queue listener failed', error);
+            }
+          });
+        }),
+    );
   }
   return shared;
-};
-
-/** Tells every listener (patients + psychologists) that the queue changed. */
-export const notifySosQueueChanged = (payload: Record<string, unknown> = {}) => {
-  try {
-    getChannel().send({ type: 'broadcast', event: 'queue-changed', payload });
-  } catch (error) {
-    console.error('[SOS] failed to broadcast queue change', error);
-  }
 };
 
 /** Subscribes to queue changes. Returns an unsubscribe function. */

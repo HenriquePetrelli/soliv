@@ -63,12 +63,11 @@ Deno.serve(monitored("notification-push", async (req: Request): Promise<Response
       totalPending += pending.length;
 
       const userIds = [...new Set(pending.map((p) => p.user_id))];
-      const { data: tokens, error: tokensError } = await supabase
-        .from("fcm_tokens")
-        .select("user_id, token")
-        .in("user_id", userIds)
-        .neq("is_active", false);
+      // Lista no corpo (RPC): com 500 contas, .in() na URL era recusado e a
+      // busca parava em 1000 aparelhos.
+      const { data: tokenRows, error: tokensError } = await supabase.rpc("fcm_tokens_for_users", { p_user_ids: userIds });
       if (tokensError) throw tokensError;
+      const tokens = (tokenRows ?? []) as { user_id: string; token: string }[];
 
       const tokensByUser = new Map<string, string[]>();
       for (const t of tokens ?? []) {
@@ -123,7 +122,7 @@ Deno.serve(monitored("notification-push", async (req: Request): Promise<Response
       }
 
       if (deadTokens.size > 0) {
-        await supabase.from("fcm_tokens").update({ is_active: false }).in("token", [...deadTokens]);
+        await supabase.rpc("deactivate_fcm_tokens", { p_tokens: [...deadTokens] });
       }
       const { error: finishError } = await supabase.rpc("finish_pushes", { p_sent: sentIds, p_failed: failedIds });
       if (finishError) console.error("notification-push: falha ao registrar o resultado", finishError);

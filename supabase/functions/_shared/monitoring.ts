@@ -98,6 +98,16 @@ function dispatch(report: EdgeErrorReport) {
   if (runtime?.waitUntil) runtime.waitUntil(task);
 }
 
+/**
+ * Trabalho que continua depois da resposta (EdgeRuntime.waitUntil). Fora do
+ * runtime do Supabase (testes), a promessa só segue sozinha.
+ */
+export function runInBackground(task: Promise<unknown>) {
+  const guarded = task.catch((error) => console.error('[background]', error));
+  const runtime = (globalThis as { EdgeRuntime?: { waitUntil?: (p: Promise<unknown>) => void } }).EdgeRuntime;
+  if (runtime?.waitUntil) runtime.waitUntil(guarded);
+}
+
 /** Registra um erro tratado dentro da função (opcional; o 5xx já é registrado). */
 export function reportEdgeError(fn: string, error: unknown, extra?: { method?: string; status?: number }) {
   dispatch({ fn, method: extra?.method, status: extra?.status, message: describe(error) });

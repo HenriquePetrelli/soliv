@@ -32,6 +32,7 @@
 | `warn-appointments-before-plan-end` | Todo dia, 12h12 (9h12 em Brasília) | Avisa, 3 dias antes, quem tem plano que não vai renovar e consulta marcada para depois do fim (uma vez por consulta) | 08 |
 | `purge-archived-payouts` | Todo dia, 5h25 | Apaga do arquivo os repasses de psicólogos excluídos que passaram de 5 anos | 09 |
 | `purge-old-sos-messages` | Todo dia, 5h35 | Apaga as mensagens do SOS por mensagem com mais de 3 meses | 02 |
+| `purge-rate-limits` | Todo dia, 5h55 | Apaga contadores de limite de uso parados há mais de 1 dia (`purge_stale_rate_limits`) | 20 |
 
 Os horários estão em UTC, que é como o pg_cron agenda: 3h UTC é meia-noite em Brasília. A tabela `cron.job` é a fonte da verdade, porque horários podem ter sido ajustados direto no banco.
 

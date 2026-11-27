@@ -1,7 +1,7 @@
 # 02. SOS: atendimento de emergência
 
 > **Status:** Pronto, com pendência externa (TURN para redes restritivas; push depende do Firebase).
-> **Última verificação:** 2026-11-02 (SOS por mensagem). Antes: 2026-10-31 (triagem rápida opcional na confirmação do SOS). Antes: 2026-10-25 (varredura das regras: plano vencido sem SOS, psicólogo em consulta agendada não aceita SOS, não conta como disponível e não recebe push, aceite recusado mostra o motivo certo).
+> **Última verificação:** 2026-11-27 (escala: fila avisada pelo banco em canal privado, push do SOS sem limite de psicólogos, SOS por mensagem sem laço de sinais). Antes: 2026-11-02 (SOS por mensagem). Antes: 2026-10-31 (triagem rápida opcional na confirmação do SOS). Antes: 2026-10-25 (varredura das regras: plano vencido sem SOS, psicólogo em consulta agendada não aceita SOS, não conta como disponível e não recebe push, aceite recusado mostra o motivo certo).
 > **Quem usa:** paciente com plano (Essencial, Flex, Completo ou empresa) e psicólogo aprovado.
 
 ## Resumo
@@ -24,9 +24,9 @@ O paciente aperta SOS, escolhe **por vídeo** (padrão) ou **por mensagem**, ent
 1. O paciente toca em SOS. A edge function `emergency-sos` confere o login, o plano (com a data de fim: plano vencido não pede SOS, mesmo antes de a rotina diária atualizar a assinatura) e a cota do mês (`can_use_sos`), aplica um limite de 5 tentativas em 10 minutos e cria o pedido em `emergency_requests` com status `pending`.
 2. Sem SOS disponível (cota do mês usada, sem plano ou conta bloqueada), a tela não fica "buscando": mostra o motivo e as ajudas do momento (CVV em destaque, respirar, plano de segurança, SAMU) e, conforme o caso, "Agendar uma consulta" (Completo) ou "Ver planos" (`SosUnavailable`).
 3. Se já existe um pedido aberto do paciente, ele volta para esse pedido em vez de criar outro. O banco garante isso mesmo com dois toques ao mesmo tempo ou duas abas (`guard_sos_concurrency`). Só conta de paciente pede SOS.
-3. Os psicólogos online veem o pedido na lista na hora (tempo real e canal `sos-queue`, com consulta a cada 10 s). Todos os psicólogos aprovados, não bloqueados, que não estão em outro SOS nem numa consulta agendada em andamento recebem um **push**, mesmo com o app fechado.
+3. Os psicólogos online veem o pedido na lista na hora: o banco avisa no canal privado `sos-queue` a cada pedido novo ou mudança de status (gatilho `broadcast_sos_queue_change`), e a lista também confere a cada 20 s. O canal é privado: só quem está logado ouve e nenhum aparelho consegue mandar aviso nele. Todos os psicólogos aprovados, não bloqueados, que não estão em outro SOS nem numa consulta agendada em andamento recebem um **push**, mesmo com o app fechado. A lista de aparelhos vem de uma consulta no banco (`sos_push_tokens`, sem limite de quantidade) e o envio sai depois da resposta ao paciente, no máximo 50 por vez.
 4. Na fila, o paciente vê quantos psicólogos estão online, o tempo de espera (até 10 min), **Meu plano** (plano de segurança), **Respirar** e as ligações para o CVV 188 e o SAMU 192 (uma vez só, sem repetir). Sem ninguém online, o pedido continua na fila (todos os psicólogos recebem push e podem ficar online). As ligações para o CVV e o SAMU têm sempre o mesmo visual.
-5. A fila confere o pedido a cada 5 s e quando a internet ou a tela voltam. Assim o aceite chega mesmo se o tempo real cair.
+5. A fila confere o pedido a cada 5 s e quando a internet ou a tela voltam. Assim o aceite chega mesmo se o tempo real cair. O número de psicólogos disponíveis é recontado a cada 15 s (com a tela visível) e, depois de um aviso da fila, com uma espera aleatória de até 2,5 s, para os pacientes na espera não consultarem todos no mesmo instante.
 
 ### 2. Aceite
 0. Na fila, cada pedido mostra o que o paciente marcou. Pedidos com suicídio ou perigo aparecem **primeiro**, com a etiqueta "Prioritário". O push na tela bloqueada só diz "Pedido de emergência prioritário", nunca o que foi marcado. No painel de contexto da chamada, a triagem aparece no topo.

@@ -41,7 +41,8 @@ export const applyAuthBlock = async (
         method: "POST",
         headers: { apikey: key, Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
         body: JSON.stringify({
-          messages: [{ topic: accountStatusTopic(userId), event: "check", payload: {}, private: false }],
+          // Canal privado: só a própria conta ouve e o app não consegue enviar.
+          messages: [{ topic: accountStatusTopic(userId), event: "check", payload: {}, private: true }],
         }),
       });
       if (!res.ok) console.error("Could not notify open app:", res.status);

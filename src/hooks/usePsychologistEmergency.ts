@@ -4,7 +4,7 @@ import { getSessionUser } from '@/lib/currentUser';
 import { useToast } from '@/hooks/use-toast';
 import { getFunctionErrorMessage } from '@/utils/errorMessage';
 import { findPsychologistOngoingCall } from '@/lib/emergencyCallGuard';
-import { notifySosQueueChanged, subscribeSosQueue } from '@/lib/sosQueueChannel';
+import { subscribeSosQueue } from '@/lib/sosQueueChannel';
 import { isPriorityTriage } from '@/lib/sosTriage';
 
 
@@ -153,7 +153,6 @@ export const usePsychologistEmergency = () => {
         
         // Refresh the list
         fetchEmergencyRequests();
-        notifySosQueueChanged({ requestId });
         
         return {
           emergency_request: data.emergency_request,
@@ -206,7 +205,6 @@ export const usePsychologistEmergency = () => {
 
       // Refresh the list
       fetchEmergencyRequests();
-      notifySosQueueChanged({ requestId });
     } catch (error: unknown) {
       console.error('Error declining emergency request:', error);
       toast({
@@ -218,14 +216,16 @@ export const usePsychologistEmergency = () => {
   };
 
   // Vários eventos seguidos (um SOS muda de estado algumas vezes em segundos)
-  // viram uma consulta só.
+  // viram uma consulta só. A espera tem uma parte aleatória (0,3 a 1,3 s): com
+  // muitos psicólogos online, o aviso chega a todos juntos e as consultas se
+  // espalham em vez de bater no banco no mesmo instante.
   const refreshTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const scheduleRefresh = () => {
     if (refreshTimer.current) return;
     refreshTimer.current = setTimeout(() => {
       refreshTimer.current = null;
       void fetchEmergencyRequests(true);
-    }, 800);
+    }, 300 + Math.random() * 1000);
   };
 
   // Set up real-time subscription for emergency requests
@@ -233,22 +233,10 @@ export const usePsychologistEmergency = () => {
     // Initial fetch
     fetchEmergencyRequests();
 
-    // Subscribe to real-time changes
-    const channel = supabase
-      .channel(`emergency-requests-changes-${Math.random().toString(36).slice(2)}`)
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'emergency_requests'
-        },
-        () => scheduleRefresh()
-      )
-      .subscribe();
-
-    // RLS hides cancelled/accepted rows from this psychologist, so the postgres
-    // event never arrives. The broadcast bus + a short poll keep the list honest.
+    // Aviso do banco a cada pedido novo ou mudança de status (canal sos-queue).
+    // Antes cada psicólogo escutava a tabela emergency_requests inteira, e a
+    // checagem de acesso rodava para cada um a cada mudança; e o cancelamento
+    // nem chegava (o pedido some do RLS).
     const unsubscribeQueue = subscribeSosQueue(scheduleRefresh);
     // Rede de segurança caso o tempo real caia; com a aba escondida, não consulta.
     const poll = window.setInterval(() => {
@@ -257,7 +245,6 @@ export const usePsychologistEmergency = () => {
 
 
     return () => {
-      supabase.removeChannel(channel);
       unsubscribeQueue();
       window.clearInterval(poll);
       if (refreshTimer.current) clearTimeout(refreshTimer.current);

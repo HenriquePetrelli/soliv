@@ -130,6 +130,9 @@ interface UseWebRTCProps {
  * rede (ICE restart) e, se não voltar, recria a conexão inteira; quando um lado
  * recarrega a página, o outro percebe pela oferta/resposta nova e recria a sua.
  */
+/** Aviso de mídia passando (ver report_call_media). */
+export const CALL_MEDIA_PULSE_MS = 30_000;
+
 export const useWebRTC = ({ sessionId, userType, onConnectionStateChange }: UseWebRTCProps) => {
   const [peerConnection, setPeerConnection] = useState<RTCPeerConnection | null>(null);
   const [localStream, setLocalStream] = useState<MediaStream | null>(null);
@@ -1046,8 +1049,12 @@ export const useWebRTC = ({ sessionId, userType, onConnectionStateChange }: UseW
     return signalChannelRef.current?.sendMediaState(payload) ?? false;
   }, []);
 
-  // While audio/video flows, a pulse every 20 s lets the server add up how long
+  // While audio/video flows, a pulse every 30 s lets the server add up how long
   // BOTH sides were really in the call (a consultation only counts after 5 min).
+  // Cada aviso grava a linha da sala, que o tempo real manda inteira (com a
+  // negociação da chamada) aos dois lados: era a cada 20 s, o que limitava
+  // quantas chamadas cabem no tráfego do tempo real. O banco aceita até 60 s
+  // entre avisos.
   useEffect(() => {
     if (!isConnected) return;
     const timer = setInterval(() => {
@@ -1055,7 +1062,7 @@ export const useWebRTC = ({ sessionId, userType, onConnectionStateChange }: UseW
       mediaQueueRef.current = mediaQueueRef.current.then(async () => {
         await supabase.rpc('report_call_media', { p_session_id: sessionId, p_connected: true });
       }).catch(() => undefined);
-    }, 20_000);
+    }, CALL_MEDIA_PULSE_MS);
     return () => clearInterval(timer);
   }, [isConnected, sessionId]);
 
@@ -1320,14 +1327,15 @@ export const useWebRTC = ({ sessionId, userType, onConnectionStateChange }: UseW
           });
 
         // Safety net: realtime can silently die after a drop. While the media is
-        // not flowing, re-read the row every 3 s; once connected, every 6 s
-        // (cheap) so a new peer or a renegotiation request is never missed.
+        // not flowing, re-read the row every 3 s; once connected, every 15 s
+        // (o tempo real traz as mudanças; a releitura só cobre uma queda dele e
+        // a volta do socket já relê na hora).
         let tick = 0;
         pollTimer = setInterval(() => {
           tick += 1;
           if (!isMounted || !isLive()) return;
           const connected = pcRef.current?.connectionState === 'connected';
-          if (connected && tick % 2 !== 0) return;
+          if (connected && tick % 5 !== 0) return;
           void readRow();
         }, 3000);
 

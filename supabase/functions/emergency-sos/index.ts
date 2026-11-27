@@ -2,7 +2,8 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.52.1";
 import { isPriorityTriage, sanitizeTriage } from "../_shared/sosTriage.ts";
 import { errorMessage } from '../_shared/errors.ts';
-import { monitored } from "../_shared/monitoring.ts";
+import { monitored, runInBackground } from "../_shared/monitoring.ts";
+import { firebaseServiceAccount, getAccessToken, sendToTokens } from "../_shared/fcm.ts";
 
 // Login vai no cabeçalho Authorization (não em cookie): '*' sem credenciais,
 // como nas outras funções. Antes a origem era refletida com credenciais para
@@ -256,68 +257,45 @@ serve(monitored("emergency-sos", async (req) => {
       // approved, unblocked psychologist who isn't already in another
       // emergency call. Best-effort: a push failure must never block SOS
       // creation itself.
-      try {
-        const { data: eligible } = await supabase
-          .from('psychologists')
-          .select('user_id, is_blocked, blocked_until')
-          .eq('approved', true)
-          .eq('approval_status', 'approved');
-
-        const now = Date.now();
-        const eligibleIds = (eligible ?? [])
-          .filter((p) => !(p.is_blocked === true && (!p.blocked_until || new Date(p.blocked_until).getTime() > now)))
-          .map((p) => p.user_id);
-
-        const { data: busy } = eligibleIds.length > 0
-          ? await supabase
-              .from('psychologist_presence')
-              .select('psychologist_id')
-              .in('psychologist_id', eligibleIds)
-              .not('current_emergency_id', 'is', null)
-          : { data: [] as { psychologist_id: string }[] };
-        const busyIds = new Set((busy ?? []).map((p) => p.psychologist_id));
-        // Em consulta agendada agora: não chama (não pode aceitar até terminar).
-        const { data: inConsultation } = eligibleIds.length > 0
-          ? await supabase
-              .from('appointments')
-              .select('psychologist_id')
-              .in('psychologist_id', eligibleIds)
-              .eq('status', 'in_progress')
-          : { data: [] as { psychologist_id: string }[] };
-        for (const row of inConsultation ?? []) busyIds.add(row.psychologist_id);
-        const targetIds = eligibleIds.filter((id) => !busyIds.has(id));
-
-        if (targetIds.length > 0) {
-          const { data: tokens } = await supabase
-            .from('fcm_tokens')
-            .select('token')
-            .in('user_id', targetIds)
-            .eq('is_active', true);
-
-          if (tokens && tokens.length > 0) {
-            await supabase.functions.invoke('firebase-notifications', {
-              body: {
-                // Texto discreto (tela bloqueada): diz só que é prioritário,
-                // nunca o que o paciente marcou.
-                title: isPriorityTriage(triage) ? 'Pedido de emergência prioritário' : 'Nova solicitação de emergência',
-                body: channel === 'text'
-                  ? 'Um paciente precisa de atendimento imediato, por mensagem.'
-                  : 'Um paciente precisa de atendimento imediato.',
-                tokens: tokens.map((t) => t.token),
-                data: { type: 'sos', emergency_request_id: emergencyRequest.id },
-                // Tocar abre a fila do SOS; entrega imediata e, se não chegar em
-                // 10 min (o pedido já expirou), o Firebase descarta.
-                url: '/psychologist-dashboard',
-                urgent: true,
-                ttl_seconds: 600,
-                tag: `sos-${emergencyRequest.id}`,
-              },
-            });
+      // Uma consulta no banco devolve os aparelhos (antes: listas de IDs na
+      // URL, que com algumas centenas de psicólogos era recusada, e buscas
+      // cortadas em 1000 linhas — o push não chegava a ninguém). O envio roda
+      // depois da resposta: o paciente não espera os pushes saírem.
+      const sendSosPush = async () => {
+        try {
+          const { data: tokens, error: tokensError } = await supabase.rpc('sos_push_tokens');
+          if (tokensError) throw tokensError;
+          const list = (tokens as string[] | null) ?? [];
+          if (list.length === 0) return;
+          const serviceAccount = firebaseServiceAccount();
+          if (!serviceAccount) {
+            console.error('SOS push: Firebase não configurado');
+            return;
           }
+          const accessToken = await getAccessToken(serviceAccount);
+          const results = await sendToTokens(serviceAccount, accessToken, list, {
+            // Texto discreto (tela bloqueada): diz só que é prioritário,
+            // nunca o que o paciente marcou.
+            title: isPriorityTriage(triage) ? 'Pedido de emergência prioritário' : 'Nova solicitação de emergência',
+            body: channel === 'text'
+              ? 'Um paciente precisa de atendimento imediato, por mensagem.'
+              : 'Um paciente precisa de atendimento imediato.',
+            data: { type: 'sos', emergency_request_id: emergencyRequest.id },
+            // Tocar abre a fila do SOS; entrega imediata e, se não chegar em
+            // 10 min (o pedido já expirou), o Firebase descarta.
+            url: '/psychologist-dashboard',
+            urgent: true,
+            ttlSeconds: 600,
+            tag: `sos-${emergencyRequest.id}`,
+          });
+          const dead = results.filter((r) => r.dead).map((r) => r.token);
+          if (dead.length > 0) await supabase.rpc('deactivate_fcm_tokens', { p_tokens: dead });
+          console.log(`SOS push: ${results.filter((r) => r.ok).length}/${results.length} aparelhos`);
+        } catch (pushError) {
+          console.error('Error sending SOS push notification:', pushError);
         }
-      } catch (pushError) {
-        console.error('Error sending SOS push notification:', pushError);
-      }
+      };
+      runInBackground(sendSosPush());
 
       return new Response(
         JSON.stringify({

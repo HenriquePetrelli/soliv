@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import {
   SOS_TEXT_HEARTBEAT_MS,
   emptySosChatState,
+  applyChatStateRow,
   parseHeartbeat,
   type SosChatServerState,
 } from '@/lib/sosTextChat';
@@ -99,14 +100,21 @@ export const useSosChat = ({ requestId, userType }: { requestId: string | null; 
     };
   }, [requestId]);
 
-  // Presença e "visto": só com a conversa visível.
+  // Presença e "visto": só com a conversa visível. Um sinal por vez (foco,
+  // volta da internet e o intervalo podem cair juntos).
+  const beatInFlightRef = useRef(false);
   const beat = useCallback(async () => {
-    if (!requestId || document.visibilityState !== 'visible') return;
-    const { data, error } = await supabase.rpc('sos_chat_heartbeat', { p_request_id: requestId, p_read: true });
-    if (error || !data) return;
-    const { state: next, serverNow } = parseHeartbeat(data);
-    if (serverNow) setClockOffset(serverNow - Date.now());
-    setState(next);
+    if (!requestId || document.visibilityState !== 'visible' || beatInFlightRef.current) return;
+    beatInFlightRef.current = true;
+    try {
+      const { data, error } = await supabase.rpc('sos_chat_heartbeat', { p_request_id: requestId, p_read: true });
+      if (error || !data) return;
+      const { state: next, serverNow } = parseHeartbeat(data);
+      if (serverNow) setClockOffset(serverNow - Date.now());
+      setState(next);
+    } finally {
+      beatInFlightRef.current = false;
+    }
   }, [requestId]);
 
   useEffect(() => {
@@ -128,6 +136,9 @@ export const useSosChat = ({ requestId, userType }: { requestId: string | null; 
   }, [requestId, beat]);
 
   // Mudanças do outro lado (lido, presença, fim do atendimento) chegam na hora.
+  // O evento traz a linha nova: aplica direto. Antes cada evento chamava o
+  // sinal (que grava em sos_chat_state e gera outro evento para os dois
+  // lados): 1 virava 2, 4, 8... enquanto a conversa estivesse aberta.
   useEffect(() => {
     if (!requestId) return;
     const channel = supabase
@@ -135,7 +146,10 @@ export const useSosChat = ({ requestId, userType }: { requestId: string | null; 
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'sos_chat_state', filter: `request_id=eq.${requestId}` },
-        () => void beat(),
+        (payload) => {
+          const row = payload.new as Record<string, unknown> | null;
+          if (row && Object.keys(row).length > 0) setState((prev) => applyChatStateRow(prev, row));
+        },
       )
       .on(
         'postgres_changes',
@@ -155,7 +169,7 @@ export const useSosChat = ({ requestId, userType }: { requestId: string | null; 
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [requestId, beat]);
+  }, [requestId]);
 
   // "digitando…": aviso direto entre os dois, sem passar pelo banco.
   useEffect(() => {

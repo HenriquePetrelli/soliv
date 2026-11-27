@@ -173,12 +173,11 @@ Deno.serve(monitored("habit-reminders", async (req: Request): Promise<Response> 
       }
 
       const userIds = [...new Set(reminders.map((r) => r.user_id))];
-      const { data: tokens, error: tokensError } = await supabase
-        .from("fcm_tokens")
-        .select("user_id, token")
-        .in("user_id", userIds)
-        .neq("is_active", false);
+      // Lista no corpo (RPC): com 500 contas, .in() na URL era recusado e a
+      // busca parava em 1000 aparelhos.
+      const { data: tokenRows, error: tokensError } = await supabase.rpc("fcm_tokens_for_users", { p_user_ids: userIds });
       if (tokensError) throw tokensError;
+      const tokens = (tokenRows ?? []) as { user_id: string; token: string }[];
 
       const tokensByUser = new Map<string, string[]>();
       for (const t of tokens ?? []) {
@@ -208,7 +207,7 @@ Deno.serve(monitored("habit-reminders", async (req: Request): Promise<Response> 
         else if (results.some((r) => r.transient)) retry.push(reminder.habit_id);
       });
       if (deadTokens.size > 0) {
-        await supabase.from("fcm_tokens").update({ is_active: false }).in("token", [...deadTokens]);
+        await supabase.rpc("deactivate_fcm_tokens", { p_tokens: [...deadTokens] });
       }
       if (retry.length > 0) {
         const { error: releaseError } = await supabase.rpc("release_habit_reminders", { p_habit_ids: retry });

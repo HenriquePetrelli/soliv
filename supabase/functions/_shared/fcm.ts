@@ -154,15 +154,38 @@ const fcmErrorCode = (body: FcmErrorBody): string | undefined => {
   return typeof body?.error?.status === 'string' ? body.error.status : undefined;
 };
 
-/** Manda a mesma mensagem para vários aparelhos, com o resultado de cada um. */
+/** Envios ao Firebase ao mesmo tempo (SOS para milhares de aparelhos). */
+export const FCM_CONCURRENCY = 50;
+
+/** Executa `fn` em cada item com no máximo `limit` ao mesmo tempo, na ordem. */
+const mapConcurrent = async <T, R>(items: T[], limit: number, fn: (item: T) => Promise<R>): Promise<R[]> => {
+  const results = new Array<R>(items.length);
+  let next = 0;
+  const workers = Array.from({ length: Math.min(limit, items.length) }, async () => {
+    while (next < items.length) {
+      const i = next++;
+      results[i] = await fn(items[i]);
+    }
+  });
+  await Promise.all(workers);
+  return results;
+};
+
+/**
+ * Manda a mesma mensagem para vários aparelhos, com o resultado de cada um.
+ * No máximo FCM_CONCURRENCY envios ao mesmo tempo: antes eram todos juntos,
+ * o que, com milhares de aparelhos, estourava conexões e memória da função.
+ */
 export const sendToTokens = async (
   serviceAccount: ServiceAccount,
   accessToken: string,
   tokens: string[],
   message: PushMessage,
 ): Promise<TokenResult[]> =>
-  Promise.all(
-    [...new Set(tokens)].map(async (token): Promise<TokenResult> => {
+  mapConcurrent(
+    [...new Set(tokens)],
+    FCM_CONCURRENCY,
+    async (token): Promise<TokenResult> => {
       try {
         const response = await fetch(`https://fcm.googleapis.com/v1/projects/${serviceAccount.project_id}/messages:send`, {
           method: 'POST',
@@ -180,5 +203,5 @@ export const sendToTokens = async (
         // Rede caiu no meio: passageiro.
         return { token, ok: false, dead: false, transient: true, error: String(err) };
       }
-    }),
+    },
   );
