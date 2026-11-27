@@ -1,7 +1,7 @@
 # 20. Segurança: proteções que valem para o app inteiro
 
 > **Status:** Pronto, com pendência externa (ajustes de senha no painel do Supabase e senha do admin).
-> **Última verificação:** 2026-11-01 (varredura: cadastro de psicólogo pela edge function não aceita mais `approved`/outro `user_id`; link `javascript:` no documento do psicólogo bloqueado no banco e no painel do admin; `subscribers` não é mais lido por e-mail reaproveitado; jsPDF 4.2.1 e dependências atualizadas). Antes: 2026-10-30 (verificação em duas etapas obrigatória para o admin). Antes: 2026-10-27 (varredura: RLS em todas as tabelas, funções abertas a visitantes conferem o acesso, todas as edge functions exigem login, segredo ou assinatura; corrigidos documento do psicólogo aprovado, `cleanup-user` e presença na chamada).
+> **Última verificação:** 2026-11-27 (varredura: consentimento da transcrição só pelo paciente; aviso de troca do Pix; motivos de bloqueio e recusa do psicólogo fora da leitura pública; contadores da presença e conquistas só pelo servidor; trilha do SOS só de participante ou da fila; regras repetidas do armazenamento removidas; links de volta e iframe só das prévias deste projeto na Lovable; link do push recusa `/\`; CSP só com o Supabase do Soliv; versões das edge functions fixadas). Antes: 2026-11-01 (varredura: cadastro de psicólogo pela edge function não aceita mais `approved`/outro `user_id`; link `javascript:` no documento do psicólogo bloqueado no banco e no painel do admin; `subscribers` não é mais lido por e-mail reaproveitado; jsPDF 4.2.1 e dependências atualizadas). Antes: 2026-10-30 (verificação em duas etapas obrigatória para o admin). Antes: 2026-10-27 (varredura: RLS em todas as tabelas, funções abertas a visitantes conferem o acesso, todas as edge functions exigem login, segredo ou assinatura; corrigidos documento do psicólogo aprovado, `cleanup-user` e presença na chamada).
 > **Quem usa:** todos (proteção invisível).
 
 ## Princípio
@@ -52,6 +52,16 @@
 | Script no link do documento (ataque ao admin) | Gatilho `validate_psychologist_document_links`: `document_url`/`documents` só `https://` ou caminho do armazenamento; no app, `src/lib/safeUrl.ts` só abre links http(s) | Update em `document_url` = `javascript:alert(1)` → "Link do documento inválido" |
 | Ver o plano de outra conta pelo e-mail reaproveitado | Política `select_own_subscription`: por e-mail só linha ainda sem dono | Conta nova com e-mail antigo de outra pessoa → 0 linhas da conta antiga |
 
+| Psicólogo forjando o consentimento da transcrição | `guard_appointment_client_update` e `guard_emergency_request_client_update` travam `transcription_consent_at`/`_version`; na consulta só `give_appointment_transcription_consent` (o paciente), no SOS só a `emergency-sos` | Como psicólogo, update em `appointments.transcription_consent_at` → "Alteração não permitida nesta consulta" |
+| Trocar o Pix e desviar o repasse sem ninguém ver | Gatilho `notify_psychologist_pix_change`: aviso com push para o psicólogo e linha `pix_key_changed` em `security_audit_log` (só os 4 últimos caracteres) | Trocar a chave Pix → aviso "Sua chave Pix foi alterada" |
+| Ler o motivo do bloqueio ou da recusa de um psicólogo | Colunas `blocked_reason` e `rejection_reason` sem leitura pelo app; o próprio lê por `get_login_state()` | `has_column_privilege('authenticated','public.psychologists','blocked_reason','select')` = `false` |
+| Mexer nos contadores do SOS ou no "SOS em andamento" do psicólogo | Gatilho `a_guard_psychologist_presence_client_write`: pelo app só `last_online` | Update em `emergency_accepted_count` pela API → valor não muda |
+| Inventar conquista | Sem inserção pelo app (nascem por `initialize_patient_achievements`); gatilho `a_guard_patient_achievement_client_update` trava título, texto e ícone | Insert em `patient_achievements` pela API → recusado |
+| Poluir a trilha de SOS de outro colega | Inserção em `sos_trace_events`: participante do chamado, ou psicólogo apto em chamado ainda livre na fila | Evento num SOS aceito por outro → recusado |
+| Site de terceiros na Lovable recebendo a volta do checkout ou exibindo o app num iframe | `isProjectLovableHost` (`_shared/origin.ts`): só as prévias deste projeto; `frameGuard` usa a mesma regra | `appOrigin` com `https://outro.lovable.app` → volta para o site |
+| Link do push para outro site com `/\site.com` | `pushTarget`/`isAppPath` e o service worker recusam `//`, `\` e caracteres de controle | `src/test/pushTarget.test.ts` |
+| Script injetado mandando dados para outro projeto Supabase | CSP `connect-src` só com `ihrrgmmsfuvlasmzdmwf.supabase.co` | No app publicado, a CSP não tem `*.supabase.co` |
+| Versão nova de biblioteca entrando sozinha no deploy | Imports do esm.sh com versão fixa (`supabase-js@2.52.1`, nunca `@2`) | `grep -rn "supabase-js@2[\"']" supabase/functions` vazio |
 | Visitante sem login lendo tabelas ou chamando funções | Desde 2026-11-07 (migration `20261107220000_varredura_limpeza_desempenho_seguranca.sql`): o papel `anon` não tem acesso a tabelas nem funções, exceto `brazilian_states`, `brazilian_cities`, `transtornos_sintomas` (leitura, cadastro) e `check_organization_code` (código da empresa no cadastro); as políticas valem só para `authenticated` (antes `public`, que inclui visitante) | Sem login: `GET /rest/v1/profiles` → 401; `GET /rest/v1/brazilian_states` → 200 |
 | App chamando funções internas ou de gatilho | Funções de gatilho e internas sem `EXECUTE` para `anon`/`authenticated` (o gatilho continua disparando); só ficam abertas as que o app chama e as usadas nas políticas | `has_function_privilege('authenticated','public.apply_organization_entitlement()','execute')` = `false` |
 
@@ -76,7 +86,14 @@ select
   pg_get_functiondef('public.guard_psychologist_client_write'::regproc) like '%document_url := OLD.document_url%' as documento_aprovado_travado,
   not exists(select 1 from pg_policies where schemaname = 'storage' and policyname in ('psychologist_own_documents', 'Admin and owner access to psychologist documents')) as arquivos_sem_regras_antigas,
   (select bool_and(file_size_limit = 10485760 and allowed_mime_types is not null) from storage.buckets
-     where id in ('documents', 'psychologist-documents', 'payment-receipts')) as uploads_limitados;
+     where id in ('documents', 'psychologist-documents', 'payment-receipts')) as uploads_limitados,
+  pg_get_functiondef('public.guard_appointment_client_update'::regproc) like '%transcription_consent_at%' as consentimento_consulta_travado,
+  pg_get_functiondef('public.guard_emergency_request_client_update'::regproc) like '%transcription_consent_at%' as consentimento_sos_travado,
+  exists(select 1 from pg_trigger where tgname = 'notify_psychologist_pix_change') as aviso_troca_pix,
+  not has_column_privilege('authenticated', 'public.psychologists', 'blocked_reason', 'select') as motivo_bloqueio_oculto,
+  exists(select 1 from pg_trigger where tgname = 'a_guard_psychologist_presence_client_write') as presenca_psicologo_protegida,
+  not exists(select 1 from pg_policies where schemaname = 'storage' and 'public' = any(roles)
+     and coalesce(qual, '') || coalesce(with_check, '') like '%psychologist-documents%') as documentos_sem_regra_publica;
 ```
 
 ## Onde está no código
@@ -88,6 +105,8 @@ select
 
 ## Pendências
 
+- **Varredura de 2026-11-27** (pendência 34): "Secure password change" no painel, CAPTCHA nas telas de login, canais privados do Realtime e dependências com troca de versão maior.
+- **Código do admin só em produção** (pendência 24): em `test` o admin entra só com a senha; no lançamento, `environment = 'production'`.
 - **Painel do Supabase** (pendência 6): senha mínima 8 e "Letters and digits"; "Confirm email" depois do domínio; "Prevent use of leaked passwords" só no plano Pro.
 - **Sem cabeçalhos de hospedagem** como `X-Frame-Options` (a Lovable não permite configurar). A proteção contra clickjacking é feita pelo próprio app (`frameGuard`), e cobre Chrome, Edge e Safari; no Firefox, que não informa o site de fora, o app abre normalmente.
 

@@ -80,11 +80,10 @@ const RouteGuard: React.FC<RouteGuardProps> = ({
     if (!user || userType !== 'psychologist') return;
     let cancelled = false;
     (async () => {
-      const { data } = await supabase
-        .from('psychologists')
-        .select('is_blocked, blocked_until, blocked_reason')
-        .eq('user_id', user.id)
-        .maybeSingle();
+      // O motivo do bloqueio não é legível na tabela (outras contas veriam):
+      // vem de get_login_state, que só devolve os dados da própria conta.
+      const { data: state } = await supabase.rpc('get_login_state');
+      const data = (state as { psychologist?: { is_blocked: boolean | null; blocked_until: string | null; blocked_reason: string | null } | null } | null)?.psychologist;
       if (cancelled || !data || !isCurrentlyBlocked(data)) return;
       await notifyBlockedAccess(data);
       await goOfflineOnSignOut(user.id);

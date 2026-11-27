@@ -61,7 +61,7 @@ Em 2026-11-22 o banco tinha 20 contas (13 pacientes, 6 psicólogos), 27 consulta
 
 ### 4. Supabase em produção
 
-- [ ] **Código do admin (pendência 24):** volta sozinho quando o cadastro abrir (item 5, `signup_invite_code = NULL`). Depois de abrir, conferir que o painel pede o código do autenticador.
+- [ ] **Código do admin (pendência 24):** mudar para produção com `UPDATE public.app_settings SET environment = 'production', updated_at = now();` e conferir que o painel pede o código do autenticador. Em `test`, o admin entra só com a senha (decisão de 2026-11-27: o código vale só em produção).
 - [ ] **TURN (pendência 5),** se não foi feito na lista A.
 - [ ] Conferir Authentication: "Confirm email" ligado, SMTP do Resend, limite de e-mails (100/h) e Site URL `https://solivsaude.com.br` (já estão assim desde 2026-11-22).
 
@@ -79,6 +79,17 @@ Em 2026-11-22 o banco tinha 20 contas (13 pacientes, 6 psicólogos), 27 consulta
 ## Detalhes das pendências
 
 ### Do ambiente de teste (lista A)
+
+#### 34. Reforços da varredura de segurança de 2026-11-27
+
+- **Situação:** a migration `20261127120000_varredura_seguranca_consentimento_e_reforcos.sql` e as edge functions com a versão do `supabase-js` fixada estão no PR da varredura. Testada na produção numa transação desfeita (nada ficou gravado): antes da correção, o psicólogo gravou o consentimento da transcrição numa consulta; depois, a consulta e o SOS recusam, o update normal da consulta continua passando, o aviso de troca do Pix é criado, `blocked_reason` fica oculto e `get_login_state` segue funcionando. Ficha 20.
+- **O que fazer:**
+  1. Aplicar a migration no Supabase e publicar as edge functions alteradas (mesmo `verify_jwt` de antes); publicar o site na Lovable (CSP, link do push, iframe).
+  2. **Authentication → Providers → Email → "Secure password change"** (`update_password_require_reauthentication`): ligar. O app já pede a senha atual e entra de novo antes de trocar, então a troca pelo app continua funcionando; o que muda é que um token roubado com mais de 24 h não troca a senha sozinho.
+  3. **CAPTCHA no login, cadastro e "esqueci a senha":** criar a conta no hCaptcha ou Cloudflare Turnstile, ligar em Authentication → Attack Protection e colocar o widget nas três telas (o Supabase passa a recusar quem não manda o token, então as duas coisas vão juntas). Sem CAPTCHA, só os limites do Supabase seguram tentativas em massa.
+  4. **Canais do Realtime privados:** a presença da chamada (`call-presence:<sala>`), o "digitando" do SOS (`sos-typing-<id>`), o aviso de bloqueio (`account-status:<conta>`) e a fila (`sos-queue`) são canais públicos: quem souber o nome entra. Os nomes usam IDs aleatórios, então o risco é baixo. Para fechar: regras em `realtime.messages`, `private: true` nos canais do app e no broadcast do servidor, e "Allow public access" desligado no Realtime. Fica para uma rodada própria, testada com chamadas de verdade (um erro aqui derruba o SOS).
+  5. **Dependências com troca de versão maior:** `react-router-dom` 7 (redirecionamento com `\`; o app não navega para endereço vindo de fora), `zod` 4 (consumo de memória só no próprio aparelho), `firebase` (o aviso é do gRPC do Firestore, que o app não usa), `vite`/`vitest` (só no computador de quem desenvolve). Nenhuma é explorável hoje; atualizar com calma, testando as telas.
+- **Registrado em:** 2026-11-27.
 
 #### 2. Domínio do Soliv e envio de e-mails
 
@@ -252,8 +263,9 @@ Em 2026-11-22 o banco tinha 20 contas (13 pacientes, 6 psicólogos), 27 consulta
 
 #### 24. Voltar a exigir o código de verificação do admin
 
-- **Situação:** enquanto o cadastro pede o código de convite (`app_settings.signup_invite_code` preenchido), o admin entra só com a senha. Com o cadastro aberto (`signup_invite_code` vazio), o código do app autenticador (verificação em duas etapas) é exigido. Desde 2026-11-23 a regra segue o código de convite (migration `20261123140000_mfa_do_admin_segue_codigo_de_convite.sql`); antes dependia de `app_settings.environment`, que não decide mais nada. O banco (`is_super_admin`), as edge functions de admin (`adminMfaSatisfied`) e o painel leem a mesma função, `admin_mfa_required()`.
-- **O que fazer no lançamento:** nada à parte. Ao abrir o cadastro (`UPDATE public.app_settings SET signup_invite_code = NULL, updated_at = now();`), o painel e as funções passam a exigir o código na hora. Para voltar a fechar o cadastro, preencher o código de novo, e o admin volta a entrar só com a senha.
+- **Situação:** desde 2026-11-25 (migration `20261125160000_mfa_do_admin_so_em_producao.sql`) a regra segue `app_settings.environment`: em `test` o admin entra só com a senha; em `production` (ou valor vazio) o código do app autenticador é exigido. Decisão confirmada em 2026-11-27: o código vale só em produção. Em 2026-11-27 o valor está `test`. O banco (`is_super_admin`), as edge functions de admin (`adminMfaSatisfied`) e o painel leem a mesma função, `admin_mfa_required()`. A conta de admin já tem o autenticador cadastrado e verificado, então a troca não trava ninguém.
+- **O que fazer no lançamento:** `UPDATE public.app_settings SET environment = 'production', updated_at = now();`. O painel e as funções passam a exigir o código na hora.
+- **Histórico:** de 2026-11-23 a 2026-11-25 a regra seguiu o código de convite (`20261123140000_mfa_do_admin_segue_codigo_de_convite.sql`).
 - **Como conferir:** entrar com a conta de admin; depois da senha, a tela do código precisa aparecer e o painel não abre sem ele.
 - **Aplicado em 2026-11-23:** migration `20261123140000_mfa_do_admin_segue_codigo_de_convite.sql` no Supabase (registrada no histórico). Conferido antes numa transação desfeita: com o código de convite, `admin_mfa_required()` = false; com `signup_invite_code = NULL`, true. Depois de aplicar, o código continua `SOLIV-BETA` e o admin entra só com a senha.
 - **Aplicado em 2026-11-09:** migration no Supabase (registrada no histórico) e 11 edge functions publicadas pela CLI com `--use-api`, mesmo `verify_jwt` de antes: `account-block-status` (nova), `admin-block-*`, `admin-update-*`, `admin-delete-*`, `admin-psychologist-management`, `psychologist-management`, `confirm-payment` e `payment-sync`. Conferido no banco, numa transação desfeita: aviso de bloqueio só com a senha certa (com prazo e por tempo indeterminado), sessões encerradas ao bloquear, admin com token aal1 aceito em `test` e recusado em `production`.

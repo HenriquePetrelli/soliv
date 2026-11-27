@@ -5,7 +5,7 @@
 // escrita — ver src/hooks/usePsychologistAvailability.ts e
 // src/hooks/useAvailableTimeSlots.ts. Este arquivo ficou órfão e o POST
 // abaixo nunca persistiu nada de verdade; mantido apenas por histórico.
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.52.1';
 import { monitored } from "../_shared/monitoring.ts";
 
 const corsHeaders = {
