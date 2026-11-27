@@ -21,7 +21,7 @@ const MindfulEating = () => {
   const [elapsed, setElapsed] = useState(0);
   const { index, remaining } = stepAt(STEPS, elapsed);
   const finished = index >= STEPS.length;
-  const { addActivity } = usePatientStatistics();
+  const { addActivity } = usePatientStatistics({ load: false });
   const { loading: achievementsLoading, unlockAchievement } = useAchievements();
   const logged = useRef(false);
 

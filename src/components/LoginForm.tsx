@@ -9,7 +9,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { isCurrentlyBlocked, notifyBlockedAccess } from "@/utils/psychologistBlock";
 import { fetchLoginState } from '@/lib/loginState';
-import { prefetchPatientHomeRow } from '@/lib/patientHomeRow';
+import { prefetchPatientHome } from '@/lib/patientHomeRow';
 import { preloadRoute } from '@/lib/routePreload';
 import type { BlockInfo } from "@/utils/psychologistBlock";
 import { getAuthErrorMessage } from '@/utils/errorMessage';
@@ -92,7 +92,12 @@ const LoginForm = ({ onForgotPassword, onSignUp }: LoginFormProps) => {
       const meta = data.user.user_metadata ?? {};
       if (meta.user_type === 'patient' && meta.is_super_admin !== true) {
         preloadRoute('/home');
-        prefetchPatientHomeRow(data.user.id);
+        prefetchPatientHome(data.user.id);
+      } else if (meta.user_type === 'psychologist') {
+        // Psicólogo (pelo cadastro): o código do painel baixa junto com a
+        // consulta abaixo, como a tela inicial do paciente. Quem ainda não foi
+        // aprovado vai para outra tela e isto só foi um download a mais.
+        preloadRoute('/psychologist-dashboard');
       }
 
       // Tudo o que o login precisa saber numa consulta só (antes eram de 3 a 5

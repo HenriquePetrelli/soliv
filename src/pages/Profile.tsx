@@ -35,7 +35,7 @@ const Profile = () => {
   // O Portal da empresa (gestor do RH) fica na Home; aqui só o plano da empresa.
   const { benefit: companyBenefit } = useCompanyBenefit();
   const { toast } = useToast();
-  const { getShowGoalModalPreference, setShowGoalModal } = useWeeklyGoals();
+  const { getShowGoalModalPreference, setShowGoalModal } = useWeeklyGoals({ autoLoad: false });
   // Nome e e-mail já estão na sessão: a tela aparece na hora e o nome do
   // cadastro (profiles) chega em seguida, sem esqueleto de espera.
   const { user: authUser, signOut } = useAuth();

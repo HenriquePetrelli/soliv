@@ -55,7 +55,7 @@ export const FeedbackModal = ({ isOpen, onClose, userType, sessionId, partnerNam
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [alreadySent, setAlreadySent] = useState(false);
   const { toast } = useToast();
-  const { addActivity } = usePatientStatistics();
+  const { addActivity } = usePatientStatistics({ load: false });
 
   const isPsychologist = userType === 'psychologist';
   const needsInvestigation = resolution === 'partially_resolved' || resolution === 'not_resolved';

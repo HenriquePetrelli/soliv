@@ -1,4 +1,5 @@
 import type { Faro } from '@grafana/faro-web-sdk';
+import { afterPageSettles } from '@/lib/idle';
 
 /**
  * Monitoramento de erros do app (Grafana Cloud, Frontend Observability).
@@ -21,6 +22,8 @@ export const DEFAULT_FARO_URL =
   'https://faro-collector-prod-sa-east-1.grafana.net/collect/38b1f1261815afe0b62bfd8743488208';
 
 let faro: Faro | null = null;
+/** Quanto o SDK espera, depois do load da página, para baixar. */
+const SDK_DELAY_MS = 2500;
 const pending: Pending[] = [];
 const MAX_PENDING = 20;
 
@@ -72,6 +75,10 @@ export async function startMonitoring(env: MonitoringEnv): Promise<boolean> {
   window.addEventListener('error', onError);
   window.addEventListener('unhandledrejection', onRejection);
   try {
+    // O SDK (uns 40 KB) espera a primeira tela abrir: antes ele baixava junto
+    // com o código e os dados da tela inicial, disputando a rede com eles.
+    // Os erros desse intervalo ficam na fila acima.
+    await new Promise<void>((resolve) => afterPageSettles(resolve, { minDelayMs: SDK_DELAY_MS }));
     const { startFaro } = await import('./faro');
     faro = startFaro({
       url: collectorUrl(env)!,

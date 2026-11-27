@@ -38,7 +38,7 @@ const AddTestimonialForm = ({ groupId, groupName, onSuccess, onCancel }: AddTest
   const { addTestimonial } = useGroupTestimonials(groupId);
   const { symptoms, symptomId } = useGroupSymptoms(groupName);
   const { subscribed, subscriptionTier } = useSubscription();
-  const { addActivity } = usePatientStatistics();
+  const { addActivity } = usePatientStatistics({ load: false });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

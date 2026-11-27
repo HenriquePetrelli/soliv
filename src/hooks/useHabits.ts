@@ -4,16 +4,14 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import type { Json } from '@/integrations/supabase/types';
 import {
-  addDays,
   localDateString,
   type HabitEvent,
   type HabitKind,
   type HabitSettings,
   type UserHabit,
 } from '@/lib/habits';
+import { fetchHabitsSnapshot, takePrefetchedHabits } from '@/lib/habitsSnapshot';
 
-/** Quantos dias de histórico carregar (sequências e gráfico da semana). */
-const HISTORY_DAYS = 60;
 
 export interface HabitDraft {
   kind: HabitKind;
@@ -160,21 +158,8 @@ export const useHabits = () => {
       setLoading(false);
       return;
     }
-    const since = addDays(localDateString(), -HISTORY_DAYS);
-    const [habitsResult, eventsResult] = await Promise.all([
-      supabase
-        .from('user_habits')
-        .select('*')
-        .eq('user_id', user.id)
-        .is('archived_at', null)
-        .order('created_at', { ascending: true }),
-      supabase
-        .from('habit_events')
-        .select('*')
-        .eq('user_id', user.id)
-        .gte('local_date', since)
-        .order('occurred_at', { ascending: true }),
-    ]);
+    // Na primeira carga, aproveita a busca começada no login (habitsSnapshot).
+    const [habitsResult, eventsResult] = await (takePrefetchedHabits(user.id) ?? fetchHabitsSnapshot(user.id));
     if (habitsResult.error || eventsResult.error) {
       console.error('useHabits: erro ao carregar', habitsResult.error ?? eventsResult.error);
       // Sem internet: continua mostrando o que já estava na tela.
