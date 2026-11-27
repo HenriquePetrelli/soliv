@@ -60,7 +60,8 @@ const fetchLegacy = async (userId: string): Promise<LoginState> => {
     supabase.from('patients').select('is_blocked, blocked_until, blocked_reason').eq('user_id', userId).maybeSingle(),
     supabase
       .from('psychologists')
-      .select('approved, approval_status, is_blocked, blocked_until, blocked_reason')
+      // blocked_reason não é legível pela tabela: neste caminho de reserva fica sem o motivo.
+      .select('approved, approval_status, is_blocked, blocked_until')
       .eq('user_id', userId)
       .maybeSingle(),
     supabase

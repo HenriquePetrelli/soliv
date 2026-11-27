@@ -8,6 +8,9 @@
  * Só no build de produção (o servidor de desenvolvimento usa scripts inline).
  */
 
+/** Projeto do Supabase do app (o mesmo de src/integrations/supabase/client.ts). */
+export const SUPABASE_HOST = 'ihrrgmmsfuvlasmzdmwf.supabase.co';
+
 // Hash do onload="this.media='all'" que carrega a fonte sem travar a página.
 export const CONTENT_SECURITY_POLICY = [
   "default-src 'self'",
@@ -18,8 +21,10 @@ export const CONTENT_SECURITY_POLICY = [
   "font-src 'self' data:",
   "img-src 'self' data: blob: https:",
   "media-src 'self' data: blob: https:",
-  "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://*.googleapis.com https://*.grafana.net",
-  "frame-src 'self' blob: https://*.supabase.co",
+  // Só o projeto do Soliv no Supabase: com "*.supabase.co", um script injetado
+  // poderia mandar dados para um projeto Supabase de outra pessoa.
+  `connect-src 'self' https://${SUPABASE_HOST} wss://${SUPABASE_HOST} https://*.googleapis.com https://*.grafana.net`,
+  `frame-src 'self' blob: https://${SUPABASE_HOST}`,
   "worker-src 'self'",
   "manifest-src 'self'",
   "object-src 'none'",

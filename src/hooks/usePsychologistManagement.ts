@@ -202,7 +202,7 @@ export const usePsychologistManagement = () => {
       // Verificar tabela psychologists
       const { data: psychologist, error: psychError } = await supabase
         .from('psychologists')
-        .select('approval_status, approved, id, is_blocked, blocked_until, blocked_reason')
+        .select('approval_status, approved, id, is_blocked, blocked_until')
         .eq('user_id', userId)
         .single();
 
@@ -215,11 +215,15 @@ export const usePsychologistManagement = () => {
         (!(psychologist).blocked_until || new Date((psychologist).blocked_until).getTime() > Date.now());
 
       if (blocked) {
+        // Motivo só pela função da própria conta (a coluna não é legível pelo app).
+        const { data: state } = await supabase.rpc('get_login_state');
+        const blockedReason =
+          (state as { psychologist?: { blocked_reason?: string | null } | null } | null)?.psychologist?.blocked_reason ?? null;
         return {
           isApproved: false,
           status: 'blocked',
           blockedUntil: (psychologist).blocked_until as string | null,
-          blockedReason: (psychologist).blocked_reason as string | null,
+          blockedReason,
         };
       }
 

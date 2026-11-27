@@ -17,7 +17,8 @@ self.addEventListener('notificationclick', (event) => {
   const candidates = [data.url, fcm && fcm.data && fcm.data.url, fcm && fcm.fcmOptions && fcm.fcmOptions.link];
   const toPath = (value) => {
     if (typeof value !== 'string') return null;
-    if (/^\/(?!\/)/.test(value)) return value;
+    // "//site.com" e "/\\site.com" o navegador trata como outro site.
+    if (/^\/(?![\/\\])/.test(value) && !/[\u0000-\u001f\\]/.test(value)) return value;
     try {
       const url = new URL(value);
       return url.origin === self.location.origin ? url.pathname + url.search : null;
@@ -25,7 +26,7 @@ self.addEventListener('notificationclick', (event) => {
       return null;
     }
   };
-  // Só caminhos do próprio app ("//site.com" também começa com "/").
+  // Só caminhos do próprio app.
   const target = candidates.map(toPath).find(Boolean) || (fcm && fcm.data && fcm.data.type === 'sos' ? '/psychologist-dashboard' : '/');
   event.waitUntil(
     self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clients) => {

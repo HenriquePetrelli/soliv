@@ -4,7 +4,7 @@
 // mesmo período, as sessões abertas são encerradas e o app aberto recebe um
 // aviso para conferir o bloqueio e sair, mostrando o motivo e o tempo.
 
-import type { SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2";
+import type { SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.52.1";
 import { authBanDuration } from "./blockDuration.ts";
 
 export { parseBlockDuration } from "./blockDuration.ts";
