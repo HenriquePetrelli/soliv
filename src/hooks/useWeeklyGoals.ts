@@ -67,7 +67,12 @@ export const recordGoalActivity = async (category: string): Promise<string[]> =>
   return done;
 };
 
-export const useWeeklyGoals = () => {
+/**
+ * `autoLoad: false` para quem não mostra as metas ao abrir (a janela de
+ * escolha, fechada na tela inicial; o perfil): antes cada abertura da tela
+ * inicial chamava ensure_week_goals e buscava as metas sem mostrar nada.
+ */
+export const useWeeklyGoals = ({ autoLoad = true }: { autoLoad?: boolean } = {}) => {
   const { user } = useAuth();
   const [goals, setGoals] = useState<PatientWeeklyGoal[]>([]);
   const [loading, setLoading] = useState(true);
@@ -232,9 +237,13 @@ export const useWeeklyGoals = () => {
   }, []);
 
   useEffect(() => {
+    if (!autoLoad) {
+      setLoading(false);
+      return;
+    }
     fetchGoals();
     fetchSelectedGoals();
-  }, [fetchGoals, fetchSelectedGoals]);
+  }, [fetchGoals, fetchSelectedGoals, autoLoad]);
 
   return {
     goals,

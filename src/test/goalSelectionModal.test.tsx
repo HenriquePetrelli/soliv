@@ -17,12 +17,14 @@ const updateSelectedGoalsMock = vi.fn().mockResolvedValue(undefined);
 const createGoalMock = vi.fn().mockResolvedValue(undefined);
 const deleteGoalMock = vi.fn().mockResolvedValue(undefined);
 const fetchDefaultGoalsMock = vi.fn().mockResolvedValue(TEMPLATES);
+const fetchSelectedGoalsMock = vi.fn().mockResolvedValue(undefined);
 
 vi.mock('@/hooks/useWeeklyGoals', () => ({
   useWeeklyGoals: () => ({
     selectedGoals: currentSelectedGoals,
     goals: currentGoals,
     fetchDefaultGoals: fetchDefaultGoalsMock,
+    fetchSelectedGoals: fetchSelectedGoalsMock,
     updateSelectedGoals: updateSelectedGoalsMock,
     createGoal: createGoalMock,
     deleteGoal: deleteGoalMock,

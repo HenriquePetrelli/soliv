@@ -12,9 +12,7 @@ import {
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { MoodAccordion } from "@/components/MoodAccordion";
-import { WeeklyGoalModal } from "@/components/goals/WeeklyGoalModal";
-import { GoalSelectionModal } from "@/components/goals/GoalSelectionModal";
-import { useEffect, useState } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
 import { useLegalGateStatus } from "@/lib/legalGateStatus";
 import { useIdentityVerification } from "@/contexts/IdentityVerificationContext";
 import HomeHabitsCard from "@/components/habits/HomeHabitsCard";
@@ -28,6 +26,12 @@ import { useTheme } from "next-themes";
 import ActiveCallBanner from "@/components/sos/ActiveCallBanner";
 import HomeAllowanceLine from "@/components/home/HomeAllowanceLine";
 import { HomeSkeleton } from "@/components/skeletons/PageSkeletons";
+
+// As janelas das metas da semana ficam fechadas na maior parte das aberturas:
+// o código delas (com a biblioteca de animação, uns 36 KB) só baixa quando
+// uma vai abrir, em vez de atrasar toda tela inicial.
+const WeeklyGoalModal = lazy(() => import("@/components/goals/WeeklyGoalModal").then((m) => ({ default: m.WeeklyGoalModal })));
+const GoalSelectionModal = lazy(() => import("@/components/goals/GoalSelectionModal").then((m) => ({ default: m.GoalSelectionModal })));
 
 
 
@@ -45,6 +49,14 @@ const HomeContent = () => {
   const [showGoalSelection, setShowGoalSelection] = useState(false);
   // A janela das metas da semana espera o aceite dos Termos, para não abrir por cima dele.
   const legalGateStatus = useLegalGateStatus();
+  const [weeklyGoalModalMounted, setWeeklyGoalModalMounted] = useState(false);
+  const [goalSelectionMounted, setGoalSelectionMounted] = useState(false);
+  useEffect(() => {
+    if (showWeeklyGoalModal) setWeeklyGoalModalMounted(true);
+  }, [showWeeklyGoalModal]);
+  useEffect(() => {
+    if (showGoalSelection) setGoalSelectionMounted(true);
+  }, [showGoalSelection]);
 
   useEffect(() => {
     if (!user?.id) return;
@@ -81,6 +93,8 @@ const HomeContent = () => {
 
       // Verificar se deve mostrar a janela das metas da semana
       if (patientData?.show_weekly_goal_modal && patientData?.show_goal_modal) {
+        // O código da janela já começa a baixar durante a espera.
+        void import("@/components/goals/WeeklyGoalModal");
         setTimeout(() => setShowWeeklyGoalModal(true), 500);
       }
 
@@ -328,18 +342,26 @@ const HomeContent = () => {
 
         {/* Modals */}
 
-        <WeeklyGoalModal
-          open={showWeeklyGoalModal && legalGateStatus === "clear" && !identityPromptOpen}
-          onOpenChange={handleCloseWeeklyGoalModal}
-          onAddGoals={handleAddGoals}
-          onDontShowAgain={handleDontShowAgain}
-        />
+        <Suspense fallback={null}>
+          {/* Montadas a partir da primeira vez que vão abrir (e mantidas, para
+              a animação de fechar). */}
+          {weeklyGoalModalMounted && (
+            <WeeklyGoalModal
+              open={showWeeklyGoalModal && legalGateStatus === "clear" && !identityPromptOpen}
+              onOpenChange={handleCloseWeeklyGoalModal}
+              onAddGoals={handleAddGoals}
+              onDontShowAgain={handleDontShowAgain}
+            />
+          )}
 
-        <GoalSelectionModal
-          open={showGoalSelection}
-          onOpenChange={setShowGoalSelection}
-          onGoalsAdded={handleGoalsAdded}
-        />
+          {goalSelectionMounted && (
+            <GoalSelectionModal
+              open={showGoalSelection}
+              onOpenChange={setShowGoalSelection}
+              onGoalsAdded={handleGoalsAdded}
+            />
+          )}
+        </Suspense>
       </div>
     </>
   );

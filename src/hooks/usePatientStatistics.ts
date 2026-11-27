@@ -18,7 +18,12 @@ interface PatientStatistics {
   last_active_date: string | null;
 }
 
-export const usePatientStatistics = () => {
+/**
+ * `load: false` para quem só registra atividades (addActivity,
+ * updateActivityTime) e não mostra os números: a tela inicial, por exemplo,
+ * pedia as estatísticas duas vezes a cada abertura sem usar nenhuma.
+ */
+export const usePatientStatistics = ({ load = true }: { load?: boolean } = {}) => {
   const { user } = useAuth();
   const [recentActivities, setRecentActivities] = useState<Activity[]>([]);
   const [statistics, setStatistics] = useState<Omit<PatientStatistics, 'recent_activities'> | null>(null);
@@ -141,8 +146,9 @@ export const usePatientStatistics = () => {
   }, [user]);
 
   useEffect(() => {
-    fetchStatistics();
-  }, [fetchStatistics]);
+    if (load) fetchStatistics();
+    else setLoading(false);
+  }, [fetchStatistics, load]);
 
   return {
     recentActivities,

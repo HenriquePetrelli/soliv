@@ -35,7 +35,7 @@ const Profile = () => {
   const { benefit: companyBenefit, managedOrganizationIds } = useCompanyBenefit();
   const linkedToCompany = Boolean(companyBenefit) || managedOrganizationIds.length > 0;
   const { toast } = useToast();
-  const { getShowGoalModalPreference, setShowGoalModal } = useWeeklyGoals();
+  const { getShowGoalModalPreference, setShowGoalModal } = useWeeklyGoals({ autoLoad: false });
   // Nome e e-mail já estão na sessão: a tela aparece na hora e o nome do
   // cadastro (profiles) chega em seguida, sem esqueleto de espera.
   const { user: authUser, signOut } = useAuth();

@@ -20,7 +20,7 @@ import { usePatientStatistics } from '@/hooks/usePatientStatistics';
 const WeeklyGoalsSection = () => {
   const { user } = useAuth();
   const { goals, loading, fetchGoals, updateGoalProgress } = useWeeklyGoals();
-  const { addActivity } = usePatientStatistics();
+  const { addActivity } = usePatientStatistics({ load: false });
   const [modalOpen, setModalOpen] = useState(false);
 
   // Escolha feita em outra aba/dispositivo (ou o reset automático das
