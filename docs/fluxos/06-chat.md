@@ -49,7 +49,7 @@ O chat dá continuidade ao cuidado depois de uma consulta. Só nasce de uma cons
 - **Hooks**: `useConversas` (usa `listar_conversas`, com não lidas; atualização em segundo plano não mostra erro), `useMensagens` (fila de envio com id do aparelho, pendentes guardadas em `chat:pendentes:<conversa>`, reenvio automático, tempo real, nova sincronização), `useChatModeration` (admin).
 - **Edge function**: `chat-cleanup` (apaga fotos de conversas que não existem mais e fotos sem mensagem com mais de 1 dia; só a rotina chama).
 - **Regras puras**: `src/lib/chatImage.ts`, `chatPhoto.ts` (reduz a foto), `browserNotifications.ts`.
-- **Banco**: `conversas`, `mensagens`; bucket `documents` (pasta `chat-images`). Funções: `notify_new_message` (aviso com link da conversa), `marcar_atividade_conversa` (mensagem nova marca a conversa: a lista escuta só as conversas da pessoa, não a tabela de mensagens inteira), `pode_criar_conversa`, `listar_conversas` (sem as ocultadas), `abrir_conversa`, `ocultar_conversa`, `marcar_mensagens_como_lidas`, `gerenciar_expiracao_conversas`, `get_admin_conversas_overview`.
+- **Banco**: `conversas`, `mensagens`; bucket `documents` (pasta `chat-images`). Funções: `notify_new_message` (aviso com link da conversa), `marcar_atividade_conversa` (mensagem nova ou lida marca a conversa), `broadcast_conversa_change` (cada mudança da conversa avisa os dois participantes no canal privado `conversas:<id>`, que a lista escuta por `src/lib/conversasChannel.ts`; a tabela `conversas` não está mais no `postgres_changes`), `pode_criar_conversa`, `listar_conversas` (sem as ocultadas), `abrir_conversa`, `ocultar_conversa`, `marcar_mensagens_como_lidas`, `gerenciar_expiracao_conversas`, `get_admin_conversas_overview`.
 
 ## Como validar
 

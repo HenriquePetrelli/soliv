@@ -7,14 +7,14 @@ import { SharedArray } from 'k6/data';
 import { Counter, Trend } from 'k6/metrics';
 import { WebSocket } from 'k6/experimental/websockets';
 
-const URL = 'https://ihrrgmmsfuvlasmzdmwf.supabase.co';
+const URL = __ENV.SB_URL || 'https://ihrrgmmsfuvlasmzdmwf.supabase.co';
 const AK = open('./anon.key').trim();
 const data = new SharedArray('data', () => [JSON.parse(open('./world.json'))]);
 const W = () => data[0];
 
 const SCALE = Number(__ENV.SCALE || 1); // 1 = pico completo
 const HOLD = __ENV.HOLD || '3m';
-const MAX = { call: Number(__ENV.MAX_CALL || 514), queue: 150, waiting: 200, browse: 250, rt: Number(__ENV.MAX_RT || 1157) };
+const MAX = { call: Number(__ENV.MAX_CALL || 514), queue: 150, waiting: 200, browse: 250, rt: Number(__ENV.MAX_RT || 400) };
 const stages = (max) => [
   { duration: __ENV.RAMP || '1m', target: Math.round(max * 0.1 * SCALE) },
   { duration: HOLD, target: Math.round(max * 0.1 * SCALE) },
@@ -217,8 +217,9 @@ const failKind = (txt) => (/IncreaseConnectionPool|connection pool/i.test(txt) ?
 const rtSystemError = new Counter('rt_system_error');
 export function rt() {
   const all = W().all;
-  const me = all[idx() % all.length];
-  const ws = new WebSocket(`${URL.replace('https', 'wss')}/realtime/v1/websocket?apikey=${AK}&vsn=1.0.0`);
+  // Espalha os papéis (sem isso, com o tempo real limitado, só entravam psicólogos).
+  const me = all[(idx() * 7919) % all.length];
+  const ws = new WebSocket(`${URL.replace(/^http/, 'ws')}/realtime/v1/websocket?apikey=${AK}&vsn=1.0.0`);
   let ref = 0;
   const pending = {};
   const base = { broadcast: { self: false, ack: false }, presence: { key: '' } };

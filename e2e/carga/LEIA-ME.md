@@ -26,6 +26,8 @@ Arquivos de trabalho numa pasta fora do repositório (ex.: `$S`), com
 
 ```bash
 node e2e/carga/setup.mjs "$S"        # cria e loga as contas (people.json)
+node e2e/carga/relogin.mjs "$S"      # novo login (o token vale 1 h)
+node e2e/carga/tokens.mjs "$S"       # passa os tokens novos para o world.json
 node e2e/carga/world.mjs "$S"        # monta world.sql e world.json
 # aplicar world.sql pela API (database/query)
 e2e/carga/sampler.sh "$S" &          # CPU/memória/conexões do banco em metrics.csv
@@ -36,7 +38,7 @@ touch "$S/stop"                      # para o sampler
 # aplicar cleanup.sql pela API e apagar as chaves de $S
 ```
 
-Variáveis: `SCALE` (0.1 = 10% do pico), `RAMP`, `HOLD`, `LAST_HOLD`,
+Variáveis: `SB_URL` (Supabase local: http://127.0.0.1:54321), `APP` (v1 ou v2: canais do app antes ou depois de 2026-11-28), `MAX_RT` (máximo de conexões de tempo real; **na produção, abaixo de 500**), `MAX_CALL`, `SCALE` (0.1 = 10% do pico), `RAMP`, `HOLD`, `LAST_HOLD`,
 `NO_RT=1` (sem tempo real), `ONLY_RT=300` + `RT_DUR=2m` (só tempo real, todos
 conectando ao mesmo tempo). O login do Supabase limita pedidos por IP: acima
 de ~1.100 logins seguidos a partir de uma máquina ele responde 429.
