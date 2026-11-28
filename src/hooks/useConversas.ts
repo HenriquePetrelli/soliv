@@ -1,6 +1,7 @@
 import { addMonths } from 'date-fns';
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { subscribeConversas } from '@/lib/conversasChannel';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 
@@ -210,35 +211,13 @@ export const useConversas = () => {
   }, [user, userType, conversas]);
 
   // Tempo real: muda a conversa (status, nova conversa, mensagem nova ou lida)
-  // → atualiza lista, última mensagem e não lidas.
+  // → atualiza lista, última mensagem e não lidas. Aviso do banco no canal
+  // privado da pessoa (ver src/lib/conversasChannel.ts).
   useEffect(() => {
     if (!user) return;
-
-    const channel = supabase
-      .channel(`conversas-${user.id}-${Math.random().toString(36).slice(2)}`)
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'conversas',
-          filter: userType === 'patient'
-            ? `paciente_id=eq.${user.id}`
-            : `psicologo_id=eq.${user.id}`
-        },
-        () => {
-          fetchConversas(true);
-        }
-      )
-      // Mensagem nova ou lida também chega por aqui: o banco marca a conversa
-      // (updated_at). Antes havia uma escuta da tabela de mensagens inteira:
-      // cada mensagem de qualquer pessoa passava pela checagem de acesso de
-      // cada usuário com o chat aberto.
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
+    return subscribeConversas(user.id, () => {
+      fetchConversas(true);
+    });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, userType]);
 

@@ -1,0 +1,13 @@
+# Chaves e dados das contas de teste (nunca no repositório)
+service.key
+anon.key
+invite.txt
+people.json
+world.json
+world.sql
+*.json
+!package.json
+metrics.csv
+*.log
+stop
+k6
