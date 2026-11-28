@@ -26,6 +26,13 @@ const reqRows = wpac.map((p) => { const r = uuid(); waiting.push({ id: p.id, tok
 sql.push(`INSERT INTO public.emergency_requests (id, patient_id, status, ended_at, end_reason) VALUES ${reqRows.join(',')};`);
 sql.push('COMMIT;');
 fs.writeFileSync(dir + '/world.sql', sql.join('\n'));
-const all = [...psi.map((p) => ({ id: p.id, token: p.token, kind: 'psychologist' })), ...pac.map((p) => ({ id: p.id, token: p.token, kind: 'patient' }))];
+// Papel e sala de cada pessoa: o tempo real escuta os mesmos canais que a tela dela.
+const roleOf = new Map();
+for (const c of calls) { roleOf.set(c.patient.id, { role: 'call', session: c.session }); roleOf.set(c.psychologist.id, { role: 'call', session: c.session }); }
+for (const q2 of queue) roleOf.set(q2.id, { role: 'queue' });
+for (const w of waiting) roleOf.set(w.id, { role: 'waiting' });
+for (const b of browse) roleOf.set(b.id, { role: 'browse' });
+const all = [...psi.map((p) => ({ id: p.id, token: p.token, kind: 'psychologist', ...(roleOf.get(p.id) ?? { role: 'idle' }) })),
+  ...pac.map((p) => ({ id: p.id, token: p.token, kind: 'patient', ...(roleOf.get(p.id) ?? { role: 'idle' }) }))];
 fs.writeFileSync(dir + '/world.json', JSON.stringify({ run, calls, queue, waiting, browse, all }));
 console.log({ calls: calls.length, queue: queue.length, waiting: waiting.length, browse: browse.length, all: all.length });

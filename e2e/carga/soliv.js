@@ -14,7 +14,7 @@ const W = () => data[0];
 
 const SCALE = Number(__ENV.SCALE || 1); // 1 = pico completo
 const HOLD = __ENV.HOLD || '3m';
-const MAX = { call: 412, queue: 150, waiting: 200, browse: 250, rt: 1102 };
+const MAX = { call: Number(__ENV.MAX_CALL || 514), queue: 150, waiting: 200, browse: 250, rt: Number(__ENV.MAX_RT || 1157) };
 const stages = (max) => [
   { duration: __ENV.RAMP || '1m', target: Math.round(max * 0.1 * SCALE) },
   { duration: HOLD, target: Math.round(max * 0.1 * SCALE) },
@@ -38,6 +38,24 @@ export const options = {
   thresholds: {
     // Para o teste se mais de 20% dos pedidos falharem (não derrubar a produção à toa).
     http_req_failed: [{ threshold: 'rate<0.2', abortOnFail: true, delayAbortEval: '1m' }],
+    'rt_join_fail{kind:pool}': ['count>=0'],
+    'rt_system_error{kind:pool}': ['count>=0'],
+    'rt_join_fail{kind:timeout}': ['count>=0'],
+    'rt_system_error{kind:timeout}': ['count>=0'],
+    'rt_join_fail{kind:unauthorized}': ['count>=0'],
+    'rt_system_error{kind:unauthorized}': ['count>=0'],
+    'rt_join_fail{kind:other}': ['count>=0'],
+    'rt_system_error{kind:other}': ['count>=0'],
+    'rt_join_fail{kind:socket}': ['count>=0'],
+    'rt_system_error{kind:socket}': ['count>=0'],
+    'rt_join_ok{topic:account-status}': ['count>=0'],
+    'rt_join_ok{topic:notifications}': ['count>=0'],
+    'rt_join_ok{topic:conversas}': ['count>=0'],
+    'rt_join_ok{topic:sos-queue}': ['count>=0'],
+    'rt_join_ok{topic:psi-presence}': ['count>=0'],
+    'rt_join_ok{topic:call-room}': ['count>=0'],
+    'rt_join_ok{topic:call-presence}': ['count>=0'],
+    'rt_broadcast_received{event:changed}': ['count>=0'],
     'http_req_duration{stage:s1}': ['p(95)<600000'],
     'http_req_failed{stage:s1}': ['rate<1'],
     'http_reqs{stage:s1}': ['count>=0'],
@@ -190,43 +208,57 @@ export function browse() {
   }
 }
 
-// Tempo real: uma conexão por pessoa, com o canal privado da fila e a escuta
-// das próprias conversas (como o app).
+// Tempo real: uma conexão por pessoa, com os canais que a tela dela abre.
+// APP=v1: escutas postgres_changes de hoje; APP=v2: lista de conversas por
+// aviso do banco (canal privado conversas:<id>) e sem escuta da presença da chamada.
+const APP = __ENV.APP || 'v1';
+const failKind = (txt) => (/IncreaseConnectionPool|connection pool/i.test(txt) ? 'pool'
+  : /timeout/i.test(txt) ? 'timeout' : /Unauthorized|permission/i.test(txt) ? 'unauthorized' : 'other');
+const rtSystemError = new Counter('rt_system_error');
 export function rt() {
   const all = W().all;
   const me = all[idx() % all.length];
   const ws = new WebSocket(`${URL.replace('https', 'wss')}/realtime/v1/websocket?apikey=${AK}&vsn=1.0.0`);
   let ref = 0;
   const pending = {};
-  const join = (topic, config) => {
+  const base = { broadcast: { self: false, ack: false }, presence: { key: '' } };
+  const join = (topic, kind, config) => {
     const r = String(++ref);
-    pending[r] = topic;
-    ws.send(JSON.stringify({ topic: `realtime:${topic}`, event: 'phx_join', payload: { config, access_token: me.token }, ref: r, join_ref: r }));
+    pending[r] = kind;
+    ws.send(JSON.stringify({ topic: `realtime:${topic}`, event: 'phx_join', payload: { config: { ...base, postgres_changes: [], private: false, ...config }, access_token: me.token }, ref: r, join_ref: r }));
   };
+  const pg = (table, filter) => ({ postgres_changes: [{ event: '*', schema: 'public', table, filter }] });
   ws.onopen = () => {
-    join('sos-queue', { broadcast: { self: false, ack: false }, presence: { key: '' }, postgres_changes: [], private: true });
-    const column = me.kind === 'patient' ? 'paciente_id' : 'psicologo_id';
-    join(`conversas-${me.id}`, { broadcast: { self: false, ack: false }, presence: { key: '' }, private: false,
-      postgres_changes: [{ event: '*', schema: 'public', table: 'conversas', filter: `${column}=eq.${me.id}` }] });
-    ws.hb = setInterval(() => ws.send(JSON.stringify({ topic: 'phoenix', event: 'heartbeat', payload: {}, ref: String(++ref) })), 25000);
+    join(`account-status:${me.id}`, 'account-status', { private: true });
+    join(`notifications-${me.id}`, 'notifications', pg('notifications', `patient_id=eq.${me.id}`));
+    if (APP === 'v2') join(`conversas:${me.id}`, 'conversas', { private: true });
+    else join(`conversas-${me.id}`, 'conversas', pg('conversas', `${me.kind === 'patient' ? 'paciente_id' : 'psicologo_id'}=eq.${me.id}`));
+    if (me.role === 'queue' || me.role === 'waiting') join('sos-queue', 'sos-queue', { private: true });
+    if (me.kind === 'psychologist') join(`psychologist_presence_shared_${me.id}`, 'psi-presence', pg('psychologist_presence', `psychologist_id=eq.${me.id}`));
+    if (me.role === 'call') {
+      join(`webrtc_session_${me.session}_${me.id}`, 'call-room', { postgres_changes: [{ event: 'UPDATE', schema: 'public', table: 'webrtc_sessions', filter: `id=eq.${me.session}` }] });
+      if (APP !== 'v2') join(`participant-heartbeat:${me.session}:${me.id}`, 'call-presence', pg('participant_presence', `session_id=eq.${me.session}`));
+    }
+    ws.hb = setInterval(() => { try { ws.send(JSON.stringify({ topic: 'phoenix', event: 'heartbeat', payload: {}, ref: String(++ref) })); } catch (e) { /* fechado */ } }, 25000);
   };
   ws.onmessage = (e) => {
     let m;
     try { m = JSON.parse(e.data); } catch { return; }
     if (m.event === 'phx_reply' && pending[m.ref]) {
-      if (m.payload && m.payload.status === 'ok') rtJoinOk.add(1, { topic: pending[m.ref].startsWith('sos') ? 'sos-queue' : 'conversas' });
-      else rtJoinFail.add(1, { topic: pending[m.ref].startsWith('sos') ? 'sos-queue' : 'conversas', reason: String((m.payload && m.payload.response && (m.payload.response.reason || JSON.stringify(m.payload.response))) || '').slice(0, 120) });
+      const kind = pending[m.ref];
       delete pending[m.ref];
+      if (m.payload && m.payload.status === 'ok') rtJoinOk.add(1, { topic: kind });
+      else rtJoinFail.add(1, { topic: kind, kind: failKind(JSON.stringify(m.payload && m.payload.response)) });
+    } else if (m.event === 'system' && m.payload && m.payload.status === 'error') {
+      rtSystemError.add(1, { kind: failKind(String(m.payload.message)) });
     } else if (m.event === 'broadcast') {
-      rtBroadcast.add(1);
+      rtBroadcast.add(1, { event: String(m.payload && m.payload.event) });
       const ts = m.payload && m.payload.payload && Number(m.payload.payload.ts);
       if (ts) rtLatency.add(Date.now() - ts);
-    } else if (m.event === 'phx_error' || m.event === 'system' || m.event === 'phx_close') {
-      rtClosed.add(1, { code: 'evt:' + m.event, reason: String(JSON.stringify(m.payload) || '').slice(0, 120) });
     } else if (m.event === 'postgres_changes') {
       rtChanges.add(1);
     }
   };
-  ws.onerror = (e) => rtJoinFail.add(1, { topic: 'socket', err: String((e && e.error) || '').slice(0, 60) });
-  ws.onclose = (e) => { rtClosed.add(1, { code: String(e && e.code), at: String(Math.floor(exec.instance.currentTestRunDuration / 60000)) + 'min' }); if (ws.hb) clearInterval(ws.hb); };
+  ws.onerror = () => rtJoinFail.add(1, { topic: 'socket', kind: 'socket' });
+  ws.onclose = () => { rtClosed.add(1); if (ws.hb) clearInterval(ws.hb); };
 }

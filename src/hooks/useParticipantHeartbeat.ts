@@ -81,30 +81,15 @@ export const useParticipantHeartbeat = ({
       readRemote();
     }, intervalMs);
 
-    const channel = supabase
-      .channel(`participant-heartbeat:${sessionId}`)
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'participant_presence',
-          filter: `session_id=eq.${sessionId}`,
-        },
-        (payload) => {
-          const row = payload.new as { user_type?: string; last_seen?: string | null } | null;
-          if (!row || row.user_type !== remoteType) return;
-          const seen = row.last_seen ? new Date(row.last_seen).getTime() : null;
-          setRemoteLastSeen(seen);
-          setRemoteRecentlySeen(seen !== null && Date.now() - seen < staleAfterMs);
-        }
-      )
-      .subscribe();
+    // Sem escuta de tempo real da tabela: o sinal do outro lado é lido junto
+    // com o nosso, a cada intervalo (ele só é considerado ausente depois de
+    // staleAfterMs, bem mais que o intervalo). No teste de carga de
+    // 2026-11-27 esta tabela era a que mais mudava (cada participante grava a
+    // cada 15 s) e o tempo real gastava 72% do tempo do banco com mudanças.
 
     return () => {
       cancelled = true;
       clearInterval(interval);
-      supabase.removeChannel(channel);
     };
   }, [sessionId, userType, remoteType, enabled, intervalMs, staleAfterMs]);
 
