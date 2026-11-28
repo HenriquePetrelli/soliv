@@ -94,7 +94,7 @@ Supabase → **Authentication → Providers → Email** (e **Policies**/**Settin
 3. **Prevent use of leaked passwords:** ligado (só existe no plano Pro do Supabase, assinado em 2026-11).
    - **Require current password when updating:** deixe **desligado**. O app já pede a senha atual nas próprias telas, e ligar isso quebraria a troca de senha e o "Esqueci minha senha".
    - **Email OTP expiration:** `3600` (1 hora), o prazo escrito nos e-mails.
-4. **Confirm email:** ligar, **só depois do passo 2** (o e-mail de confirmação precisa chegar). O app já está pronto para isso:
+4. **Confirm email:** **só em produção.** No ambiente de teste fica desligado (desde 2026-11-28: o cadastro entra direto, sem e-mail). No lançamento, ligar, **depois do passo 2** (o e-mail de confirmação precisa chegar). O app já está pronto para os dois jeitos:
    - o paciente é criado pelo banco no cadastro;
    - o psicólogo conclui o cadastro (envia o documento) no primeiro acesso, em `/psicologo/concluir-cadastro`;
    - nas empresas com domínio, o benefício só vale com o e-mail confirmado.
