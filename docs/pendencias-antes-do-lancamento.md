@@ -33,6 +33,7 @@ Ao resolver um item, marque o quadradinho, atualize o detalhe da pendência e, q
 - [ ] **TURN das chamadas (pendência 5):** criar a chave do TURN na Cloudflare e cadastrar os 2 secrets. **Esperando o cartão de crédito da empresa (Nubank PJ)** em 2026-11-23: a ativação do Cloudflare Realtime pede cartão (cobra $0/mês; 1.000 GB grátis, depois US$ 0,05/GB). Dá para deixar para a lista B, mas testar antes evita surpresa com usuários no 4G.
 - [x] **Site fora do Google até o lançamento (2026-11-23):** todas as páginas com `noindex` e o sitemap fora do `robots.txt` (`SEARCH_INDEXING_ENABLED = false` em `src/lib/seo.ts`), para o público não chegar ao cadastro antes da hora. Vale depois do próximo Publish na Lovable. Quem tiver o link ainda consegue abrir o site e se cadastrar.
 - [x] **Cadastro só com convite (2026-11-23):** migrations `20261123120000` e `20261123130000` aplicadas no Supabase (registradas no histórico; testadas numa transação desfeita), campo "Código de convite" nos dois cadastros e **código definido** em `app_settings.signup_invite_code` (o código não fica no repositório; quem administra sabe). Conferido pela API: código certo aceito, errado recusado, cadastro sem código recusado com "Código de convite inválido" e nenhuma conta criada. O campo aparece no site depois do próximo Publish na Lovable. Ficha 01.
+- [x] **Confirmação de e-mail só em produção (2026-11-28):** "Confirm email" desligado no Supabase (`mailer_autoconfirm = true`, conferido pela API). No teste o cadastro entra direto e não sai e-mail de confirmação; o "Esqueci minha senha" continua mandando e-mail pelo Resend. O app já funciona dos dois jeitos (o psicólogo envia o documento no próprio cadastro). Religar no lançamento (lista B, passo 4).
 - [ ] **Página de apresentação (`roadmap.md`):** decidir se haverá uma (hoje a página inicial é o login).
 
 ## Lista B — No lançamento (virar produção)
@@ -65,7 +66,8 @@ Em 2026-11-22 o banco tinha 20 contas (13 pacientes, 6 psicólogos), 27 consulta
 
 - [ ] **Código do admin (pendência 24):** mudar para produção com `UPDATE public.app_settings SET environment = 'production', updated_at = now();` e conferir que o painel pede o código do autenticador. Em `test`, o admin entra só com a senha (decisão de 2026-11-27: o código vale só em produção).
 - [ ] **TURN (pendência 5),** se não foi feito na lista A.
-- [ ] Conferir Authentication: "Confirm email" ligado, SMTP do Resend, limite de e-mails (100/h) e Site URL `https://solivsaude.com.br` (já estão assim desde 2026-11-22).
+- [ ] **Religar a confirmação de e-mail:** Authentication → Providers → Email → **"Confirm email" ligado** (`mailer_autoconfirm = false`). Desligada no ambiente de teste desde 2026-11-28 (o cadastro entra direto, sem e-mail de confirmação). Depois, cadastrar uma conta de teste e conferir que o e-mail de confirmação chega.
+- [ ] Conferir Authentication: SMTP do Resend, limite de e-mails (100/h) e Site URL `https://solivsaude.com.br` (já estão assim desde 2026-11-22).
 
 ### 5. Abrir o cadastro e o site
 
